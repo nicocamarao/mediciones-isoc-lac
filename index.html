@@ -46,6 +46,10 @@
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="ipv6" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">IPv6</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dmarc" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">DMARC</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="spf" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">SPF</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dkim" class="h-4 w-4 rounded"><span class="ml-2 text-sm">DKIM</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="mx" class="h-4 w-4 rounded"><span class="ml-2 text-sm">MX</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="smtputf8" class="h-4 w-4 rounded"><span class="ml-2 text-sm">SMTPUTF8</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="rpki" class="h-4 w-4 rounded"><span class="ml-2 text-sm">RPKI</span></label>
                  </div>
         </div>
 
@@ -70,7 +74,7 @@
     const resultsContainer = document.getElementById('results');
     const loader = document.getElementById('loader');
     const checkboxes = document.querySelectorAll('input[type="checkbox"][data-check]');
-    const countrySelect = document.getElementById('countrySelect');
+        const API_BASE = 'http://localhost:3000';
 
     const countryTlds = {
         'Uruguay': ['uy','com.uy','edu.uy','gub.uy','org.uy','net.uy'],
@@ -101,7 +105,11 @@
         dnssec: { label: 'DNSSEC' },
         ipv6: { label: 'IPv6' },
         dmarc: { label: 'DMARC' },
-        spf: { label: 'SPF' }
+        spf: { label: 'SPF' },
+        dkim: { label: 'DKIM' },
+        mx: { label: 'MX' },
+        smtputf8: { label: 'SMTPUTF8' },
+        rpki: { label: 'RPKI' }
     };
 
     async function fetchWithTimeout(resource, options = {}, timeout = 12000) {
@@ -139,7 +147,7 @@
         card.className = 'p-4 rounded-lg bg-gray-50 border border-gray-200 shadow-sm';
         const groups = {
             "Configuración DNS y Red": ['dnssec', 'ipv6', 'rpki'],
-            "Registros de Correo y EAI": ['dmarc', 'spf', 'dkim', 'smtputf8']
+              "Registros de Correo y EAI": ['dmarc', 'spf', 'dkim', 'smtputf8', 'mx']
         };
         let cardHtml = `<h3 class="font-bold text-xl text-gray-800 mb-4 pb-2 border-b">${domain}</h3>`;
         for (const [groupTitle, checkKeys] of Object.entries(groups)) {
@@ -164,8 +172,9 @@
         try {
             switch (checkType) {
                 case 'dnssec': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=DNSKEY`);
-                    return { label, status: data.Answer ? 'ok' : 'fail', details: data.Answer ? 'Firmado' : 'No firmado' };
+                    const data = await fetchWithTimeout(`${API_BASE}/dnssec/${domain}`);
+                    const details = `Parent DS: ${data.parent ? 'sí' : 'no'}, Child DNSKEY: ${data.child ? 'sí' : 'no'}`;
+                    return { label, status: data.parent && data.child ? 'ok' : 'fail', details };
                 }
                 case 'ipv6': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=AAAA`);
@@ -180,6 +189,25 @@
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=TXT`);
                     const found = data.Answer?.some(r => r.data.includes("v=spf1"));
                     return { label, status: found ? 'ok' : 'fail', details: found ? 'Registro encontrado' : 'No encontrado' };
+                }
+                case 'dkim': {
+                    const data = await fetchWithTimeout(`${API_BASE}/dkim/${domain}?selector=default`);
+                    return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Registro encontrado' : 'No encontrado' };
+                }
+                case 'mx': {
+                    const data = await fetchWithTimeout(`${API_BASE}/mx/${domain}`);
+                    const details = data.records?.map(r => `${r.exchange} (p${r.priority})`).join(', ') || 'No encontrado';
+                    return { label, status: data.records?.length ? 'ok' : 'fail', details };
+                }
+                case 'smtputf8': {
+                    const data = await fetchWithTimeout(`${API_BASE}/smtputf8/${domain}`);
+                    const details = data.results?.map(r => `${r.server}: ${r.supports ? 'sí' : 'no'}`).join('; ') || 'Sin datos';
+                    const ok = data.results?.every(r => r.supports);
+                    return { label, status: ok ? 'ok' : 'fail', details };
+                }
+                case 'rpki': {
+                    const data = await fetchWithTimeout(`${API_BASE}/rpki/${domain}`);
+                    return { label, status: data.valid ? 'ok' : 'fail', details: data.message || 'Sin datos' };
                 }
             }
         } catch (error) {
