@@ -173,8 +173,12 @@
             switch (checkType) {
                 case 'dnssec': {
                     const data = await fetchWithTimeout(`${API_BASE}/dnssec/${domain}`);
-                    const details = `Parent DS: ${data.parent ? 'sí' : 'no'}, Child DNSKEY: ${data.child ? 'sí' : 'no'}`;
-                    return { label, status: data.parent && data.child ? 'ok' : 'fail', details };
+                    const parts = [];
+                    for (const [method, res] of Object.entries(data.methods)) {
+                        parts.push(`${method}: parent ${res.parent ? 'sí' : 'no'}, child ${res.child ? 'sí' : 'no'}`);
+                    }
+                    const ok = Object.values(data.methods).some(r => r.parent && r.child);
+                    return { label, status: ok ? 'ok' : 'fail', details: parts.join(' | ') };
                 }
                 case 'ipv6': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=AAAA`);
@@ -207,7 +211,8 @@
                 }
                 case 'rpki': {
                     const data = await fetchWithTimeout(`${API_BASE}/rpki/${domain}`);
-                    return { label, status: data.valid ? 'ok' : 'fail', details: data.message || 'Sin datos' };
+                    const details = data.results?.map(r => `${r.ip}: CF ${r.cloudflare ? 'sí' : 'no'}, RIPE ${r.ripe ? 'sí' : 'no'}`).join('; ') || 'Sin datos';
+                    return { label, status: data.valid ? 'ok' : 'fail', details };
                 }
             }
         } catch (error) {

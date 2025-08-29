@@ -21,29 +21,56 @@ async function handleMx(domain, res) {
   }
 }
 
-function checkSmtpUtf8(server) {
+function smtpQuery(server, port) {
   return new Promise(resolve => {
-    const socket = net.createConnection(25, server);
-    let response = '';
-    const timer = setTimeout(() => { socket.destroy(); resolve(false); }, 5000);
+    const socket = net.createConnection(port, server);
+    let buffer = '';
+    let ehloSent = false;
+    const timer = setTimeout(() => { socket.destroy(); resolve(false); }, 8000);
+
     socket.on('data', data => {
-      response += data.toString();
-      if (response.includes('\n')) {
-        socket.write('EHLO example.com\r\n');
-      }
-      if (response.includes('250 ')) {
-        socket.end();
+      buffer += data.toString();
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!ehloSent && /^220 /.test(line)) {
+          socket.write('EHLO example.com\r\n');
+          ehloSent = true;
+        } else if (ehloSent && /^250[ -]/.test(line)) {
+          if (/SMTPUTF8/i.test(line)) {
+            clearTimeout(timer);
+            socket.end();
+            return resolve(true);
+          }
+          if (line.startsWith('250 ')) {
+            clearTimeout(timer);
+            socket.end();
+            return resolve(false);
+          }
+        }
       }
     });
-    socket.on('end', () => {
-      clearTimeout(timer);
-      resolve(/SMTPUTF8/i.test(response));
-    });
+
     socket.on('error', () => {
       clearTimeout(timer);
       resolve(false);
     });
+
+    socket.on('end', () => {
+      clearTimeout(timer);
+      resolve(false);
+    });
   });
+}
+
+async function checkSmtpUtf8(server) {
+  // Try common SMTP ports for resilience
+  const ports = [25, 587];
+  for (const port of ports) {
+    const ok = await smtpQuery(server, port);
+    if (ok) return true;
+  }
+  return false;
 }
 
 async function handleSmtpUtf8(domain, res) {
@@ -60,18 +87,33 @@ async function handleSmtpUtf8(domain, res) {
   }
 }
 
+async function dnssecSystem(domain) {
+  const result = { parent: false, child: false };
+  try { await dns.resolve(domain, 'DS'); result.parent = true; } catch (e) {}
+  try { await dns.resolve(domain, 'DNSKEY'); result.child = true; } catch (e) {}
+  return result;
+}
+
+async function dnssecGoogle(domain) {
+  const result = { parent: false, child: false };
+  try {
+    const ds = await fetchJSON(`https://dns.google/resolve?name=${domain}&type=DS`);
+    result.parent = Array.isArray(ds.Answer) && ds.Answer.length > 0;
+  } catch (e) {}
+  try {
+    const dnskey = await fetchJSON(`https://dns.google/resolve?name=${domain}&type=DNSKEY`);
+    result.child = Array.isArray(dnskey.Answer) && dnskey.Answer.length > 0;
+  } catch (e) {}
+  return result;
+}
+
 async function handleDnssec(domain, res) {
-  let parent = false;
-  let child = false;
-  try {
-    await dns.resolve(domain, 'DS');
-    parent = true;
-  } catch (e) {}
-  try {
-    await dns.resolve(domain, 'DNSKEY');
-    child = true;
-  } catch (e) {}
-  sendJSON(res, 200, { domain, parent, child });
+  const methods = {
+    system: await dnssecSystem(domain),
+    google: await dnssecGoogle(domain)
+  };
+  const valid = Object.values(methods).some(m => m.parent && m.child);
+  sendJSON(res, 200, { domain, methods, valid });
 }
 
 async function handleDkim(domain, selector, res) {
@@ -97,20 +139,35 @@ function fetchJSON(target) {
   });
 }
 
+async function rpkiCloudflare(ip) {
+  try {
+    const data = await fetchJSON(`https://rpki.cloudflare.com/api/v1/roas?ip=${ip}`);
+    return Array.isArray(data?.roas) && data.roas.length > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function rpkiRipe(ip) {
+  try {
+    const data = await fetchJSON(`https://stat.ripe.net/data/rpki-validation/data.json?resource=${ip}`);
+    return data?.data?.validity === 'valid';
+  } catch (e) {
+    return false;
+  }
+}
+
 async function handleRpki(domain, res) {
   try {
     const ips = await dns.resolve4(domain);
-    const roas = [];
+    const results = [];
     for (const ip of ips) {
-      const api = `https://rpki.cloudflare.com/api/v1/roas?ip=${ip}`;
-      try {
-        const data = await fetchJSON(api);
-        roas.push({ ip, data });
-      } catch (e) {
-        roas.push({ ip, error: e.message });
-      }
+      const cloudflare = await rpkiCloudflare(ip);
+      const ripe = await rpkiRipe(ip);
+      results.push({ ip, cloudflare, ripe });
     }
-    sendJSON(res, 200, { domain, roas, valid: roas.length > 0, message: roas.length > 0 ? "Datos obtenidos" : "Sin ROAs" });
+    const valid = results.some(r => r.cloudflare || r.ripe);
+    sendJSON(res, 200, { domain, results, valid });
   } catch (e) {
     sendJSON(res, 500, { valid: false, message: e.message });
   }
