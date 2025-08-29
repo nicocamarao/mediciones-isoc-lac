@@ -46,10 +46,7 @@
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="ipv6" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">IPv6</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dmarc" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">DMARC</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="spf" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">SPF</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dkim" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">DKIM</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="smtputf8" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">SMTPUTF8 (EAI)</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="rpki" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">RPKI</span></label>
-            </div>
+                 </div>
         </div>
 
         <div class="flex items-center justify-center">
@@ -104,10 +101,7 @@
         dnssec: { label: 'DNSSEC' },
         ipv6: { label: 'IPv6' },
         dmarc: { label: 'DMARC' },
-        spf: { label: 'SPF' },
-        dkim: { label: 'DKIM (default)' },
-        smtputf8: { label: 'SMTPUTF8 (EAI)' },
-        rpki: { label: 'RPKI' }
+        spf: { label: 'SPF' }
     };
 
     async function fetchWithTimeout(resource, options = {}, timeout = 12000) {
@@ -186,31 +180,6 @@
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=TXT`);
                     const found = data.Answer?.some(r => r.data.includes("v=spf1"));
                     return { label, status: found ? 'ok' : 'fail', details: found ? 'Registro encontrado' : 'No encontrado' };
-                }
-                case 'dkim': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=default._domainkey.${domain}&type=TXT`);
-                    return { label, status: data.Answer ? 'ok' : 'fail', details: data.Answer ? 'Registro encontrado' : 'No encontrado' };
-                }
-                case 'smtputf8': {
-                    const data = await fetchWithTimeout(`https://api.mailhardener.com/v2/check/smtp/domain/${domain}`);
-                    const isReady = data?.some(server => server.features?.smtputf8 === true);
-                    const serverInfo = data?.[0]?.hostname || 'N/A';
-                    const details = isReady ? `Soportado en ${serverInfo}` : `No soportado en ${serverInfo}`;
-                    return { label, status: isReady ? 'ok' : 'fail', details };
-                }
-                case 'rpki': {
-                    const aData = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=A`);
-                    const ips = aData.Answer?.map(r => r.data).filter(ip => /^\d+\.\d+\.\d+\.\d+$/.test(ip)) || [];
-                    if (ips.length === 0) return { label, status: 'error', details: 'Sin registros A' };
-                    for (const ip of ips) {
-                        try {
-                            const rpki = await fetchWithTimeout(`https://stat.ripe.net/data/rpki-validation/data.json?resource=${ip}`);
-                            const st = rpki?.data?.status;
-                            if (st === 'valid') return { label, status: 'ok', details: `IP ${ip} válido` };
-                            if (st === 'invalid') return { label, status: 'fail', details: `IP ${ip} inválido` };
-                        } catch (e) { /* ignore */ }
-                    }
-                    return { label, status: 'fail', details: 'Sin ROA válido' };
                 }
             }
         } catch (error) {
