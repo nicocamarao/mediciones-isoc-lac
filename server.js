@@ -26,7 +26,10 @@ function smtpQuery(server, port) {
     const socket = net.createConnection(port, server);
     let buffer = '';
     let ehloSent = false;
-    const timer = setTimeout(() => { socket.destroy(); resolve(false); }, 8000);
+    const timer = setTimeout(() => {
+      socket.destroy();
+      resolve({ status: 'timeout' });
+    }, 15000);
 
     socket.on('data', data => {
       buffer += data.toString();
@@ -40,12 +43,12 @@ function smtpQuery(server, port) {
           if (/SMTPUTF8/i.test(line)) {
             clearTimeout(timer);
             socket.end();
-            return resolve(true);
+            return resolve({ status: 'supports' });
           }
           if (line.startsWith('250 ')) {
             clearTimeout(timer);
             socket.end();
-            return resolve(false);
+            return resolve({ status: 'no' });
           }
         }
       }
@@ -53,12 +56,12 @@ function smtpQuery(server, port) {
 
     socket.on('error', () => {
       clearTimeout(timer);
-      resolve(false);
+      resolve({ status: 'connection-error' });
     });
 
     socket.on('end', () => {
       clearTimeout(timer);
-      resolve(false);
+      resolve({ status: 'no' });
     });
   });
 }
@@ -66,11 +69,14 @@ function smtpQuery(server, port) {
 async function checkSmtpUtf8(server) {
   // Try common SMTP ports for resilience
   const ports = [25, 587];
+  let last = { status: 'connection-error' };
   for (const port of ports) {
-    const ok = await smtpQuery(server, port);
-    if (ok) return true;
+    const res = await smtpQuery(server, port);
+    if (res.status === 'supports') return res;
+    if (res.status === 'no' && last.status !== 'supports') last = res;
+    if (res.status === 'timeout' || res.status === 'connection-error') last = res;
   }
-  return false;
+  return last;
 }
 
 async function handleSmtpUtf8(domain, res) {
@@ -78,8 +84,8 @@ async function handleSmtpUtf8(domain, res) {
     const mx = await dns.resolveMx(domain);
     const results = [];
     for (const record of mx) {
-      const supports = await checkSmtpUtf8(record.exchange);
-      results.push({ server: record.exchange, supports });
+      const { status } = await checkSmtpUtf8(record.exchange);
+      results.push({ server: record.exchange, status });
     }
     sendJSON(res, 200, { domain, results });
   } catch (e) {
@@ -157,6 +163,18 @@ async function rpkiRipe(ip) {
   }
 }
 
+async function rpkiRipeStat(ip) {
+  try {
+    const data = await fetchJSON(`https://stat.ripe.net/data/overview/data.json?resource=${ip}`);
+    return {
+      status: data?.data?.rpki?.status || 'unknown',
+      asn: Array.isArray(data?.data?.asns) && data.data.asns.length ? data.data.asns[0].asn : null
+    };
+  } catch (e) {
+    return { status: 'error', asn: null };
+  }
+}
+
 async function handleRpki(domain, res) {
   try {
     const ips = await dns.resolve4(domain);
@@ -164,9 +182,10 @@ async function handleRpki(domain, res) {
     for (const ip of ips) {
       const cloudflare = await rpkiCloudflare(ip);
       const ripe = await rpkiRipe(ip);
-      results.push({ ip, cloudflare, ripe });
+      const ripeStat = await rpkiRipeStat(ip);
+      results.push({ ip, cloudflare, ripe, ripeStat });
     }
-    const valid = results.some(r => r.cloudflare || r.ripe);
+    const valid = results.some(r => r.cloudflare || r.ripe || /^valid$/i.test(r.ripeStat.status));
     sendJSON(res, 200, { domain, results, valid });
   } catch (e) {
     sendJSON(res, 500, { valid: false, message: e.message });

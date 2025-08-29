@@ -112,7 +112,7 @@
         rpki: { label: 'RPKI' }
     };
 
-    async function fetchWithTimeout(resource, options = {}, timeout = 12000) {
+    async function fetchWithTimeout(resource, options = {}, timeout = 20000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
         try {
@@ -182,36 +182,48 @@
                 }
                 case 'ipv6': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=AAAA`);
-                    return { label, status: data.Answer ? 'ok' : 'fail', details: data.Answer ? 'Registro AAAA encontrado' : 'No encontrado' };
+                    return { label, status: data.Answer ? 'ok' : 'fail', details: data.Answer ? 'Registro AAAA encontrado' : 'No permite IPv6' };
                 }
                 case 'dmarc': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=_dmarc.${domain}&type=TXT`);
                     const found = data.Answer?.some(r => r.data.includes("v=DMARC1"));
-                    return { label, status: found ? 'ok' : 'fail', details: found ? 'Política encontrada' : 'No encontrada' };
+                    return { label, status: found ? 'ok' : 'fail', details: found ? 'Política encontrada' : 'No permite DMARC' };
                 }
                 case 'spf': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=TXT`);
                     const found = data.Answer?.some(r => r.data.includes("v=spf1"));
-                    return { label, status: found ? 'ok' : 'fail', details: found ? 'Registro encontrado' : 'No encontrado' };
+                    return { label, status: found ? 'ok' : 'fail', details: found ? 'Registro encontrado' : 'No permite SPF' };
                 }
                 case 'dkim': {
                     const data = await fetchWithTimeout(`${API_BASE}/dkim/${domain}?selector=default`);
-                    return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Registro encontrado' : 'No encontrado' };
+                    return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Registro encontrado' : 'No permite DKIM' };
                 }
                 case 'mx': {
                     const data = await fetchWithTimeout(`${API_BASE}/mx/${domain}`);
-                    const details = data.records?.map(r => `${r.exchange} (p${r.priority})`).join(', ') || 'No encontrado';
+                    const details = data.records?.map(r => `${r.exchange} (p${r.priority})`).join(', ') || 'No permite MX';
                     return { label, status: data.records?.length ? 'ok' : 'fail', details };
                 }
                 case 'smtputf8': {
                     const data = await fetchWithTimeout(`${API_BASE}/smtputf8/${domain}`);
-                    const details = data.results?.map(r => `${r.server}: ${r.supports ? 'sí' : 'no'}`).join('; ') || 'Sin datos';
-                    const ok = data.results?.every(r => r.supports);
+                    const details = data.results?.map(r => {
+                        switch (r.status) {
+                            case 'supports': return `${r.server}: sí`;
+                            case 'no': return `${r.server}: no`;
+                            case 'timeout': return `${r.server}: timeout`;
+                            case 'connection-error': return `${r.server}: sin conexión`;
+                            default: return `${r.server}: sin datos`;
+                        }
+                    }).join('; ') || 'No permite SMTPUTF8';
+                    const ok = data.results?.length && data.results.every(r => r.status === 'supports');
                     return { label, status: ok ? 'ok' : 'fail', details };
                 }
                 case 'rpki': {
                     const data = await fetchWithTimeout(`${API_BASE}/rpki/${domain}`);
-                    const details = data.results?.map(r => `${r.ip}: CF ${r.cloudflare ? 'sí' : 'no'}, RIPE ${r.ripe ? 'sí' : 'no'}`).join('; ') || 'Sin datos';
+                    const details = data.results?.map(r => {
+                        const statStatus = r.ripeStat?.status || '-';
+                        const asn = r.ripeStat?.asn ? ` AS${r.ripeStat.asn}` : '';
+                        return `${r.ip}: CF ${r.cloudflare ? 'sí' : 'no'}, RIPE ${r.ripe ? 'sí' : 'no'}, Stat ${statStatus}${asn}`;
+                    }).join('; ') || 'No permite RPKI';
                     return { label, status: data.valid ? 'ok' : 'fail', details };
                 }
             }
