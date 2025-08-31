@@ -17,5 +17,6 @@ npm start
 - `GET /dnssec/:dominio` – consulta la presencia de DS/DNSKEY utilizando el resolvedor local y la API de Google DNS.
 - `GET /dkim/:dominio?selector=default` – busca un registro DKIM para el selector indicado.
 - `GET /rpki/:dominio` – valida las direcciones IPv4 del dominio contra las APIs de Cloudflare, RIPE `rpki-validation` y el resumen de RIPE Stat.
+- `GET /whois/:dominio` – consulta información básica de RDAP sobre el dueño del dominio.
 
 El cliente web en `index.html` consume estos endpoints y muestra los resultados de cada método para una verificación más resiliente.

@@ -4,6 +4,21 @@ const net = require('net');
 const url = require('url');
 const https = require('https');
 
+const ALGO_MAP = {
+  1: 'RSA/MD5',
+  2: 'Diffie-Hellman',
+  3: 'DSA/SHA1',
+  5: 'RSA/SHA-1',
+  6: 'DSA-NSEC3-SHA1',
+  7: 'RSASHA1-NSEC3-SHA1',
+  8: 'RSA/SHA-256',
+  10: 'RSA/SHA-512',
+  13: 'ECDSA/P256/SHA-256',
+  14: 'ECDSA/P384/SHA-384',
+  15: 'Ed25519',
+  16: 'Ed448'
+};
+
 function sendJSON(res, status, data) {
   res.writeHead(status, {
     'Content-Type': 'application/json',
@@ -94,21 +109,43 @@ async function handleSmtpUtf8(domain, res) {
 }
 
 async function dnssecSystem(domain) {
-  const result = { parent: false, child: false };
-  try { await dns.resolve(domain, 'DS'); result.parent = true; } catch (e) {}
-  try { await dns.resolve(domain, 'DNSKEY'); result.child = true; } catch (e) {}
+  const result = { parent: false, child: false, algorithms: [] };
+  try {
+    const ds = await dns.resolve(domain, 'DS');
+    result.parent = ds.length > 0;
+    result.algorithms.push(...ds.map(r => ALGO_MAP[r.algorithm] || String(r.algorithm)));
+  } catch (e) {}
+  try {
+    const dnskey = await dns.resolve(domain, 'DNSKEY');
+    result.child = dnskey.length > 0;
+    result.algorithms.push(...dnskey.map(r => ALGO_MAP[r.algorithm] || String(r.algorithm)));
+  } catch (e) {}
   return result;
 }
 
 async function dnssecGoogle(domain) {
-  const result = { parent: false, child: false };
+  const result = { parent: false, child: false, algorithms: [] };
   try {
     const ds = await fetchJSON(`https://dns.google/resolve?name=${domain}&type=DS`);
-    result.parent = Array.isArray(ds.Answer) && ds.Answer.length > 0;
+    if (Array.isArray(ds.Answer) && ds.Answer.length > 0) {
+      result.parent = true;
+      ds.Answer.forEach(a => {
+        const parts = a.data.split(' ');
+        const algo = Number(parts[1]);
+        result.algorithms.push(ALGO_MAP[algo] || String(algo));
+      });
+    }
   } catch (e) {}
   try {
     const dnskey = await fetchJSON(`https://dns.google/resolve?name=${domain}&type=DNSKEY`);
-    result.child = Array.isArray(dnskey.Answer) && dnskey.Answer.length > 0;
+    if (Array.isArray(dnskey.Answer) && dnskey.Answer.length > 0) {
+      result.child = true;
+      dnskey.Answer.forEach(a => {
+        const parts = a.data.split(' ');
+        const algo = Number(parts[3]);
+        result.algorithms.push(ALGO_MAP[algo] || String(algo));
+      });
+    }
   } catch (e) {}
   return result;
 }
@@ -118,8 +155,12 @@ async function handleDnssec(domain, res) {
     system: await dnssecSystem(domain),
     google: await dnssecGoogle(domain)
   };
+  const algorithms = [...new Set([
+    ...methods.system.algorithms,
+    ...methods.google.algorithms
+  ].filter(Boolean))];
   const valid = Object.values(methods).some(m => m.parent && m.child);
-  sendJSON(res, 200, { domain, methods, valid });
+  sendJSON(res, 200, { domain, methods, algorithms, valid });
 }
 
 async function handleDkim(domain, selector, res) {
@@ -177,7 +218,9 @@ async function rpkiRipeStat(ip) {
 
 async function handleRpki(domain, res) {
   try {
-    const ips = await dns.resolve4(domain);
+    const v4 = await dns.resolve4(domain).catch(() => []);
+    const v6 = await dns.resolve6(domain).catch(() => []);
+    const ips = [...v4, ...v6];
     const results = [];
     for (const ip of ips) {
       const cloudflare = await rpkiCloudflare(ip);
@@ -192,6 +235,30 @@ async function handleRpki(domain, res) {
   }
 }
 
+async function handleWhois(domain, res) {
+  try {
+    const data = await fetchJSON(`https://rdap.org/domain/${domain}`);
+    let name = data?.name || '';
+    let country = '';
+    if (Array.isArray(data?.entities)) {
+      const ent = data.entities.find(e => Array.isArray(e.vcardArray));
+      if (ent && Array.isArray(ent.vcardArray[1])) {
+        const vc = ent.vcardArray[1];
+        const fn = vc.find(i => i[0] === 'fn');
+        if (fn) name = fn[3];
+        const adr = vc.find(i => i[0] === 'adr');
+        if (adr && Array.isArray(adr[3])) {
+          const addr = adr[3];
+          country = addr[6] || addr[5] || '';
+        }
+      }
+    }
+    sendJSON(res, 200, { domain, name, country });
+  } catch (e) {
+    sendJSON(res, 500, { valid: false, message: e.message });
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const parsed = url.parse(req.url, true);
   const segments = parsed.pathname.split('/').filter(Boolean);
@@ -200,6 +267,7 @@ const server = http.createServer(async (req, res) => {
   if (segments[0] === 'dnssec' && segments[1]) return handleDnssec(segments[1], res);
   if (segments[0] === 'dkim' && segments[1]) return handleDkim(segments[1], parsed.query.selector || 'default', res);
   if (segments[0] === 'rpki' && segments[1]) return handleRpki(segments[1], res);
+  if (segments[0] === 'whois' && segments[1]) return handleWhois(segments[1], res);
   sendJSON(res, 404, { error: 'Not found' });
 });
 

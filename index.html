@@ -6,6 +6,8 @@
     <title>Suite de Análisis de Dominios</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <style>
         body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         .loader {
@@ -23,8 +25,12 @@
 
     <div class="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 my-8">
         <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Suite de Análisis de Dominios</h1>
-            <p class="text-gray-500 mt-2">Herramienta enfocada en la configuración de DNS y Correo Electrónico.</p>
+            <h1 class="text-3xl font-bold text-gray-900">Internet Society Uruguay (Mediciones ISOC-LAC)</h1>
+            <p class="text-gray-500 mt-2">Proyecto colaborativo de capítulos de Internet Society para mediciones abiertas de la región LAC.</p>
+            <button id="aboutBtn" class="text-blue-600 underline text-sm mt-2">Acerca de</button>
+            <div id="aboutText" class="hidden mt-4 text-sm text-gray-700">
+                ISOC Capítulo Uruguay, junto a otros capítulos de la región unieron esfuerzos para esta herramienta abierta, que luego servirá para conectarla con ISOC Pulse para recabar información de la región LAC.
+            </div>
         </div>
 
         <div class="mb-6">
@@ -43,14 +49,17 @@
             <label class="block text-sm font-medium text-gray-700 mb-3">Verificaciones a realizar</label>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dnssec" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">DNSSEC</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="ipv4" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">IPv4</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="ipv6" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">IPv6</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="asn" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">ASN</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="rpki" class="h-4 w-4 rounded"><span class="ml-2 text-sm">RPKI</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="whois" class="h-4 w-4 rounded"><span class="ml-2 text-sm">WHOIS</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dmarc" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">DMARC</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="spf" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">SPF</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dkim" class="h-4 w-4 rounded"><span class="ml-2 text-sm">DKIM</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="mx" class="h-4 w-4 rounded"><span class="ml-2 text-sm">MX</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="smtputf8" class="h-4 w-4 rounded"><span class="ml-2 text-sm">SMTPUTF8</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="rpki" class="h-4 w-4 rounded"><span class="ml-2 text-sm">RPKI</span></label>
-                 </div>
+                </div>
         </div>
 
         <div class="flex flex-col items-center justify-center">
@@ -72,6 +81,7 @@
             </div>
             <div id="results" class="space-y-6"></div>
         </div>
+        <div id="map" class="w-full h-64 mt-8 hidden"></div>
     </div>
 
 <script>
@@ -83,6 +93,10 @@
     const historyButton = document.getElementById('historyButton');
     const clearHistoryButton = document.getElementById('clearHistoryButton');
     const historyDiv = document.getElementById('history');
+    const aboutBtn = document.getElementById('aboutBtn');
+    const aboutText = document.getElementById('aboutText');
+    const mapDiv = document.getElementById('map');
+    let map; let mapMarkers = [];
         const API_BASE = 'http://localhost:3000';
 
     const countryTlds = {
@@ -110,15 +124,45 @@
         domainsInput.value = domains.join(', ');
     });
 
+    aboutBtn.addEventListener('click', () => {
+        aboutText.classList.toggle('hidden');
+    });
+
+    function initMap() {
+        map = L.map('map').setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+    }
+    initMap();
+
+    function clearMap() {
+        mapMarkers.forEach(m => map.removeLayer(m));
+        mapMarkers = [];
+    }
+
+    function updateMap(domain, geos) {
+        if (!geos || !geos.length) return;
+        mapDiv.classList.remove('hidden');
+        geos.forEach(g => {
+            const marker = L.marker([g.lat, g.lon]).addTo(map).bindPopup(`${domain} (${g.ip}) - ${g.country || ''}`);
+            mapMarkers.push(marker);
+        });
+        map.setView([geos[0].lat, geos[0].lon], 2);
+    }
+
     const checkConfig = {
         dnssec: { label: 'DNSSEC' },
+        ipv4: { label: 'IPv4' },
         ipv6: { label: 'IPv6' },
+        asn: { label: 'ASN' },
+        rpki: { label: 'RPKI' },
+        whois: { label: 'WHOIS' },
         dmarc: { label: 'DMARC' },
         spf: { label: 'SPF' },
         dkim: { label: 'DKIM' },
         mx: { label: 'MX' },
-        smtputf8: { label: 'SMTPUTF8' },
-        rpki: { label: 'RPKI' }
+        smtputf8: { label: 'SMTPUTF8' }
     };
 
     function loadHistory() {
@@ -127,13 +171,28 @@
             historyDiv.innerHTML = '<div class="text-center text-gray-500">Sin historial</div>';
             return;
         }
-        const list = history.map(d => `<li class="py-1">${d}</li>`).join('');
-        historyDiv.innerHTML = `<ul class="list-disc pl-5">${list}</ul>`;
+        let html = '';
+        history.forEach(entry => {
+            html += `<div class="mb-4"><h4 class="font-semibold mb-2">${entry.date}</h4>`;
+            html += '<div class="overflow-auto"><table class="min-w-full text-sm border"><thead><tr><th class="border px-2 py-1">Dominio</th>';
+            entry.checks.forEach(c => { html += `<th class="border px-2 py-1">${checkConfig[c]?.label || c}</th>`; });
+            html += '</tr></thead><tbody>';
+            entry.domains.forEach(d => {
+                html += `<tr><td class="border px-2 py-1">${d.domain}</td>`;
+                entry.checks.forEach(c => {
+                    const val = d.results[c]?.status || '-';
+                    html += `<td class="border px-2 py-1 text-center">${val}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div></div>';
+        });
+        historyDiv.innerHTML = html;
     }
 
-    function saveHistory(domains) {
+    function saveHistory(entry) {
         const history = JSON.parse(localStorage.getItem('domainHistory') || '[]');
-        domains.forEach(d => { if (!history.includes(d)) history.push(d); });
+        history.push(entry);
         localStorage.setItem('domainHistory', JSON.stringify(history));
     }
 
@@ -171,8 +230,9 @@
         const card = document.createElement('div');
         card.className = 'p-4 rounded-lg bg-gray-50 border border-gray-200 shadow-sm';
         const groups = {
-            "Configuración DNS y Red": ['dnssec', 'ipv6', 'rpki'],
-              "Registros de Correo y EAI": ['dmarc', 'spf', 'dkim', 'smtputf8', 'mx']
+            "Configuración DNS y Red": ['dnssec', 'ipv4', 'ipv6', 'asn', 'rpki'],
+            "Registros de Correo y EAI": ['dmarc', 'spf', 'dkim', 'smtputf8', 'mx'],
+            "Información del Dominio": ['whois']
         };
         let cardHtml = `<h3 class="font-bold text-xl text-gray-800 mb-4 pb-2 border-b">${domain}</h3>`;
         for (const [groupTitle, checkKeys] of Object.entries(groups)) {
@@ -202,12 +262,34 @@
                     for (const [method, res] of Object.entries(data.methods)) {
                         parts.push(`${method}: parent ${res.parent ? 'sí' : 'no'}, child ${res.child ? 'sí' : 'no'}`);
                     }
+                    if (data.algorithms?.length) parts.push(`Algoritmos: ${data.algorithms.join(', ')}`);
                     const ok = Object.values(data.methods).some(r => r.parent && r.child);
                     return { label, status: ok ? 'ok' : 'fail', details: parts.join(' | ') };
                 }
+                case 'ipv4': {
+                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=A`);
+                    const ips = data.Answer?.filter(r => r.type === 1).map(r => r.data) || [];
+                    const geos = [];
+                    for (const ip of ips) {
+                        try {
+                            const info = await fetchWithTimeout(`https://ipapi.co/${ip}/json/`);
+                            geos.push({ ip, country: info.country_name, lat: info.latitude, lon: info.longitude, asn: info.asn });
+                        } catch (e) {}
+                    }
+                    const details = ips.length ? ips.join(', ') : 'No tiene IPv4';
+                    return { label, status: ips.length ? 'ok' : 'fail', details, geos };
+                }
                 case 'ipv6': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=AAAA`);
-                    return { label, status: data.Answer ? 'ok' : 'fail', details: data.Answer ? 'Registro AAAA encontrado' : 'No permite IPv6' };
+                    const ips = data.Answer?.filter(r => r.type === 28).map(r => r.data) || [];
+                    return { label, status: ips.length ? 'ok' : 'fail', details: ips.length ? ips.join(', ') : 'No tiene IPv6' };
+                }
+                case 'asn': {
+                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=A`);
+                    const ip = data.Answer?.find(r => r.type === 1)?.data;
+                    if (!ip) return { label, status: 'fail', details: 'Sin IPv4' };
+                    const info = await fetchWithTimeout(`https://ipapi.co/${ip}/json/`);
+                    return { label, status: info.asn ? 'ok' : 'fail', details: info.asn || 'Sin datos' };
                 }
                 case 'dmarc': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=_dmarc.${domain}&type=TXT`);
@@ -251,6 +333,11 @@
                     }).join('; ') || 'No permite RPKI';
                     return { label, status: data.valid ? 'ok' : 'fail', details };
                 }
+                case 'whois': {
+                    const data = await fetchWithTimeout(`${API_BASE}/whois/${domain}`);
+                    const details = data.country ? `${data.name || 'Desconocido'} (${data.country})` : (data.name || 'Desconocido');
+                    return { label, status: data.name ? 'ok' : 'fail', details };
+                }
             }
         } catch (error) {
             return { label, status: 'error', details: error.message };
@@ -270,12 +357,14 @@
             }
         });
         renderResultCard(domain, finalResults);
+        return { domain, results: finalResults };
     }
 
     async function handleAnalysis() {
         resultsContainer.innerHTML = '';
         loader.style.display = 'flex';
         checkButton.disabled = true;
+        clearMap();
 
         const domains = domainsInput.value.trim().split(',').map(d => d.trim()).filter(Boolean);
         const selectedChecks = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.dataset.check);
@@ -287,8 +376,13 @@
             return;
         }
 
-        await Promise.all(domains.map(domain => analyzeDomain(domain, selectedChecks)));
-        saveHistory(domains);
+        const historyEntry = { date: new Date().toLocaleString(), checks: selectedChecks, domains: [] };
+        for (const domain of domains) {
+            const res = await analyzeDomain(domain, selectedChecks);
+            historyEntry.domains.push(res);
+            if (res.results.ipv4?.geos) updateMap(domain, res.results.ipv4.geos);
+        }
+        saveHistory(historyEntry);
 
         loader.style.display = 'none';
         checkButton.disabled = false;
