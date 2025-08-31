@@ -352,8 +352,15 @@
                 case 'rpki': {
                     const data = await fetchWithTimeout(`${API_BASE}/rpki/${domain}`);
                     if (data.error) return { label, status: 'error', details: data.error };
-                    const details = data.results?.map(r => `${r.ip}: ${r.valid ? 'válido' : 'inválido'}${r.asn ? ' AS'+r.asn : ''}`).join('; ') || 'No tiene RPKI';
-                    return { label, status: data.valid ? 'ok' : 'fail', details };
+                    if (!data.results?.length) return { label, status: 'error', details: 'Sin datos' };
+                    const details = data.results.map(r => {
+                        const state = r.state === 'valid' ? 'válido' : r.state === 'invalid' ? 'inválido' : 'desconocido';
+                        return `${r.ip}: ${state}${r.asn ? ' AS' + r.asn : ''}`;
+                    }).join('; ');
+                    let status = 'error';
+                    if (data.results.some(r => r.state === 'valid')) status = 'ok';
+                    else if (data.results.some(r => r.state === 'invalid')) status = 'fail';
+                    return { label, status, details };
                 }
                 case 'whois': {
                     const data = await fetchWithTimeout(`${API_BASE}/whois/${domain}`);
