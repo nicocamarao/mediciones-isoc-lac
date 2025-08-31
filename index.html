@@ -29,7 +29,10 @@
             <p class="text-gray-500 mt-2">Proyecto colaborativo de capítulos de Internet Society para mediciones abiertas de la región LAC.</p>
             <button id="aboutBtn" class="text-blue-600 underline text-sm mt-2">Acerca de</button>
             <div id="aboutText" class="hidden mt-4 text-sm text-gray-700">
-                ISOC Capítulo Uruguay, junto a otros capítulos de la región unieron esfuerzos para esta herramienta abierta, que luego servirá para conectarla con ISOC Pulse para recabar información de la región LAC.
+                El Capítulo Uruguay de Internet Society, junto a otros capítulos de la región,
+                desarrolló esta herramienta abierta para medir la adopción de tecnologías y buenas prácticas
+                en América Latina y el Caribe. Esta plataforma se integrará con ISOC Pulse para
+                recopilar y compartir información regional.
             </div>
         </div>
 
@@ -100,7 +103,7 @@
         const API_BASE = 'http://localhost:3000';
 
     const countryTlds = {
-        'Uruguay': ['uy','com.uy','edu.uy','gub.uy','org.uy','net.uy'],
+        'Uruguay': ['uy','com.uy','edu.uy','gub.uy','org.uy','net.uy','mil.uy','destinosnaturales.gub.uy','agesic.gub.uy'],
         'Argentina': ['ar','com.ar','gob.ar','edu.ar','org.ar','net.ar'],
         'Brasil': ['br','com.br','gov.br','edu.br','org.br','net.br'],
         'Ecuador': ['ec','com.ec','gob.ec','edu.ec','org.ec','net.ec'],
@@ -258,13 +261,11 @@
             switch (checkType) {
                 case 'dnssec': {
                     const data = await fetchWithTimeout(`${API_BASE}/dnssec/${domain}`);
-                    const parts = [];
-                    for (const [method, res] of Object.entries(data.methods)) {
-                        parts.push(`${method}: parent ${res.parent ? 'sí' : 'no'}, child ${res.child ? 'sí' : 'no'}`);
-                    }
-                    if (data.algorithms?.length) parts.push(`Algoritmos: ${data.algorithms.join(', ')}`);
-                    const ok = Object.values(data.methods).some(r => r.parent && r.child);
-                    return { label, status: ok ? 'ok' : 'fail', details: parts.join(' | ') };
+                    const ok = data.valid;
+                    const details = ok
+                        ? (data.algorithms?.length ? `Algoritmos: ${data.algorithms.join(', ')}` : 'DNSSEC configurado')
+                        : '¡No tiene DNSSEC!';
+                    return { label, status: ok ? 'ok' : 'fail', details };
                 }
                 case 'ipv4': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=A`);
@@ -327,10 +328,10 @@
                 case 'rpki': {
                     const data = await fetchWithTimeout(`${API_BASE}/rpki/${domain}`);
                     const details = data.results?.map(r => {
-                        const statStatus = r.ripeStat?.status || '-';
+                        const estado = r.ripeStat?.status || '-';
                         const asn = r.ripeStat?.asn ? ` AS${r.ripeStat.asn}` : '';
-                        return `${r.ip}: CF ${r.cloudflare ? 'sí' : 'no'}, RIPE ${r.ripe ? 'sí' : 'no'}, Stat ${statStatus}${asn}`;
-                    }).join('; ') || 'No permite RPKI';
+                        return `${r.ip}: Cloudflare ${r.cloudflare ? 'sí' : 'no'}, RIPE ${r.ripe ? 'sí' : 'no'}, Estado ${estado}${asn}`;
+                    }).join('; ') || 'No tiene RPKI';
                     return { label, status: data.valid ? 'ok' : 'fail', details };
                 }
                 case 'whois': {

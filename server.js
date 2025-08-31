@@ -1,5 +1,6 @@
 const http = require('http');
 const dns = require('dns').promises;
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 const net = require('net');
 const url = require('url');
 const https = require('https');
@@ -108,21 +109,6 @@ async function handleSmtpUtf8(domain, res) {
   }
 }
 
-async function dnssecSystem(domain) {
-  const result = { parent: false, child: false, algorithms: [] };
-  try {
-    const ds = await dns.resolve(domain, 'DS');
-    result.parent = ds.length > 0;
-    result.algorithms.push(...ds.map(r => ALGO_MAP[r.algorithm] || String(r.algorithm)));
-  } catch (e) {}
-  try {
-    const dnskey = await dns.resolve(domain, 'DNSKEY');
-    result.child = dnskey.length > 0;
-    result.algorithms.push(...dnskey.map(r => ALGO_MAP[r.algorithm] || String(r.algorithm)));
-  } catch (e) {}
-  return result;
-}
-
 async function dnssecGoogle(domain) {
   const result = { parent: false, child: false, algorithms: [] };
   try {
@@ -151,16 +137,10 @@ async function dnssecGoogle(domain) {
 }
 
 async function handleDnssec(domain, res) {
-  const methods = {
-    system: await dnssecSystem(domain),
-    google: await dnssecGoogle(domain)
-  };
-  const algorithms = [...new Set([
-    ...methods.system.algorithms,
-    ...methods.google.algorithms
-  ].filter(Boolean))];
-  const valid = Object.values(methods).some(m => m.parent && m.child);
-  sendJSON(res, 200, { domain, methods, algorithms, valid });
+  const google = await dnssecGoogle(domain);
+  const algorithms = [...new Set(google.algorithms.filter(Boolean))];
+  const valid = google.parent && google.child;
+  sendJSON(res, 200, { domain, methods: { google }, algorithms, valid });
 }
 
 async function handleDkim(domain, selector, res) {
@@ -182,6 +162,16 @@ function fetchJSON(target) {
       r.on('end', () => {
         try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
       });
+    }).on('error', reject);
+  });
+}
+
+function fetchText(target) {
+  return new Promise((resolve, reject) => {
+    https.get(target, r => {
+      let data = '';
+      r.on('data', chunk => (data += chunk));
+      r.on('end', () => resolve(data));
     }).on('error', reject);
   });
 }
@@ -237,22 +227,14 @@ async function handleRpki(domain, res) {
 
 async function handleWhois(domain, res) {
   try {
-    const data = await fetchJSON(`https://rdap.org/domain/${domain}`);
-    let name = data?.name || '';
-    let country = '';
-    if (Array.isArray(data?.entities)) {
-      const ent = data.entities.find(e => Array.isArray(e.vcardArray));
-      if (ent && Array.isArray(ent.vcardArray[1])) {
-        const vc = ent.vcardArray[1];
-        const fn = vc.find(i => i[0] === 'fn');
-        if (fn) name = fn[3];
-        const adr = vc.find(i => i[0] === 'adr');
-        if (adr && Array.isArray(adr[3])) {
-          const addr = adr[3];
-          country = addr[6] || addr[5] || '';
-        }
-      }
-    }
+    const html = await fetchText(`https://www.whois.com/whois/${domain}`);
+    const match = html.match(/<pre[^>]*id="registrarData">([\s\S]*?)<\/pre>/i);
+    if (!match) return sendJSON(res, 500, { valid: false, message: 'No se pudo obtener WHOIS' });
+    const text = match[1].replace(/<[^>]+>/g, '').trim();
+    const nameMatch = text.match(/Registrant Organization:\s*(.*)/i);
+    const countryMatch = text.match(/Registrant Country:\s*(.*)/i);
+    const name = nameMatch ? nameMatch[1].trim() : '';
+    const country = countryMatch ? countryMatch[1].trim() : '';
     sendJSON(res, 200, { domain, name, country });
   } catch (e) {
     sendJSON(res, 500, { valid: false, message: e.message });
