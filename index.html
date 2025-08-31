@@ -53,12 +53,18 @@
                  </div>
         </div>
 
-        <div class="flex items-center justify-center">
+        <div class="flex flex-col items-center justify-center">
             <button id="checkButton" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105 flex items-center justify-center space-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 9a2 2 0 114 0 2 2 0 01-4 0z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a4 4 0 00-3.446 6.032l-2.261 2.26a1 1 0 101.414 1.414l2.26-2.26a4 4 0 10-1.15-7.446z" clip-rule="evenodd" /></svg>
                 <span>Analizar Dominios</span>
             </button>
+            <div class="flex space-x-4 mt-4">
+                <button id="historyButton" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Ver Historial</button>
+                <button id="clearHistoryButton" class="bg-gray-400 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">Limpiar Historial</button>
+            </div>
         </div>
+
+        <div id="history" class="mt-6 hidden"></div>
 
         <div id="results-container" class="mt-8">
             <div id="loader" class="hidden items-center justify-center py-4">
@@ -74,6 +80,9 @@
     const resultsContainer = document.getElementById('results');
     const loader = document.getElementById('loader');
     const checkboxes = document.querySelectorAll('input[type="checkbox"][data-check]');
+    const historyButton = document.getElementById('historyButton');
+    const clearHistoryButton = document.getElementById('clearHistoryButton');
+    const historyDiv = document.getElementById('history');
         const API_BASE = 'http://localhost:3000';
 
     const countryTlds = {
@@ -111,6 +120,22 @@
         smtputf8: { label: 'SMTPUTF8' },
         rpki: { label: 'RPKI' }
     };
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('domainHistory') || '[]');
+        if (!history.length) {
+            historyDiv.innerHTML = '<div class="text-center text-gray-500">Sin historial</div>';
+            return;
+        }
+        const list = history.map(d => `<li class="py-1">${d}</li>`).join('');
+        historyDiv.innerHTML = `<ul class="list-disc pl-5">${list}</ul>`;
+    }
+
+    function saveHistory(domains) {
+        const history = JSON.parse(localStorage.getItem('domainHistory') || '[]');
+        domains.forEach(d => { if (!history.includes(d)) history.push(d); });
+        localStorage.setItem('domainHistory', JSON.stringify(history));
+    }
 
     async function fetchWithTimeout(resource, options = {}, timeout = 20000) {
         const controller = new AbortController();
@@ -263,10 +288,21 @@
         }
 
         await Promise.all(domains.map(domain => analyzeDomain(domain, selectedChecks)));
+        saveHistory(domains);
 
         loader.style.display = 'none';
         checkButton.disabled = false;
     }
+
+    historyButton.addEventListener('click', () => {
+        const hidden = historyDiv.classList.toggle('hidden');
+        if (!hidden) loadHistory();
+    });
+
+    clearHistoryButton.addEventListener('click', () => {
+        localStorage.removeItem('domainHistory');
+        loadHistory();
+    });
 
     checkButton.addEventListener('click', handleAnalysis);
 </script>
