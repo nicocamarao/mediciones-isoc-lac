@@ -205,11 +205,11 @@
         try {
             const response = await fetch(resource, { ...options, signal: controller.signal });
             clearTimeout(id);
-            if (!response.ok) throw new Error(`API falló (${response.status})`);
+            if (!response.ok) throw new Error('Servicio no disponible');
             return response.json();
         } catch (error) {
             clearTimeout(id);
-            throw new Error(error.name === 'AbortError' ? 'Timeout' : error.message);
+            throw new Error(error.name === 'AbortError' ? 'Timeout' : 'Servicio no disponible');
         }
     }
 
@@ -222,6 +222,9 @@
             case 'fail':
                 icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
                 color = 'text-red-600'; text = details; break;
+            case 'error':
+                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                color = 'text-gray-500'; text = details; break;
             default:
                 icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
                 color = 'text-yellow-600'; text = details; break;
@@ -229,30 +232,47 @@
         return `<div class="flex items-center ${color}"><span class="mr-2 flex-shrink-0">${icon}</span><span class="font-semibold text-sm">${text}</span></div>`;
     }
 
-    function renderResultCard(domain, results) {
+    function createResultCard(domain, selectedChecks) {
         const card = document.createElement('div');
         card.className = 'p-4 rounded-lg bg-gray-50 border border-gray-200 shadow-sm';
+        const title = document.createElement('h3');
+        title.className = 'font-bold text-xl text-gray-800 mb-4 pb-2 border-b';
+        title.textContent = domain;
+        card.appendChild(title);
+
         const groups = {
             "Configuración DNS y Red": ['dnssec', 'ipv4', 'ipv6', 'asn', 'rpki'],
             "Registros de Correo y EAI": ['dmarc', 'spf', 'dkim', 'smtputf8', 'mx'],
             "Información del Dominio": ['whois']
         };
-        let cardHtml = `<h3 class="font-bold text-xl text-gray-800 mb-4 pb-2 border-b">${domain}</h3>`;
+
+        const placeholders = {};
+
         for (const [groupTitle, checkKeys] of Object.entries(groups)) {
-            const groupResults = checkKeys.map(key => results[key]).filter(Boolean);
-            if (groupResults.length > 0) {
-                cardHtml += `<h4 class="text-md font-semibold text-gray-700 mt-4 mb-2">${groupTitle}</h4>`;
-                groupResults.forEach(({ label, status, details }) => {
-                    cardHtml += `
-                        <div class="result-item flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                            <span class="label text-sm font-medium text-gray-600">${label}</span>
-                            ${getStatusHtml(status, details)}
-                        </div>`;
-                });
-            }
+            const filtered = selectedChecks.filter(c => checkKeys.includes(c));
+            if (!filtered.length) continue;
+            const h4 = document.createElement('h4');
+            h4.className = 'text-md font-semibold text-gray-700 mt-4 mb-2';
+            h4.textContent = groupTitle;
+            card.appendChild(h4);
+            filtered.forEach(c => {
+                const row = document.createElement('div');
+                row.className = 'result-item flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0';
+                const label = document.createElement('span');
+                label.className = 'label text-sm font-medium text-gray-600';
+                label.textContent = checkConfig[c].label;
+                const placeholder = document.createElement('span');
+                placeholder.className = 'text-gray-500 flex items-center';
+                placeholder.innerHTML = '<div class="loader mr-2"></div><span>Cargando...</span>';
+                row.appendChild(label);
+                row.appendChild(placeholder);
+                card.appendChild(row);
+                placeholders[c] = placeholder;
+            });
         }
-        card.innerHTML = cardHtml;
+
         resultsContainer.appendChild(card);
+        return placeholders;
     }
 
     async function getCheckResult(checkType, domain) {
@@ -304,15 +324,18 @@
                 }
                 case 'dkim': {
                     const data = await fetchWithTimeout(`${API_BASE}/dkim/${domain}?selector=default`);
+                    if (data.error) return { label, status: 'error', details: data.error };
                     return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Registro encontrado' : 'No permite DKIM' };
                 }
                 case 'mx': {
                     const data = await fetchWithTimeout(`${API_BASE}/mx/${domain}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
                     const details = data.records?.map(r => `${r.exchange} (p${r.priority})`).join(', ') || 'No permite MX';
                     return { label, status: data.records?.length ? 'ok' : 'fail', details };
                 }
                 case 'smtputf8': {
                     const data = await fetchWithTimeout(`${API_BASE}/smtputf8/${domain}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
                     const details = data.results?.map(r => {
                         switch (r.status) {
                             case 'supports': return `${r.server}: sí`;
@@ -327,6 +350,7 @@
                 }
                 case 'rpki': {
                     const data = await fetchWithTimeout(`${API_BASE}/rpki/${domain}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
                     const details = data.results?.map(r => {
                         const estado = r.ripeStat?.status || '-';
                         const asn = r.ripeStat?.asn ? ` AS${r.ripeStat.asn}` : '';
@@ -336,6 +360,7 @@
                 }
                 case 'whois': {
                     const data = await fetchWithTimeout(`${API_BASE}/whois/${domain}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
                     const details = data.country ? `${data.name || 'Desconocido'} (${data.country})` : (data.name || 'Desconocido');
                     return { label, status: data.name ? 'ok' : 'fail', details };
                 }
@@ -346,18 +371,19 @@
     }
 
     async function analyzeDomain(domain, selectedChecks) {
-        const promises = selectedChecks.map(checkType => getCheckResult(checkType, domain));
-        const settledResults = await Promise.allSettled(promises);
+        const placeholders = createResultCard(domain, selectedChecks);
         const finalResults = {};
-        settledResults.forEach((res, index) => {
-            const checkType = selectedChecks[index];
-            if (res.status === 'fulfilled' && res.value) {
-                finalResults[checkType] = res.value;
-            } else if (res.status === 'rejected') {
-                finalResults[checkType] = { label: checkConfig[checkType].label, status: 'error', details: res.reason.message };
+        const promises = selectedChecks.map(async checkType => {
+            try {
+                const res = await getCheckResult(checkType, domain);
+                finalResults[checkType] = res;
+                placeholders[checkType].innerHTML = getStatusHtml(res.status, res.details);
+            } catch (err) {
+                finalResults[checkType] = { label: checkConfig[checkType].label, status: 'error', details: err.message };
+                placeholders[checkType].innerHTML = getStatusHtml('error', err.message);
             }
         });
-        renderResultCard(domain, finalResults);
+        await Promise.allSettled(promises);
         return { domain, results: finalResults };
     }
 

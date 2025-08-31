@@ -2,7 +2,6 @@ const http = require('http');
 const dns = require('dns').promises;
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 const net = require('net');
-const url = require('url');
 const https = require('https');
 
 const ALGO_MAP = {
@@ -33,7 +32,7 @@ async function handleMx(domain, res) {
     const records = await dns.resolveMx(domain);
     sendJSON(res, 200, { domain, records });
   } catch (e) {
-    sendJSON(res, 500, { valid: false, message: e.message });
+    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
   }
 }
 
@@ -105,7 +104,7 @@ async function handleSmtpUtf8(domain, res) {
     }
     sendJSON(res, 200, { domain, results });
   } catch (e) {
-    sendJSON(res, 500, { valid: false, message: e.message });
+    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
   }
 }
 
@@ -211,6 +210,7 @@ async function handleRpki(domain, res) {
     const v4 = await dns.resolve4(domain).catch(() => []);
     const v6 = await dns.resolve6(domain).catch(() => []);
     const ips = [...v4, ...v6];
+    if (!ips.length) return sendJSON(res, 200, { domain, error: 'Sin direcciones IP' });
     const results = [];
     for (const ip of ips) {
       const cloudflare = await rpkiCloudflare(ip);
@@ -221,7 +221,7 @@ async function handleRpki(domain, res) {
     const valid = results.some(r => r.cloudflare || r.ripe || /^valid$/i.test(r.ripeStat.status));
     sendJSON(res, 200, { domain, results, valid });
   } catch (e) {
-    sendJSON(res, 500, { valid: false, message: e.message });
+    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
   }
 }
 
@@ -229,7 +229,7 @@ async function handleWhois(domain, res) {
   try {
     const html = await fetchText(`https://www.whois.com/whois/${domain}`);
     const match = html.match(/<pre[^>]*id="registrarData">([\s\S]*?)<\/pre>/i);
-    if (!match) return sendJSON(res, 500, { valid: false, message: 'No se pudo obtener WHOIS' });
+    if (!match) return sendJSON(res, 200, { domain, error: 'No se pudo obtener WHOIS' });
     const text = match[1].replace(/<[^>]+>/g, '').trim();
     const nameMatch = text.match(/Registrant Organization:\s*(.*)/i);
     const countryMatch = text.match(/Registrant Country:\s*(.*)/i);
@@ -237,17 +237,17 @@ async function handleWhois(domain, res) {
     const country = countryMatch ? countryMatch[1].trim() : '';
     sendJSON(res, 200, { domain, name, country });
   } catch (e) {
-    sendJSON(res, 500, { valid: false, message: e.message });
+    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
   }
 }
 
 const server = http.createServer(async (req, res) => {
-  const parsed = url.parse(req.url, true);
+  const parsed = new URL(req.url, 'http://localhost');
   const segments = parsed.pathname.split('/').filter(Boolean);
   if (segments[0] === 'mx' && segments[1]) return handleMx(segments[1], res);
   if (segments[0] === 'smtputf8' && segments[1]) return handleSmtpUtf8(segments[1], res);
   if (segments[0] === 'dnssec' && segments[1]) return handleDnssec(segments[1], res);
-  if (segments[0] === 'dkim' && segments[1]) return handleDkim(segments[1], parsed.query.selector || 'default', res);
+  if (segments[0] === 'dkim' && segments[1]) return handleDkim(segments[1], parsed.searchParams.get('selector') || 'default', res);
   if (segments[0] === 'rpki' && segments[1]) return handleRpki(segments[1], res);
   if (segments[0] === 'whois' && segments[1]) return handleWhois(segments[1], res);
   sendJSON(res, 404, { error: 'Not found' });
