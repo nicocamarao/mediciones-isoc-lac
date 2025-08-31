@@ -23,3 +23,4 @@ El cliente web en `index.html` consume estos endpoints y muestra los resultados 
 ## Mario Bros en HTML5
 
 En la carpeta `mario/` se incluye un pequeño juego tipo *Mario Bros* desarrollado con Canvas. Para jugarlo, abre `mario/index.html` en un navegador compatible con HTML5.
+
