@@ -175,33 +175,17 @@ function fetchText(target) {
   });
 }
 
-async function rpkiCloudflare(ip) {
+async function rpkiValidity(ip) {
   try {
-    const data = await fetchJSON(`https://rpki.cloudflare.com/api/v1/roas?ip=${ip}`);
-    return Array.isArray(data?.roas) && data.roas.length > 0;
+    const info = await fetchJSON(`https://api.bgpview.io/ip/${ip}`);
+    const prefix = info?.data?.prefixes?.[0]?.prefix;
+    const asn = info?.data?.asns?.[0]?.asn;
+    if (!prefix || !asn) return { valid: false, asn: null };
+    const val = await fetchJSON(`https://rpki-validator.ripe.net/api/validity?prefix=${prefix}&asn=${asn}`);
+    const validity = val?.validity || val?.state?.validity || 'unknown';
+    return { valid: validity.toLowerCase() === 'valid', asn };
   } catch (e) {
-    return false;
-  }
-}
-
-async function rpkiRipe(ip) {
-  try {
-    const data = await fetchJSON(`https://stat.ripe.net/data/rpki-validation/data.json?resource=${ip}`);
-    return data?.data?.validity === 'valid';
-  } catch (e) {
-    return false;
-  }
-}
-
-async function rpkiRipeStat(ip) {
-  try {
-    const data = await fetchJSON(`https://stat.ripe.net/data/overview/data.json?resource=${ip}`);
-    return {
-      status: data?.data?.rpki?.status || 'unknown',
-      asn: Array.isArray(data?.data?.asns) && data.data.asns.length ? data.data.asns[0].asn : null
-    };
-  } catch (e) {
-    return { status: 'error', asn: null };
+    return { valid: false, asn: null };
   }
 }
 
@@ -213,13 +197,11 @@ async function handleRpki(domain, res) {
     if (!ips.length) return sendJSON(res, 200, { domain, error: 'Sin direcciones IP' });
     const results = [];
     for (const ip of ips) {
-      const cloudflare = await rpkiCloudflare(ip);
-      const ripe = await rpkiRipe(ip);
-      const ripeStat = await rpkiRipeStat(ip);
-      results.push({ ip, cloudflare, ripe, ripeStat });
+      const { valid, asn } = await rpkiValidity(ip);
+      results.push({ ip, valid, asn });
     }
-    const valid = results.some(r => r.cloudflare || r.ripe || /^valid$/i.test(r.ripeStat.status));
-    sendJSON(res, 200, { domain, results, valid });
+    const overall = results.some(r => r.valid);
+    sendJSON(res, 200, { domain, results, valid: overall });
   } catch (e) {
     sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
   }

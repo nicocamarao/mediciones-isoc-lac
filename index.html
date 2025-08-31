@@ -147,6 +147,7 @@
     function updateMap(domain, geos) {
         if (!geos || !geos.length) return;
         mapDiv.classList.remove('hidden');
+        map.invalidateSize();
         geos.forEach(g => {
             const marker = L.marker([g.lat, g.lon]).addTo(map).bindPopup(`${domain} (${g.ip}) - ${g.country || ''}`);
             mapMarkers.push(marker);
@@ -351,11 +352,7 @@
                 case 'rpki': {
                     const data = await fetchWithTimeout(`${API_BASE}/rpki/${domain}`);
                     if (data.error) return { label, status: 'error', details: data.error };
-                    const details = data.results?.map(r => {
-                        const estado = r.ripeStat?.status || '-';
-                        const asn = r.ripeStat?.asn ? ` AS${r.ripeStat.asn}` : '';
-                        return `${r.ip}: Cloudflare ${r.cloudflare ? 'sí' : 'no'}, RIPE ${r.ripe ? 'sí' : 'no'}, Estado ${estado}${asn}`;
-                    }).join('; ') || 'No tiene RPKI';
+                    const details = data.results?.map(r => `${r.ip}: ${r.valid ? 'válido' : 'inválido'}${r.asn ? ' AS'+r.asn : ''}`).join('; ') || 'No tiene RPKI';
                     return { label, status: data.valid ? 'ok' : 'fail', details };
                 }
                 case 'whois': {
