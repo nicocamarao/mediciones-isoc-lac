@@ -185,14 +185,16 @@ function fetchText(target) {
 
 async function rpkiValidity(ip) {
   try {
-    const info = await fetchJSON(`https://api.bgpview.io/ip/${ip}`);
-    const prefix = info?.data?.prefixes?.[0]?.prefix;
-    const asn =
-      info?.data?.prefixes?.[0]?.asn?.asn || info?.data?.asns?.[0]?.asn || null;
+    const info = await fetchJSON(
+      `https://stat.ripe.net/data/network-info/data.json?resource=${ip}`
+    );
+    const prefix =
+      info?.data?.prefix || info?.data?.resources?.[0] || info?.data?.resource;
+    const asn = info?.data?.asns?.[0]?.asn || info?.data?.asns?.[0] || null;
     if (!prefix || !asn) return { state: 'unknown', asn };
 
     const validators = [
-      `https://rpki-validator.ripe.net/api/validity?prefix=${prefix}&asn=${asn}`,
+      `https://stat.ripe.net/data/rpki-validation/data.json?resource=${prefix}&origin_asn=${asn}`,
       `https://rpki.cloudflare.com/api/v1/validity?prefix=${prefix}&asn=${asn}`
     ];
 
@@ -200,8 +202,8 @@ async function rpkiValidity(ip) {
       try {
         const val = await fetchJSON(url);
         const validity =
-          val?.validity || val?.state?.validity || val?.state || 'unknown';
-        if (validity) return { state: validity.toLowerCase(), asn };
+          val?.data?.validity || val?.state?.validity || val?.state || val?.validity;
+        if (validity) return { state: String(validity).toLowerCase(), asn };
       } catch (e) {}
     }
 
@@ -231,20 +233,35 @@ async function handleRpki(domain, res) {
 
 async function handleWhois(domain, res) {
   try {
-    const data = await fetchJSON(`https://rdap.org/domain/${domain}`);
-    const registrant = data.entities?.find(e => e.roles?.includes('registrant'));
     let name = '';
     let country = '';
-    const vcard = registrant?.vcardArray?.[1] || [];
-    for (const item of vcard) {
-      if (item[0] === 'fn') name = item[3];
-      if (item[0] === 'adr') {
-        const label = item[1]?.label || '';
-        country = label.split('\n').pop();
+    try {
+      const html = await fetchText(`https://www.whois.com/whois/${domain}`);
+      const orgMatch = html.match(
+        /Registrant Organization:\s*<\/div>\s*<div class="df-value">([^<]*)/i
+      );
+      if (orgMatch) name = orgMatch[1].trim();
+      const countryMatch = html.match(
+        /Registrant Country:\s*<\/div>\s*<div class="df-value">([^<]*)/i
+      );
+      if (countryMatch) country = countryMatch[1].trim();
+    } catch (e) {}
+
+    if (!name && !country) {
+      const data = await fetchJSON(`https://rdap.org/domain/${domain}`);
+      const registrant = data.entities?.find(e => e.roles?.includes('registrant'));
+      const vcard = registrant?.vcardArray?.[1] || [];
+      for (const item of vcard) {
+        if (item[0] === 'fn') name = item[3];
+        if (item[0] === 'adr') {
+          const label = item[1]?.label || '';
+          country = label.split('\n').pop();
+        }
+        if (item[0] === 'country') country = item[3];
       }
-      if (item[0] === 'country') country = item[3];
+      if (!name && data.name) name = data.name;
     }
-    if (!name && data.name) name = data.name;
+
     sendJSON(res, 200, { domain, name, country });
   } catch (e) {
     sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
