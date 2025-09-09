@@ -73,6 +73,13 @@
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="permissions" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Permissions-Policy</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="xxss" class="h-4 w-4 rounded"><span class="ml-2 text-sm">X-XSS-Protection</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="server" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Encabezado Server</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="compression" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Compresión HTTP</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="ocsp" class="h-4 w-4 rounded"><span class="ml-2 text-sm">OCSP Stapling</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="tls" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Versión TLS</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="key" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Intercambio de Clave</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="caa" class="h-4 w-4 rounded"><span class="ml-2 text-sm">CAA</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="tlsa" class="h-4 w-4 rounded"><span class="ml-2 text-sm">TLSA</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="securitytxt" class="h-4 w-4 rounded"><span class="ml-2 text-sm">security.txt</span></label>
                 </div>
         </div>
 
@@ -112,6 +119,7 @@
     let map; let mapMarkers = [];
         const API_BASE = 'http://localhost:3000';
     const headerCache = {};
+    const tlsCache = {};
 
     const countryTlds = {
         'Uruguay': ['uy','com.uy','edu.uy','gub.uy','org.uy','net.uy','mil.uy','destinosnaturales.gub.uy','agesic.gub.uy'],
@@ -208,7 +216,14 @@
         referrer: { label: 'Referrer-Policy' },
         permissions: { label: 'Permissions-Policy' },
         xxss: { label: 'X-XSS-Protection' },
-        server: { label: 'Encabezado Server' }
+        server: { label: 'Encabezado Server' },
+        compression: { label: 'Compresión HTTP' },
+        ocsp: { label: 'OCSP Stapling' },
+        tls: { label: 'Versión TLS' },
+        key: { label: 'Intercambio de Clave' },
+        caa: { label: 'CAA' },
+        tlsa: { label: 'TLSA' },
+        securitytxt: { label: 'security.txt' }
     };
 
     function loadHistory() {
@@ -242,6 +257,11 @@
         localStorage.setItem('domainHistory', JSON.stringify(history));
     }
 
+    function toASCII(domain) {
+        try { return new URL('http://' + domain).hostname; }
+        catch (e) { return domain; }
+    }
+
     async function fetchWithTimeout(resource, options = {}, timeout = 20000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
@@ -257,9 +277,18 @@
     }
 
     async function getSecurityHeaders(domain) {
-        if (headerCache[domain]) return headerCache[domain];
-        const data = await fetchWithTimeout(`${API_BASE}/headers/${domain}`);
-        headerCache[domain] = data;
+        const ascii = toASCII(domain);
+        if (headerCache[ascii]) return headerCache[ascii];
+        const data = await fetchWithTimeout(`${API_BASE}/headers/${ascii}`);
+        headerCache[ascii] = data;
+        return data;
+    }
+
+    async function getTlsInfo(domain) {
+        const ascii = toASCII(domain);
+        if (tlsCache[ascii]) return tlsCache[ascii];
+        const data = await fetchWithTimeout(`${API_BASE}/tlsinfo/${ascii}`);
+        tlsCache[ascii] = data;
         return data;
     }
 
@@ -294,7 +323,7 @@
             "Configuración DNS y Red": ['dnssec', 'ipv4', 'ipv6', 'asn', 'rpki'],
             "Registros de Correo y EAI": ['dmarc', 'spf', 'dkim', 'smtputf8', 'mx'],
             "Información del Dominio": ['whois'],
-            "Web y Seguridad": ['w3c','https','redirect','hsts','csp','xfo','xcto','referrer','permissions','xxss','server']
+            "Web y Seguridad": ['w3c','https','redirect','hsts','csp','xfo','xcto','referrer','permissions','xxss','server','compression','ocsp','tls','key','caa','tlsa','securitytxt']
         };
 
         const placeholders = {};
@@ -328,10 +357,11 @@
 
     async function getCheckResult(checkType, domain) {
         const { label } = checkConfig[checkType];
+        const ascii = toASCII(domain);
         try {
             switch (checkType) {
                 case 'dnssec': {
-                    const data = await fetchWithTimeout(`${API_BASE}/dnssec/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/dnssec/${ascii}`);
                     const ok = data.valid;
                     const details = ok
                         ? (data.algorithms?.length ? `Algoritmos: ${data.algorithms.join(', ')}` : 'DNSSEC configurado')
@@ -339,7 +369,7 @@
                     return { label, status: ok ? 'ok' : 'fail', details };
                 }
                 case 'ipv4': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=A`);
+                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${ascii}&type=A`);
                     const ips = data.Answer?.filter(r => r.type === 1).map(r => r.data) || [];
                     const geos = [];
                     for (const ip of ips) {
@@ -352,40 +382,40 @@
                     return { label, status: ips.length ? 'ok' : 'fail', details, geos };
                 }
                 case 'ipv6': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=AAAA`);
+                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${ascii}&type=AAAA`);
                     const ips = data.Answer?.filter(r => r.type === 28).map(r => r.data) || [];
                     return { label, status: ips.length ? 'ok' : 'fail', details: ips.length ? ips.join(', ') : 'No tiene IPv6' };
                 }
                 case 'asn': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=A`);
+                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${ascii}&type=A`);
                     const ip = data.Answer?.find(r => r.type === 1)?.data;
                     if (!ip) return { label, status: 'fail', details: 'Sin IPv4' };
                     const info = await fetchWithTimeout(`https://ipapi.co/${ip}/json/`);
                     return { label, status: info.asn ? 'ok' : 'fail', details: info.asn || 'Sin datos' };
                 }
                 case 'dmarc': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=_dmarc.${domain}&type=TXT`);
+                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=_dmarc.${ascii}&type=TXT`);
                     const found = data.Answer?.some(r => r.data.includes("v=DMARC1"));
                     return { label, status: found ? 'ok' : 'fail', details: found ? 'Política encontrada' : 'No permite DMARC' };
                 }
                 case 'spf': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${domain}&type=TXT`);
+                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${ascii}&type=TXT`);
                     const found = data.Answer?.some(r => r.data.includes("v=spf1"));
                     return { label, status: found ? 'ok' : 'fail', details: found ? 'Registro encontrado' : 'No permite SPF' };
                 }
                 case 'dkim': {
-                    const data = await fetchWithTimeout(`${API_BASE}/dkim/${domain}?selector=default`);
+                    const data = await fetchWithTimeout(`${API_BASE}/dkim/${ascii}?selector=default`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Registro encontrado' : 'No permite DKIM' };
                 }
                 case 'mx': {
-                    const data = await fetchWithTimeout(`${API_BASE}/mx/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/mx/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const details = data.records?.map(r => `${r.exchange} (p${r.priority})`).join(', ') || 'No permite MX';
                     return { label, status: data.records?.length ? 'ok' : 'fail', details };
                 }
                 case 'smtputf8': {
-                    const data = await fetchWithTimeout(`${API_BASE}/smtputf8/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/smtputf8/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const details = data.results?.map(r => {
                         switch (r.status) {
@@ -400,7 +430,7 @@
                     return { label, status: ok ? 'ok' : 'fail', details };
                 }
                 case 'rpki': {
-                    const data = await fetchWithTimeout(`${API_BASE}/rpki/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/rpki/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     if (!data.results?.length) return { label, status: 'error', details: 'Sin datos' };
                     const details = data.results.map(r => {
@@ -413,13 +443,13 @@
                     return { label, status, details };
                 }
                 case 'whois': {
-                    const data = await fetchWithTimeout(`${API_BASE}/whois/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/whois/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const details = data.country ? `${data.name || 'Desconocido'} (${data.country})` : (data.name || 'Desconocido');
                     return { label, status: data.name ? 'ok' : 'fail', details };
                 }
                 case 'w3c': {
-                    const data = await fetchWithTimeout(`${API_BASE}/w3c/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/w3c/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const details = `${data.errors} errores, ${data.warnings} advertencias`;
                     return { label, status: data.errors === 0 ? 'ok' : 'fail', details };
@@ -473,6 +503,48 @@
                     const data = await getSecurityHeaders(domain);
                     if (data.error) return { label, status: 'error', details: data.error };
                     return { label, status: data.server ? 'fail' : 'ok', details: data.server || 'No expuesto' };
+                }
+                case 'compression': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.compression ? 'ok' : 'fail', details: data.compression ? 'Compresión habilitada' : 'Sin compresión' };
+                }
+                case 'ocsp': {
+                    const data = await getTlsInfo(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.ocsp ? 'ok' : 'fail', details: data.ocsp ? 'OCSP válido' : 'Sin OCSP' };
+                }
+                case 'tls': {
+                    const data = await getTlsInfo(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const ok = data.protocol === 'TLSv1.3' || data.protocol === 'TLSv1.2';
+                    return { label, status: ok ? 'ok' : 'fail', details: data.protocol || 'Desconocido' };
+                }
+                case 'key': {
+                    const data = await getTlsInfo(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const info = data.key || {};
+                    let ok = false;
+                    if (info.type === 'ECDH') ok = info.size >= 224;
+                    else if (info.type === 'DH') ok = info.size >= 2048;
+                    else ok = true;
+                    const details = info.type ? `${info.type}${info.size ? ' ' + info.size : ''}` : 'Sin datos';
+                    return { label, status: ok ? 'ok' : 'fail', details };
+                }
+                case 'caa': {
+                    const data = await fetchWithTimeout(`${API_BASE}/caa/${domain}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.records?.length ? 'ok' : 'fail', details: data.records?.length ? data.records.join(', ') : 'No tiene CAA' };
+                }
+                case 'tlsa': {
+                    const data = await fetchWithTimeout(`${API_BASE}/tlsa/${domain}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.records?.length ? 'ok' : 'fail', details: data.records?.length ? data.records.join(', ') : 'No tiene TLSA' };
+                }
+                case 'securitytxt': {
+                    const data = await fetchWithTimeout(`${API_BASE}/securitytxt/${domain}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Encontrado' : 'No disponible' };
                 }
             }
         } catch (error) {

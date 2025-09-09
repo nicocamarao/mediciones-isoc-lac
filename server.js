@@ -3,6 +3,8 @@ const dns = require('dns').promises;
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 const net = require('net');
 const https = require('https');
+const tls = require('tls');
+const { domainToASCII } = require('url');
 
 const ALGO_MAP = {
   1: 'RSA/MD5',
@@ -19,6 +21,24 @@ const ALGO_MAP = {
   16: 'Ed448'
 };
 
+function normalizeDomain(domain) {
+  try {
+    return domainToASCII(domain.toLowerCase());
+  } catch (e) {
+    return domain;
+  }
+}
+
+function errorMessage(e) {
+  if (e && typeof e === 'object') {
+    if (e.code === 'ENOTFOUND') return 'Dominio no encontrado';
+    if (e.code === 'ETIMEOUT') return 'Timeout';
+    if (e.code === 'ECONNREFUSED') return 'Conexión rechazada';
+    if (e.code === 'EAI_AGAIN') return 'Problema de DNS';
+  }
+  return 'Servicio no disponible';
+}
+
 function sendJSON(res, status, data) {
   res.writeHead(status, {
     'Content-Type': 'application/json',
@@ -28,11 +48,12 @@ function sendJSON(res, status, data) {
 }
 
 async function handleMx(domain, res) {
+  domain = normalizeDomain(domain);
   try {
     const records = await dns.resolveMx(domain);
     sendJSON(res, 200, { domain, records });
   } catch (e) {
-    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
 }
 
@@ -95,6 +116,7 @@ async function checkSmtpUtf8(server) {
 }
 
 async function handleSmtpUtf8(domain, res) {
+  domain = normalizeDomain(domain);
   try {
     const mx = await dns.resolveMx(domain);
     const results = [];
@@ -104,11 +126,12 @@ async function handleSmtpUtf8(domain, res) {
     }
     sendJSON(res, 200, { domain, results });
   } catch (e) {
-    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
 }
 
 async function dnssecGoogle(domain) {
+  domain = normalizeDomain(domain);
   const result = { parent: false, child: false, algorithms: [] };
   try {
     const ds = await fetchJSON(`https://dns.google/resolve?name=${domain}&type=DS`);
@@ -136,6 +159,7 @@ async function dnssecGoogle(domain) {
 }
 
 async function handleDnssec(domain, res) {
+  domain = normalizeDomain(domain);
   const google = await dnssecGoogle(domain);
   const algorithms = [...new Set(google.algorithms.filter(Boolean))];
   const valid = google.parent && google.child;
@@ -143,6 +167,7 @@ async function handleDnssec(domain, res) {
 }
 
 async function handleDkim(domain, selector, res) {
+  domain = normalizeDomain(domain);
   try {
     const txt = await dns.resolveTxt(`${selector}._domainkey.${domain}`);
     const flat = txt.flat().join('');
@@ -225,6 +250,7 @@ async function rpkiValidity(ip) {
 }
 
 async function handleRpki(domain, res) {
+  domain = normalizeDomain(domain);
   try {
     const v4 = await dns.resolve4(domain).catch(() => []);
     const v6 = await dns.resolve6(domain).catch(() => []);
@@ -238,11 +264,12 @@ async function handleRpki(domain, res) {
     const overall = results.every(r => r.state === 'valid');
     sendJSON(res, 200, { domain, results, valid: overall });
   } catch (e) {
-    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
 }
 
 async function handleWhois(domain, res) {
+  domain = normalizeDomain(domain);
   try {
     let name = '';
     let country = '';
@@ -275,11 +302,12 @@ async function handleWhois(domain, res) {
 
     sendJSON(res, 200, { domain, name, country });
   } catch (e) {
-    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
 }
 
 async function handleW3C(domain, res) {
+  domain = normalizeDomain(domain);
   try {
     const data = await fetchJSON(
       `https://validator.w3.org/nu/?doc=https://${domain}&out=json`
@@ -289,11 +317,12 @@ async function handleW3C(domain, res) {
     const warnings = messages.filter(m => m.type !== 'error').length;
     sendJSON(res, 200, { domain, errors, warnings });
   } catch (e) {
-    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
 }
 
 async function handleHeaders(domain, res) {
+  domain = normalizeDomain(domain);
   try {
     const httpsRes = await fetchHeaders(`https://${domain}`);
     const httpRes = await fetchHeaders(`http://${domain}`, true).catch(
@@ -315,11 +344,86 @@ async function handleHeaders(domain, res) {
       referrer: Boolean(httpsRes.headers['referrer-policy']),
       permissions: Boolean(httpsRes.headers['permissions-policy']),
       xxss: Boolean(httpsRes.headers['x-xss-protection']),
+      compression: Boolean(httpsRes.headers['content-encoding']),
       server: httpsRes.headers['server'] || ''
     };
     sendJSON(res, 200, result);
   } catch (e) {
-    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleCaa(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const records = await dns.resolve(domain, 'CAA');
+    sendJSON(res, 200, { domain, records });
+  } catch (e) {
+    if (e.code === 'ENODATA' || e.code === 'ENOTFOUND')
+      sendJSON(res, 200, { domain, records: [] });
+    else sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleTlsa(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const records = await dns.resolve(`_443._tcp.${domain}`, 'TLSA');
+    sendJSON(res, 200, { domain, records });
+  } catch (e) {
+    if (e.code === 'ENODATA' || e.code === 'ENOTFOUND')
+      sendJSON(res, 200, { domain, records: [] });
+    else sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleSecurityTxt(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const data = await fetchHeaders(`https://${domain}/.well-known/security.txt`);
+    const found = data.statusCode && data.statusCode < 400;
+    sendJSON(res, 200, { domain, found });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleTls(domain, res) {
+  domain = normalizeDomain(domain);
+  let settled = false;
+  try {
+    const socket = tls.connect(
+      { host: domain, servername: domain, port: 443, rejectUnauthorized: false, requestOCSP: true },
+      () => {
+        if (settled) return;
+        settled = true;
+        const protocol = socket.getProtocol();
+        const cipher = socket.getCipher();
+        const key = socket.getEphemeralKeyInfo ? socket.getEphemeralKeyInfo() : null;
+        const ocsp = Boolean(socket.ocspResponse);
+        socket.end();
+        sendJSON(res, 200, {
+          domain,
+          protocol,
+          cipher: cipher && cipher.name,
+          key,
+          ocsp
+        });
+      }
+    );
+    socket.setTimeout(15000, () => {
+      if (settled) return;
+      settled = true;
+      socket.destroy();
+      sendJSON(res, 200, { domain, error: 'Timeout' });
+    });
+    socket.on('error', e => {
+      if (settled) return;
+      settled = true;
+      sendJSON(res, 200, { domain, error: errorMessage(e) });
+    });
+  } catch (e) {
+    if (!settled) sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
 }
 
@@ -334,6 +438,11 @@ const server = http.createServer(async (req, res) => {
   if (segments[0] === 'whois' && segments[1]) return handleWhois(segments[1], res);
   if (segments[0] === 'w3c' && segments[1]) return handleW3C(segments[1], res);
   if (segments[0] === 'headers' && segments[1]) return handleHeaders(segments[1], res);
+  if (segments[0] === 'caa' && segments[1]) return handleCaa(segments[1], res);
+  if (segments[0] === 'tlsa' && segments[1]) return handleTlsa(segments[1], res);
+  if (segments[0] === 'securitytxt' && segments[1])
+    return handleSecurityTxt(segments[1], res);
+  if (segments[0] === 'tlsinfo' && segments[1]) return handleTls(segments[1], res);
   sendJSON(res, 404, { error: 'Not found' });
 });
 
