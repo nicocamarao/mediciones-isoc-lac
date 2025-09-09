@@ -183,6 +183,17 @@ function fetchText(target) {
   });
 }
 
+function fetchHeaders(target, useHttp = false) {
+  return new Promise((resolve, reject) => {
+    const lib = useHttp ? http : https;
+    const req = lib.request(target, { method: 'HEAD' }, r => {
+      resolve({ headers: r.headers, statusCode: r.statusCode });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 async function rpkiValidity(ip) {
   try {
     const info = await fetchJSON(
@@ -268,6 +279,50 @@ async function handleWhois(domain, res) {
   }
 }
 
+async function handleW3C(domain, res) {
+  try {
+    const data = await fetchJSON(
+      `https://validator.w3.org/nu/?doc=https://${domain}&out=json`
+    );
+    const messages = Array.isArray(data.messages) ? data.messages : [];
+    const errors = messages.filter(m => m.type === 'error').length;
+    const warnings = messages.filter(m => m.type !== 'error').length;
+    sendJSON(res, 200, { domain, errors, warnings });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
+  }
+}
+
+async function handleHeaders(domain, res) {
+  try {
+    const httpsRes = await fetchHeaders(`https://${domain}`);
+    const httpRes = await fetchHeaders(`http://${domain}`, true).catch(
+      () => null
+    );
+    const result = {
+      domain,
+      https: httpsRes.statusCode === 200,
+      redirect:
+        httpRes &&
+        httpRes.statusCode >= 300 &&
+        httpRes.statusCode < 400 &&
+        typeof httpRes.headers.location === 'string' &&
+        httpRes.headers.location.startsWith('https://'),
+      hsts: Boolean(httpsRes.headers['strict-transport-security']),
+      csp: Boolean(httpsRes.headers['content-security-policy']),
+      xfo: Boolean(httpsRes.headers['x-frame-options']),
+      xcto: Boolean(httpsRes.headers['x-content-type-options']),
+      referrer: Boolean(httpsRes.headers['referrer-policy']),
+      permissions: Boolean(httpsRes.headers['permissions-policy']),
+      xxss: Boolean(httpsRes.headers['x-xss-protection']),
+      server: httpsRes.headers['server'] || ''
+    };
+    sendJSON(res, 200, result);
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: 'Servicio no disponible' });
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const parsed = new URL(req.url, 'http://localhost');
   const segments = parsed.pathname.split('/').filter(Boolean);
@@ -277,6 +332,8 @@ const server = http.createServer(async (req, res) => {
   if (segments[0] === 'dkim' && segments[1]) return handleDkim(segments[1], parsed.searchParams.get('selector') || 'default', res);
   if (segments[0] === 'rpki' && segments[1]) return handleRpki(segments[1], res);
   if (segments[0] === 'whois' && segments[1]) return handleWhois(segments[1], res);
+  if (segments[0] === 'w3c' && segments[1]) return handleW3C(segments[1], res);
+  if (segments[0] === 'headers' && segments[1]) return handleHeaders(segments[1], res);
   sendJSON(res, 404, { error: 'Not found' });
 });
 

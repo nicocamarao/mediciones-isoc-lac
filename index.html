@@ -62,6 +62,17 @@
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dkim" class="h-4 w-4 rounded"><span class="ml-2 text-sm">DKIM</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="mx" class="h-4 w-4 rounded"><span class="ml-2 text-sm">MX</span></label>
                 <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="smtputf8" class="h-4 w-4 rounded"><span class="ml-2 text-sm">SMTPUTF8</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="w3c" class="h-4 w-4 rounded"><span class="ml-2 text-sm">W3C</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="https" class="h-4 w-4 rounded"><span class="ml-2 text-sm">HTTPS</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="redirect" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Redir. HTTPS</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="hsts" class="h-4 w-4 rounded"><span class="ml-2 text-sm">HSTS</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="csp" class="h-4 w-4 rounded"><span class="ml-2 text-sm">CSP</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="xfo" class="h-4 w-4 rounded"><span class="ml-2 text-sm">X-Frame-Options</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="xcto" class="h-4 w-4 rounded"><span class="ml-2 text-sm">X-Content-Type</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="referrer" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Referrer-Policy</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="permissions" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Permissions-Policy</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="xxss" class="h-4 w-4 rounded"><span class="ml-2 text-sm">X-XSS-Protection</span></label>
+                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="server" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Encabezado Server</span></label>
                 </div>
         </div>
 
@@ -77,14 +88,13 @@
         </div>
 
         <div id="history" class="mt-6 hidden"></div>
-
+        <div id="map" class="w-full h-64 mb-8 hidden"></div>
         <div id="results-container" class="mt-8">
             <div id="loader" class="hidden items-center justify-center py-4">
                 <div class="loader"></div><p class="ml-3 text-gray-600">Analizando...</p>
             </div>
             <div id="results" class="space-y-6"></div>
         </div>
-        <div id="map" class="w-full h-64 mt-8 hidden"></div>
     </div>
 
 <script>
@@ -101,6 +111,7 @@
     const mapDiv = document.getElementById('map');
     let map; let mapMarkers = [];
         const API_BASE = 'http://localhost:3000';
+    const headerCache = {};
 
     const countryTlds = {
         'Uruguay': ['uy','com.uy','edu.uy','gub.uy','org.uy','net.uy','mil.uy','destinosnaturales.gub.uy','agesic.gub.uy'],
@@ -144,15 +155,35 @@
         mapMarkers = [];
     }
 
-    function updateMap(domain, geos) {
-        if (!geos || !geos.length) return;
+    async function updateMap(domains) {
+        if (!domains.length) return;
+        clearMap();
         mapDiv.classList.remove('hidden');
         map.invalidateSize();
-        geos.forEach(g => {
-            const marker = L.marker([g.lat, g.lon]).addTo(map).bindPopup(`${domain} (${g.ip}) - ${g.country || ''}`);
+        const generics = [];
+        const coords = {};
+        for (const d of domains) {
+            const tld = d.split('.').pop().toLowerCase();
+            if (tld.length === 2) {
+                if (!coords[tld]) {
+                    try {
+                        const info = await fetchWithTimeout(`https://restcountries.com/v3.1/alpha/${tld}`);
+                        const c = info[0];
+                        coords[tld] = { lat: c.latlng[0], lon: c.latlng[1], country: c.name.common, domains: [] };
+                    } catch (e) { generics.push(d); continue; }
+                }
+                coords[tld].domains.push(d);
+            } else generics.push(d);
+        }
+        Object.values(coords).forEach(c => {
+            const marker = L.marker([c.lat, c.lon]).addTo(map).bindPopup(`${c.country}: ${c.domains.join(', ')}`);
             mapMarkers.push(marker);
         });
-        map.setView([geos[0].lat, geos[0].lon], 2);
+        if (generics.length) {
+            const marker = L.marker([0, 0]).addTo(map).bindPopup(`Genéricos: ${generics.join(', ')}`);
+            mapMarkers.push(marker);
+        }
+        map.setView([0, 0], 2);
     }
 
     const checkConfig = {
@@ -166,7 +197,18 @@
         spf: { label: 'SPF' },
         dkim: { label: 'DKIM' },
         mx: { label: 'MX' },
-        smtputf8: { label: 'SMTPUTF8' }
+        smtputf8: { label: 'SMTPUTF8' },
+        w3c: { label: 'W3C' },
+        https: { label: 'HTTPS' },
+        redirect: { label: 'Redir. HTTPS' },
+        hsts: { label: 'HSTS' },
+        csp: { label: 'CSP' },
+        xfo: { label: 'X-Frame-Options' },
+        xcto: { label: 'X-Content-Type' },
+        referrer: { label: 'Referrer-Policy' },
+        permissions: { label: 'Permissions-Policy' },
+        xxss: { label: 'X-XSS-Protection' },
+        server: { label: 'Encabezado Server' }
     };
 
     function loadHistory() {
@@ -214,6 +256,13 @@
         }
     }
 
+    async function getSecurityHeaders(domain) {
+        if (headerCache[domain]) return headerCache[domain];
+        const data = await fetchWithTimeout(`${API_BASE}/headers/${domain}`);
+        headerCache[domain] = data;
+        return data;
+    }
+
     function getStatusHtml(status, details = '') {
         let icon, color, text;
         switch (status) {
@@ -244,7 +293,8 @@
         const groups = {
             "Configuración DNS y Red": ['dnssec', 'ipv4', 'ipv6', 'asn', 'rpki'],
             "Registros de Correo y EAI": ['dmarc', 'spf', 'dkim', 'smtputf8', 'mx'],
-            "Información del Dominio": ['whois']
+            "Información del Dominio": ['whois'],
+            "Web y Seguridad": ['w3c','https','redirect','hsts','csp','xfo','xcto','referrer','permissions','xxss','server']
         };
 
         const placeholders = {};
@@ -368,6 +418,62 @@
                     const details = data.country ? `${data.name || 'Desconocido'} (${data.country})` : (data.name || 'Desconocido');
                     return { label, status: data.name ? 'ok' : 'fail', details };
                 }
+                case 'w3c': {
+                    const data = await fetchWithTimeout(`${API_BASE}/w3c/${domain}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const details = `${data.errors} errores, ${data.warnings} advertencias`;
+                    return { label, status: data.errors === 0 ? 'ok' : 'fail', details };
+                }
+                case 'https': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.https ? 'ok' : 'fail', details: data.https ? 'Accesible' : 'No responde HTTPS' };
+                }
+                case 'redirect': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.redirect ? 'ok' : 'fail', details: data.redirect ? 'Redirige a HTTPS' : 'No redirige' };
+                }
+                case 'hsts': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.hsts ? 'ok' : 'fail', details: data.hsts ? 'Cabecera presente' : 'Sin HSTS' };
+                }
+                case 'csp': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.csp ? 'ok' : 'fail', details: data.csp ? 'Cabecera presente' : 'Sin CSP' };
+                }
+                case 'xfo': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.xfo ? 'ok' : 'fail', details: data.xfo ? 'Cabecera presente' : 'Sin X-Frame-Options' };
+                }
+                case 'xcto': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.xcto ? 'ok' : 'fail', details: data.xcto ? 'Cabecera presente' : 'Sin X-Content-Type-Options' };
+                }
+                case 'referrer': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.referrer ? 'ok' : 'fail', details: data.referrer ? 'Cabecera presente' : 'Sin Referrer-Policy' };
+                }
+                case 'permissions': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.permissions ? 'ok' : 'fail', details: data.permissions ? 'Cabecera presente' : 'Sin Permissions-Policy' };
+                }
+                case 'xxss': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.xxss ? 'ok' : 'fail', details: data.xxss ? 'Cabecera presente' : 'Sin X-XSS-Protection' };
+                }
+                case 'server': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.server ? 'fail' : 'ok', details: data.server || 'No expuesto' };
+                }
             }
         } catch (error) {
             return { label, status: 'error', details: error.message };
@@ -411,8 +517,8 @@
         for (const domain of domains) {
             const res = await analyzeDomain(domain, selectedChecks);
             historyEntry.domains.push(res);
-            if (res.results.ipv4?.geos) updateMap(domain, res.results.ipv4.geos);
         }
+        await updateMap(domains);
         saveHistory(historyEntry);
 
         loader.style.display = 'none';
