@@ -53,37 +53,7 @@
                 <label class="block text-sm font-medium text-gray-700">Verificaciones a realizar</label>
                 <button id="selectAll" type="button" class="text-blue-600 text-sm">Seleccionar todos</button>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dnssec" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">DNSSEC</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="ipv4" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">IPv4</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="ipv6" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">IPv6</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="asn" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">ASN</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="rpki" class="h-4 w-4 rounded"><span class="ml-2 text-sm">RPKI</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="whois" class="h-4 w-4 rounded"><span class="ml-2 text-sm">WHOIS</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dmarc" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">DMARC</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="spf" class="h-4 w-4 rounded" checked><span class="ml-2 text-sm">SPF</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="dkim" class="h-4 w-4 rounded"><span class="ml-2 text-sm">DKIM</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="mx" class="h-4 w-4 rounded"><span class="ml-2 text-sm">MX</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="smtputf8" class="h-4 w-4 rounded"><span class="ml-2 text-sm">SMTPUTF8</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="w3c" class="h-4 w-4 rounded"><span class="ml-2 text-sm">W3C</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="https" class="h-4 w-4 rounded"><span class="ml-2 text-sm">HTTPS</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="redirect" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Redir. HTTPS</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="hsts" class="h-4 w-4 rounded"><span class="ml-2 text-sm">HSTS</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="csp" class="h-4 w-4 rounded"><span class="ml-2 text-sm">CSP</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="xfo" class="h-4 w-4 rounded"><span class="ml-2 text-sm">X-Frame-Options</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="xcto" class="h-4 w-4 rounded"><span class="ml-2 text-sm">X-Content-Type</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="referrer" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Referrer-Policy</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="permissions" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Permissions-Policy</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="xxss" class="h-4 w-4 rounded"><span class="ml-2 text-sm">X-XSS-Protection</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="server" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Encabezado Server</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="compression" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Compresión HTTP</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="ocsp" class="h-4 w-4 rounded"><span class="ml-2 text-sm">OCSP Stapling</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="tls" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Versión TLS</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="key" class="h-4 w-4 rounded"><span class="ml-2 text-sm">Intercambio de Clave</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="caa" class="h-4 w-4 rounded"><span class="ml-2 text-sm">CAA</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="tlsa" class="h-4 w-4 rounded"><span class="ml-2 text-sm">TLSA</span></label>
-                <label class="check-label flex items-center p-2 border rounded-lg cursor-pointer"><input type="checkbox" data-check="securitytxt" class="h-4 w-4 rounded"><span class="ml-2 text-sm">security.txt</span></label>
-                </div>
+            <div id="checksContainer" class="space-y-3"></div>
         </div>
 
         <div class="flex flex-col items-center justify-center">
@@ -113,7 +83,7 @@
     const countrySelect = document.getElementById('countrySelect');
     const resultsContainer = document.getElementById('results');
     const loader = document.getElementById('loader');
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][data-check]');
+    let checkboxes = [];
     const selectAllBtn = document.getElementById('selectAll');
     const historyButton = document.getElementById('historyButton');
     const clearHistoryButton = document.getElementById('clearHistoryButton');
@@ -199,37 +169,143 @@
         map.setView([0, 0], 2);
     }
 
-    const checkConfig = {
-        dnssec: { label: 'DNSSEC' },
-        ipv4: { label: 'IPv4' },
-        ipv6: { label: 'IPv6' },
-        asn: { label: 'ASN' },
-        rpki: { label: 'RPKI' },
-        whois: { label: 'WHOIS' },
-        dmarc: { label: 'DMARC' },
-        spf: { label: 'SPF' },
-        dkim: { label: 'DKIM' },
-        mx: { label: 'MX' },
-        smtputf8: { label: 'SMTPUTF8' },
-        w3c: { label: 'W3C' },
-        https: { label: 'HTTPS' },
-        redirect: { label: 'Redir. HTTPS' },
-        hsts: { label: 'HSTS' },
-        csp: { label: 'CSP' },
-        xfo: { label: 'X-Frame-Options' },
-        xcto: { label: 'X-Content-Type' },
-        referrer: { label: 'Referrer-Policy' },
-        permissions: { label: 'Permissions-Policy' },
-        xxss: { label: 'X-XSS-Protection' },
-        server: { label: 'Encabezado Server' },
-        compression: { label: 'Compresión HTTP' },
-        ocsp: { label: 'OCSP Stapling' },
-        tls: { label: 'Versión TLS' },
-        key: { label: 'Intercambio de Clave' },
-        caa: { label: 'CAA' },
-        tlsa: { label: 'TLSA' },
-        securitytxt: { label: 'security.txt' }
-    };
+    const groupDefinitions = [
+        {
+            title: 'IP y Red',
+            checks: [
+                { key: 'ipinfo', label: 'More IP Info', default: true },
+                { key: 'serverlocation', label: 'Server Location', default: true },
+                { key: 'serverinfo', label: 'Server Info', default: true },
+                { key: 'ipv4', label: 'IPv4', default: true },
+                { key: 'ipv6', label: 'IPv6', default: false },
+                { key: 'asn', label: 'ASN', default: true },
+                { key: 'serverstatus', label: 'Server Status', default: true },
+                { key: 'openports', label: 'Open Ports', default: false },
+                { key: 'traceroute', label: 'Traceroute', default: false },
+                { key: 'redirectchain', label: 'Redirect Chain', default: true },
+                { key: 'associatedhosts', label: 'Associated Hosts', default: false },
+                { key: 'block', label: 'Block Detection', default: false }
+            ]
+        },
+        {
+            title: 'DNS y Seguridad',
+            checks: [
+                { key: 'dnsrecords', label: 'DNS Records', default: true },
+                { key: 'txtrecords', label: 'TXT Records', default: true },
+                { key: 'dnsserver', label: 'DNS Server', default: true },
+                { key: 'dnssecurity', label: 'DNS Security Extensions', default: true },
+                { key: 'rpki', label: 'RPKI', default: false },
+                { key: 'caa', label: 'CAA', default: false },
+                { key: 'tlsa', label: 'TLSA', default: false }
+            ]
+        },
+        {
+            title: 'Correo y Mensajería',
+            checks: [
+                { key: 'emailconfig', label: 'Email Configuration', default: true },
+                { key: 'mx', label: 'MX', default: false },
+                { key: 'smtputf8', label: 'SMTPUTF8', default: false },
+                { key: 'dmarc', label: 'DMARC', default: true },
+                { key: 'spf', label: 'SPF', default: true },
+                { key: 'dkim', label: 'DKIM', default: false }
+            ]
+        },
+        {
+            title: 'Identidad y Cumplimiento',
+            checks: [
+                { key: 'whois', label: 'Whois Lookup', default: true },
+                { key: 'domaininfo', label: 'Domain Info', default: true },
+                { key: 'securitytxt', label: 'Security.txt', default: false }
+            ]
+        },
+        {
+            title: 'Contenido y Experiencia',
+            checks: [
+                { key: 'sitefeatures', label: 'Site Features', default: false },
+                { key: 'cookies', label: 'Cookies', default: false },
+                { key: 'crawlrules', label: 'Crawl Rules', default: false },
+                { key: 'linkedpages', label: 'Linked Pages', default: false },
+                { key: 'listedpages', label: 'Listed Pages', default: false },
+                { key: 'socialtags', label: 'Social Tags', default: false },
+                { key: 'quality', label: 'Quality Metrics', default: false },
+                { key: 'w3c', label: 'W3C Validator', default: false },
+                { key: 'carbon', label: 'Carbon Footprint', default: false },
+                { key: 'archive', label: 'Archive History', default: false },
+                { key: 'ranking', label: 'Global Ranking', default: false },
+                { key: 'malware', label: 'Malware & Phishing Detection', default: false },
+                { key: 'screenshot', label: 'Screenshot', default: false }
+            ]
+        },
+        {
+            title: 'Seguridad Web y TLS',
+            checks: [
+                { key: 'https', label: 'HTTPS', default: true },
+                { key: 'redirect', label: 'HTTPS Redirect', default: true },
+                { key: 'hsts', label: 'HTTP Strict Transport Security', default: true },
+                { key: 'csp', label: 'Content Security Policy', default: false },
+                { key: 'xfo', label: 'X-Frame-Options', default: false },
+                { key: 'xcto', label: 'X-Content-Type-Options', default: false },
+                { key: 'referrer', label: 'Referrer-Policy', default: false },
+                { key: 'permissions', label: 'Permissions-Policy', default: false },
+                { key: 'xxss', label: 'X-XSS-Protection', default: false },
+                { key: 'headers', label: 'Headers', default: false },
+                { key: 'server', label: 'Server Header', default: false },
+                { key: 'compression', label: 'HTTP Compression', default: false },
+                { key: 'ocsp', label: 'OCSP Stapling', default: false },
+                { key: 'tls', label: 'TLS Version', default: true },
+                { key: 'key', label: 'Key Exchange', default: false },
+                { key: 'sslchain', label: 'SSL Chain Info', default: false },
+                { key: 'tlsciphers', label: 'TLS Cipher Suites', default: false },
+                { key: 'tlsconfig', label: 'TLS Security Config', default: false },
+                { key: 'tlssimulation', label: 'TLS Handshake Simulation', default: false },
+                { key: 'httpsecurity', label: 'HTTP Security Features', default: false },
+                { key: 'firewall', label: 'Firewall Detection', default: false }
+            ]
+        }
+    ];
+
+    const checkConfig = {};
+    groupDefinitions.forEach(group => {
+        group.checks.forEach(check => {
+            checkConfig[check.key] = { label: check.label };
+        });
+    });
+
+    function renderCheckOptions() {
+        const container = document.getElementById('checksContainer');
+        container.innerHTML = '';
+        groupDefinitions.forEach(group => {
+            const details = document.createElement('details');
+            details.className = 'border rounded-lg bg-white shadow-sm';
+            details.open = true;
+            const summary = document.createElement('summary');
+            summary.className = 'cursor-pointer select-none px-3 py-2 font-semibold text-gray-700 flex items-center justify-between';
+            summary.innerHTML = `<span>${group.title}</span><span class="text-xs text-gray-500">${group.checks.length} checks</span>`;
+            details.appendChild(summary);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2 px-3 pb-3';
+            group.checks.forEach(check => {
+                const label = document.createElement('label');
+                label.className = 'check-label flex items-center p-2 border rounded-lg cursor-pointer bg-gray-50';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.dataset.check = check.key;
+                if (check.default) input.checked = true;
+                input.className = 'h-4 w-4 rounded';
+                const span = document.createElement('span');
+                span.className = 'ml-2 text-sm';
+                span.textContent = check.label;
+                label.appendChild(input);
+                label.appendChild(span);
+                wrapper.appendChild(label);
+            });
+            details.appendChild(wrapper);
+            container.appendChild(details);
+        });
+        checkboxes = container.querySelectorAll('input[type="checkbox"][data-check]');
+    }
+
+    renderCheckOptions();
 
     function loadHistory() {
         const history = JSON.parse(localStorage.getItem('domainHistory') || '[]');
@@ -297,23 +373,57 @@
         return data;
     }
 
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function formatDetails(details) {
+        if (details === undefined || details === null) return '';
+        if (Array.isArray(details)) {
+            return details
+                .map(item => {
+                    if (item && typeof item === 'object' && item.html) {
+                        return `<div class="text-xs text-gray-700">${item.html}</div>`;
+                    }
+                    return `<div class="text-xs text-gray-700">${escapeHtml(item)}</div>`;
+                })
+                .join('');
+        }
+        if (details && typeof details === 'object') {
+            if (details.html) return details.html;
+            return `<pre class="text-xs text-gray-700 whitespace-pre-wrap">${escapeHtml(JSON.stringify(details, null, 2))}</pre>`;
+        }
+        return `<span class="text-sm">${escapeHtml(details)}</span>`;
+    }
+
     function getStatusHtml(status, details = '') {
-        let icon, color, text;
+        let icon, color;
         switch (status) {
             case 'ok':
                 icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-green-600'; text = details; break;
+                color = 'text-green-600';
+                break;
             case 'fail':
                 icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-red-600'; text = details; break;
+                color = 'text-red-600';
+                break;
             case 'error':
                 icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-gray-500'; text = details; break;
+                color = 'text-gray-500';
+                break;
+            case 'info':
+                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                color = 'text-blue-600';
+                break;
             default:
                 icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-yellow-600'; text = details; break;
+                color = 'text-yellow-600';
+                break;
         }
-        return `<div class="flex items-center ${color}"><span class="mr-2 flex-shrink-0">${icon}</span><span class="font-semibold text-sm">${text}</span></div>`;
+        return `<div class="flex items-start ${color}"><span class="mr-2 flex-shrink-0">${icon}</span><div class="space-y-1">${formatDetails(details)}</div></div>`;
     }
 
     function createResultCard(domain, selectedChecks) {
@@ -324,21 +434,15 @@
         title.textContent = domain;
         card.appendChild(title);
 
-        const groups = {
-            "Configuración DNS y Red": ['dnssec', 'ipv4', 'ipv6', 'asn', 'rpki'],
-            "Registros de Correo y EAI": ['dmarc', 'spf', 'dkim', 'smtputf8', 'mx'],
-            "Información del Dominio": ['whois'],
-            "Web y Seguridad": ['w3c','https','redirect','hsts','csp','xfo','xcto','referrer','permissions','xxss','server','compression','ocsp','tls','key','caa','tlsa','securitytxt']
-        };
-
         const placeholders = {};
 
-        for (const [groupTitle, checkKeys] of Object.entries(groups)) {
-            const filtered = selectedChecks.filter(c => checkKeys.includes(c));
+        for (const group of groupDefinitions) {
+            const groupKeys = group.checks.map(c => c.key);
+            const filtered = selectedChecks.filter(c => groupKeys.includes(c));
             if (!filtered.length) continue;
             const h4 = document.createElement('h4');
             h4.className = 'text-md font-semibold text-gray-700 mt-4 mb-2';
-            h4.textContent = groupTitle;
+            h4.textContent = group.title;
             card.appendChild(h4);
             filtered.forEach(c => {
                 const row = document.createElement('div');
@@ -365,6 +469,270 @@
         const ascii = toASCII(domain);
         try {
             switch (checkType) {
+                case 'ipinfo': {
+                    const data = await fetchWithTimeout(`${API_BASE}/ipinfo/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const lines = [];
+                    if (data.ipv4?.length) lines.push(`IPv4: ${data.ipv4.join(', ')}`);
+                    if (data.ipv6?.length) lines.push(`IPv6: ${data.ipv6.join(', ')}`);
+                    if (data.geo?.length) {
+                        data.geo.forEach(g => {
+                            lines.push(`${g.ip}: ${[g.city, g.region, g.country].filter(Boolean).join(', ')}${g.asn ? ' (AS' + g.asn + ')' : ''}`);
+                        });
+                    }
+                    return { label, status: lines.length ? 'ok' : 'fail', details: lines.length ? lines : 'Sin datos' };
+                }
+                case 'serverlocation': {
+                    const data = await fetchWithTimeout(`${API_BASE}/serverlocation/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const parts = [data.city, data.region, data.country].filter(Boolean).join(', ');
+                    const details = parts ? `${parts} (${data.ip})` : data.ip;
+                    return { label, status: data.ip ? 'ok' : 'fail', details: details || 'Sin datos' };
+                }
+                case 'serverinfo': {
+                    const data = await fetchWithTimeout(`${API_BASE}/serverinfo/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const lines = [];
+                    if (data.asn) lines.push(`ASN: ${data.asn}`);
+                    if (data.org) lines.push(`Org: ${data.org}`);
+                    if (data.network) lines.push(`Red: ${data.network}`);
+                    if (data.city || data.country) lines.push(`Ubicación: ${[data.city, data.country].filter(Boolean).join(', ')}`);
+                    return { label, status: lines.length ? 'ok' : 'fail', details: lines.length ? lines : 'Sin datos' };
+                }
+                case 'serverstatus': {
+                    const data = await fetchWithTimeout(`${API_BASE}/serverstatus/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.statusCode && data.statusCode < 500 ? 'ok' : 'fail', details: `HTTP ${data.statusCode || 'sin respuesta'}` };
+                }
+                case 'openports': {
+                    const data = await fetchWithTimeout(`${API_BASE}/openports/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const open = data.ports?.filter(p => p.open).map(p => p.port) || [];
+                    return {
+                        label,
+                        status: open.length ? 'ok' : 'fail',
+                        details: open.length ? `Abiertos: ${open.join(', ')}` : 'Sin puertos comunes abiertos'
+                    };
+                }
+                case 'traceroute': {
+                    const data = await fetchWithTimeout(`${API_BASE}/traceroute/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const hops = data.hops?.slice(0, 10) || [];
+                    return { label, status: hops.length ? 'ok' : 'fail', details: hops.length ? hops : 'Sin datos' };
+                }
+                case 'redirectchain': {
+                    const data = await fetchWithTimeout(`${API_BASE}/redirectchain/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const chain = data.chain?.map(item => `${item.statusCode || '-'} → ${item.url}`) || [];
+                    return { label, status: chain.length ? 'ok' : 'fail', details: chain.length ? chain : 'Sin redirecciones' };
+                }
+                case 'associatedhosts': {
+                    const data = await fetchWithTimeout(`${API_BASE}/associatedhosts/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const hosts = data.hosts?.map(h => `${h.host} (${h.ip})`) || [];
+                    return { label, status: hosts.length ? 'ok' : 'fail', details: hosts.length ? hosts : 'Sin hosts asociados' };
+                }
+                case 'block': {
+                    const data = await fetchWithTimeout(`${API_BASE}/block/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const lines = data.results?.map(r => `${r.resolver}: ${r.blocked ? 'bloqueado' : 'acceso'}`) || [];
+                    const blocked = data.results?.some(r => r.blocked);
+                    return { label, status: blocked ? 'fail' : 'ok', details: lines.length ? lines : 'Sin datos' };
+                }
+                case 'dnsrecords': {
+                    const data = await fetchWithTimeout(`${API_BASE}/dnsrecords/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const records = [];
+                    Object.entries(data.records || {}).forEach(([type, values]) => {
+                        if (Array.isArray(values) && values.length) {
+                            const formatted = values
+                                .map(v => (typeof v === 'string' ? v : JSON.stringify(v)))
+                                .join(', ');
+                            records.push(`${type}: ${formatted}`);
+                        }
+                    });
+                    return { label, status: records.length ? 'ok' : 'fail', details: records.length ? records : 'Sin registros' };
+                }
+                case 'txtrecords': {
+                    const data = await fetchWithTimeout(`${API_BASE}/txtrecords/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const records = data.records?.map(r => r.join('')) || [];
+                    return { label, status: records.length ? 'ok' : 'fail', details: records.length ? records : 'Sin TXT' };
+                }
+                case 'dnsserver': {
+                    const data = await fetchWithTimeout(`${API_BASE}/dnsserver/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return { label, status: data.servers?.length ? 'ok' : 'fail', details: data.servers?.length ? data.servers : 'Sin NS' };
+                }
+                case 'dnssecurity': {
+                    const data = await fetchWithTimeout(`${API_BASE}/dnssecurity/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const lines = [];
+                    if (data.algorithms?.length) lines.push(`Algoritmos: ${data.algorithms.join(', ')}`);
+                    if (data.doh) lines.push('DoH activo');
+                    lines.push(data.valid ? 'DNSSEC válido' : 'DNSSEC ausente');
+                    return { label, status: data.valid ? 'ok' : 'fail', details: lines };
+                }
+                case 'emailconfig': {
+                    const data = await fetchWithTimeout(`${API_BASE}/emailconfig/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const lines = [
+                        `SPF: ${data.spf ? 'sí' : 'no'}`,
+                        `DMARC: ${data.dmarc ? 'sí' : 'no'}`,
+                        `DKIM: ${data.dkim ? 'sí' : 'no'}`
+                    ];
+                    if (data.mx?.length) lines.push(`MX: ${data.mx.map(m => `${m.exchange} (p${m.priority})`).join(', ')}`);
+                    return { label, status: data.spf || data.dmarc || data.dkim ? 'ok' : 'fail', details: lines };
+                }
+                case 'sitefeatures': {
+                    const data = await fetchWithTimeout(`${API_BASE}/sitefeatures/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const features = data.features || {};
+                    const lines = Object.entries(features).map(([k, v]) => {
+                        const clean = k.replace(/^has/, '').replace(/([A-Z])/g, ' $1').trim();
+                        const formatted = clean.charAt(0).toUpperCase() + clean.slice(1);
+                        return `${formatted}: ${v ? 'sí' : 'no'}`;
+                    });
+                    return { label, status: lines.some(l => /sí$/.test(l)) ? 'ok' : 'info', details: lines };
+                }
+                case 'cookies': {
+                    const data = await fetchWithTimeout(`${API_BASE}/cookies/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const cookies = data.cookies || [];
+                    return { label, status: cookies.length ? 'info' : 'ok', details: cookies.length ? cookies : 'Sin cookies' };
+                }
+                case 'crawlrules': {
+                    const data = await fetchWithTimeout(`${API_BASE}/crawlrules/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    if (!data.found) return { label, status: 'fail', details: 'No encontrado' };
+                    const snippet = escapeHtml((data.content || '').slice(0, 500));
+                    const html = `<pre class="whitespace-pre-wrap text-xs text-gray-700">${snippet}${data.content && data.content.length > 500 ? '…' : ''}</pre>`;
+                    return { label, status: 'ok', details: { html } };
+                }
+                case 'linkedpages': {
+                    const data = await fetchWithTimeout(`${API_BASE}/linkedpages/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const lines = data.links?.slice(0, 20).map(l => `${l.internal ? 'Interno' : 'Externo'}: ${l.href}`) || [];
+                    return { label, status: lines.length ? 'ok' : 'info', details: lines.length ? lines : 'Sin enlaces detectados' };
+                }
+                case 'listedpages': {
+                    const data = await fetchWithTimeout(`${API_BASE}/listedpages/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const pages = data.pages?.slice(0, 20) || [];
+                    return { label, status: pages.length ? 'ok' : 'info', details: pages.length ? pages : 'Sin sitemap' };
+                }
+                case 'socialtags': {
+                    const data = await fetchWithTimeout(`${API_BASE}/socialtags/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const tags = Object.entries(data.tags || {}).map(([k, v]) => `${k}: ${v}`);
+                    return { label, status: tags.length ? 'ok' : 'info', details: tags.length ? tags : 'Sin etiquetas sociales' };
+                }
+                case 'quality': {
+                    const data = await fetchWithTimeout(`${API_BASE}/quality/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const lines = [];
+                    if (typeof data.performance === 'number') lines.push(`Performance: ${(data.performance * 100).toFixed(0)}`);
+                    if (typeof data.accessibility === 'number') lines.push(`Accesibilidad: ${(data.accessibility * 100).toFixed(0)}`);
+                    if (typeof data.bestPractices === 'number') lines.push(`Mejores prácticas: ${(data.bestPractices * 100).toFixed(0)}`);
+                    if (typeof data.seo === 'number') lines.push(`SEO: ${(data.seo * 100).toFixed(0)}`);
+                    return { label, status: lines.length ? 'ok' : 'info', details: lines.length ? lines : 'Sin datos de Lighthouse' };
+                }
+                case 'carbon': {
+                    const data = await fetchWithTimeout(`${API_BASE}/carbon/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const footprint = data.data?.statistics?.co2?.grid?.grams;
+                    return {
+                        label,
+                        status: footprint !== undefined ? 'info' : 'error',
+                        details: footprint !== undefined ? `${footprint.toFixed(2)}g CO₂ por visita` : 'Sin datos'
+                    };
+                }
+                case 'archive': {
+                    const data = await fetchWithTimeout(`${API_BASE}/archive/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const entries = data.entries?.map(e => `${e.timestamp}: ${e.original} (${e.status})`) || [];
+                    return { label, status: entries.length ? 'ok' : 'info', details: entries.length ? entries : 'Sin historial' };
+                }
+                case 'ranking': {
+                    const data = await fetchWithTimeout(`${API_BASE}/ranking/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return {
+                        label,
+                        status: data.rank ? 'ok' : 'info',
+                        details: data.rank ? `Ranking global ${data.rank}${data.date ? ` (${data.date})` : ''}` : 'Sin ranking'
+                    };
+                }
+                case 'malware': {
+                    const data = await fetchWithTimeout(`${API_BASE}/malware/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const entries = data.entries?.map(e => `${e.url || e.id} (${e.status || 'listado'})`) || [];
+                    const threat = data.threat && data.threat !== 'ok';
+                    return { label, status: threat ? 'fail' : 'ok', details: entries.length ? entries : 'Sin reportes' };
+                }
+                case 'screenshot': {
+                    const data = await fetchWithTimeout(`${API_BASE}/screenshot/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const link = `<a class="text-blue-600 underline" href="${escapeHtml(data.imageUrl)}" target="_blank" rel="noopener">Ver captura</a>`;
+                    return { label, status: 'info', details: { html: link } };
+                }
+                case 'headers': {
+                    const data = await getSecurityHeaders(domain);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const entries = Object.entries(data.headers || {}).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
+                    return { label, status: entries.length ? 'ok' : 'info', details: entries.length ? entries : 'Sin encabezados' };
+                }
+                case 'sslchain': {
+                    const data = await fetchWithTimeout(`${API_BASE}/sslchain/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const chain = data.chain?.map(c => `${c.subject?.CN || 'Certificado'} → ${c.issuer?.CN || 'Emisor'} (${c.valid_from} - ${c.valid_to})`) || [];
+                    return { label, status: chain.length ? 'ok' : 'fail', details: chain.length ? chain : 'Sin cadena SSL' };
+                }
+                case 'tlsciphers': {
+                    const data = await fetchWithTimeout(`${API_BASE}/tlsciphers/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const suites = data.suites?.map(s => `${s.protocol}: ${s.cipher}`) || [];
+                    return { label, status: suites.length ? 'ok' : 'info', details: suites.length ? suites : 'Sin información' };
+                }
+                case 'tlsconfig': {
+                    const data = await fetchWithTimeout(`${API_BASE}/tlsconfig/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    if (data.data?.error) return { label, status: 'error', details: data.data.error };
+                    const score = data.data?.score;
+                    const details = [];
+                    if (score !== undefined) details.push(`Puntaje: ${score}`);
+                    if (data.data?.tests) {
+                        Object.entries(data.data.tests).slice(0, 10).forEach(([name, result]) => {
+                            if (result && typeof result === 'object' && result.output) {
+                                details.push(`${name}: ${result.output}`);
+                            }
+                        });
+                    }
+                    return { label, status: score !== undefined ? 'ok' : 'info', details: details.length ? details : 'Sin datos' };
+                }
+                case 'tlssimulation': {
+                    const data = await fetchWithTimeout(`${API_BASE}/tlssimulation/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const scenarios = data.scenarios?.map(s => `${s.client}: ${s.success ? `${s.protocol || 'TLS'} (${s.cipher || 'cifra desconocida'})` : 'falló'}`) || [];
+                    const success = data.scenarios?.every(s => s.success);
+                    return { label, status: success ? 'ok' : 'fail', details: scenarios.length ? scenarios : 'Sin datos' };
+                }
+                case 'httpsecurity': {
+                    const data = await fetchWithTimeout(`${API_BASE}/httpsecurity/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const security = data.security || {};
+                    const lines = Object.entries(security).map(([k, v]) => `${k.toUpperCase()}: ${v ? 'sí' : 'no'}`);
+                    const ok = Object.values(security).some(Boolean);
+                    return { label, status: ok ? 'ok' : 'fail', details: lines.length ? lines : 'Sin cabeceras de seguridad' };
+                }
+                case 'firewall': {
+                    const data = await fetchWithTimeout(`${API_BASE}/firewall/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return {
+                        label,
+                        status: data.detected ? 'ok' : 'info',
+                        details: data.detected ? `Detectado: ${data.waf.join(', ')}` : 'No se identificó WAF'
+                    };
+                }
                 case 'dnssec': {
                     const data = await fetchWithTimeout(`${API_BASE}/dnssec/${ascii}`);
                     const ok = data.valid;
@@ -537,17 +905,17 @@
                     return { label, status: ok ? 'ok' : 'fail', details };
                 }
                 case 'caa': {
-                    const data = await fetchWithTimeout(`${API_BASE}/caa/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/caa/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     return { label, status: data.records?.length ? 'ok' : 'fail', details: data.records?.length ? data.records.join(', ') : 'No tiene CAA' };
                 }
                 case 'tlsa': {
-                    const data = await fetchWithTimeout(`${API_BASE}/tlsa/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/tlsa/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     return { label, status: data.records?.length ? 'ok' : 'fail', details: data.records?.length ? data.records.join(', ') : 'No tiene TLSA' };
                 }
                 case 'securitytxt': {
-                    const data = await fetchWithTimeout(`${API_BASE}/securitytxt/${domain}`);
+                    const data = await fetchWithTimeout(`${API_BASE}/securitytxt/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Encontrado' : 'No disponible' };
                 }
