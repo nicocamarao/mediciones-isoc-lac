@@ -11,6 +11,54 @@ const { URL } = require('url');
 const htmlCache = new Map();
 const headerCache = new Map();
 
+async function resolveAddresses(domain) {
+  const v4 = await dns.resolve4(domain).catch(() => []);
+  const v6 = await dns.resolve6(domain).catch(() => []);
+  return { v4, v6 };
+}
+
+async function resolveFirstIp(domain) {
+  const { v4, v6 } = await resolveAddresses(domain);
+  if (v4.length) return { ip: v4[0], family: 4 };
+  if (v6.length) return { ip: v6[0], family: 6 };
+  return { ip: null, family: null };
+}
+
+async function lookupIpMeta(ip) {
+  if (!ip) throw new Error('Sin dirección IP');
+  const data = await fetchJSON(`https://ipwho.is/${encodeURIComponent(ip)}`);
+  if (!data || data.success === false) {
+    const message =
+      typeof data?.message === 'string' && data.message.trim()
+        ? data.message.trim()
+        : 'Servicio no disponible';
+    throw new Error(message);
+  }
+  const connection = data.connection || {};
+  return {
+    ip,
+    city: data.city || '',
+    region: data.region || data.region_name || data.region_code || '',
+    country: data.country || data.country_name || '',
+    latitude: data.latitude ?? null,
+    longitude: data.longitude ?? null,
+    timezone:
+      (data.timezone && data.timezone.id) ||
+      data.timezone ||
+      data.timezone_gmt ||
+      '',
+    asn: connection.asn || data.asn || null,
+    org: connection.org || data.org || data.connection?.organization || '',
+    isp: connection.isp || data.isp || '',
+    network:
+      connection.route ||
+      connection.network ||
+      connection.domain ||
+      data.network ||
+      ''
+  };
+}
+
 const ALGO_MAP = {
   1: 'RSA/MD5',
   2: 'Diffie-Hellman',
@@ -320,24 +368,52 @@ async function rpkiValidity(ip) {
     );
     const prefix =
       info?.data?.prefix || info?.data?.resources?.[0] || info?.data?.resource;
-    const asn = info?.data?.asns?.[0]?.asn || info?.data?.asns?.[0] || null;
-    if (!prefix || !asn) return { state: 'unknown', asn };
+    const asnEntry = info?.data?.asns?.[0];
+    const asn =
+      typeof asnEntry === 'number'
+        ? asnEntry
+        : typeof asnEntry === 'object'
+        ? asnEntry.asn || asnEntry.id
+        : null;
 
-    const validators = [
-      `https://stat.ripe.net/data/rpki-validation/data.json?resource=${prefix}&origin_asn=${asn}`,
-      `https://rpki.cloudflare.com/api/v1/validity?prefix=${prefix}&asn=${asn}`
-    ];
+    let state = 'unknown';
 
-    for (const url of validators) {
+    if (asn) {
       try {
-        const val = await fetchJSON(url);
+        const cf = await fetchJSON(
+          `https://rpki.cloudflare.com/api/v1/validity?ip=${encodeURIComponent(
+            ip
+          )}&asn=${asn}`
+        );
         const validity =
-          val?.data?.validity || val?.state?.validity || val?.state || val?.validity;
-        if (validity) return { state: String(validity).toLowerCase(), asn };
+          cf?.state?.validity ||
+          cf?.state ||
+          cf?.validity ||
+          cf?.result ||
+          null;
+        if (validity) state = String(validity).toLowerCase();
       } catch (e) {}
     }
 
-    return { state: 'unknown', asn };
+    if (state === 'unknown') {
+      try {
+        const ripe = await fetchJSON(
+          prefix
+            ? `https://stat.ripe.net/data/rpki-validation/data.json?resource=${encodeURIComponent(
+                prefix
+              )}${asn ? `&origin_asn=${asn}` : ''}`
+            : `https://stat.ripe.net/data/rpki-validation/data.json?resource=${encodeURIComponent(
+                ip
+              )}`
+        );
+        const validity =
+          ripe?.data?.validity || ripe?.status || ripe?.state || ripe?.validity;
+        if (validity) state = String(validity).toLowerCase();
+      } catch (e) {}
+    }
+
+    if (!['valid', 'invalid'].includes(state)) state = 'unknown';
+    return { state, asn: asn || null, prefix: prefix || null };
   } catch (e) {
     return { state: 'error', asn: null };
   }
@@ -346,17 +422,16 @@ async function rpkiValidity(ip) {
 async function handleRpki(domain, res) {
   domain = normalizeDomain(domain);
   try {
-    const v4 = await dns.resolve4(domain).catch(() => []);
-    const v6 = await dns.resolve6(domain).catch(() => []);
+    const { v4, v6 } = await resolveAddresses(domain);
     const ips = [...v4, ...v6];
     if (!ips.length) return sendJSON(res, 200, { domain, error: 'Sin direcciones IP' });
     const results = [];
     for (const ip of ips) {
-      const { state, asn } = await rpkiValidity(ip);
-      results.push({ ip, state, asn });
+      const { state, asn, prefix } = await rpkiValidity(ip);
+      results.push({ ip, state, asn, prefix });
     }
-    const overall = results.every(r => r.state === 'valid');
-    sendJSON(res, 200, { domain, results, valid: overall });
+    const overall = results.length && results.every(r => r.state === 'valid');
+    sendJSON(res, 200, { domain, results, valid: Boolean(overall) });
   } catch (e) {
     sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
@@ -439,7 +514,8 @@ async function handleHeaders(domain, res) {
       permissions: Boolean(httpsRes.headers['permissions-policy']),
       xxss: Boolean(httpsRes.headers['x-xss-protection']),
       compression: Boolean(httpsRes.headers['content-encoding']),
-      server: httpsRes.headers['server'] || ''
+      server: httpsRes.headers['server'] || '',
+      headers: httpsRes.headers
     };
     sendJSON(res, 200, result);
   } catch (e) {
@@ -524,25 +600,13 @@ async function handleTls(domain, res) {
 async function handleIpInfo(domain, res) {
   domain = normalizeDomain(domain);
   try {
-    const [ipv4, ipv6] = await Promise.all([
-      dns.resolve4(domain).catch(() => []),
-      dns.resolve6(domain).catch(() => [])
-    ]);
+    const { v4: ipv4, v6: ipv6 } = await resolveAddresses(domain);
     const geo = [];
     const ips = [...ipv4, ...ipv6].slice(0, 5);
     for (const ip of ips) {
       try {
-        const info = await fetchJSON(`https://ipapi.co/${ip}/json/`);
-        geo.push({
-          ip,
-          city: info.city,
-          region: info.region,
-          country: info.country_name,
-          org: info.org || info.org_name,
-          asn: info.asn,
-          latitude: info.latitude,
-          longitude: info.longitude
-        });
+        const info = await lookupIpMeta(ip);
+        geo.push(info);
       } catch (e) {}
     }
     sendJSON(res, 200, { domain, ipv4, ipv6, geo });
@@ -671,18 +735,15 @@ async function handleQuality(domain, res) {
 async function handleServerLocation(domain, res) {
   domain = normalizeDomain(domain);
   try {
-    const ip = await dns.resolve4(domain).then(r => r[0]).catch(async () => {
-      const v6 = await dns.resolve6(domain);
-      return v6[0];
-    });
+    const { ip } = await resolveFirstIp(domain);
     if (!ip) return sendJSON(res, 200, { domain, error: 'Sin dirección IP' });
-    const info = await fetchJSON(`https://ipapi.co/${ip}/json/`);
+    const info = await lookupIpMeta(ip);
     sendJSON(res, 200, {
       domain,
       ip,
       city: info.city,
       region: info.region,
-      country: info.country_name,
+      country: info.country,
       latitude: info.latitude,
       longitude: info.longitude,
       timezone: info.timezone
@@ -752,11 +813,22 @@ async function handleServerStatus(domain, res) {
   domain = normalizeDomain(domain);
   try {
     const page = await fetchPage(`https://${domain}`, { method: 'HEAD' });
-    sendJSON(res, 200, { domain, statusCode: page.statusCode });
+    sendJSON(res, 200, {
+      domain,
+      statusCode: page.statusCode,
+      location: page.headers?.location || null
+    });
   } catch (e) {
     try {
-      const page = await fetchPage(`http://${domain}`, { method: 'HEAD', useHttp: true });
-      sendJSON(res, 200, { domain, statusCode: page.statusCode });
+      const page = await fetchPage(`http://${domain}`, {
+        method: 'HEAD',
+        useHttp: true
+      });
+      sendJSON(res, 200, {
+        domain,
+        statusCode: page.statusCode,
+        location: page.headers?.location || null
+      });
     } catch (err) {
       sendJSON(res, 200, { domain, error: errorMessage(err) });
     }
@@ -794,11 +866,18 @@ async function handleTraceroute(domain, res) {
   domain = normalizeDomain(domain);
   try {
     const text = await fetchText(`https://api.hackertarget.com/mtr/?q=${domain}`);
+    if (!text || /api count exceeded/i.test(text) || /error/i.test(text)) {
+      return sendJSON(res, 200, {
+        domain,
+        error: 'Servicio no disponible (límite alcanzado)'
+      });
+    }
     const hops = text
       .split('\n')
       .slice(1)
       .filter(Boolean)
-      .map(line => line.trim());
+      .map(line => line.trim())
+      .filter(line => /^\d+\./.test(line));
     sendJSON(res, 200, { domain, hops });
   } catch (e) {
     sendJSON(res, 200, { domain, error: errorMessage(e) });
@@ -818,20 +897,17 @@ async function handleCarbon(domain, res) {
 async function handleServerInfo(domain, res) {
   domain = normalizeDomain(domain);
   try {
-    const ip = await dns.resolve4(domain).then(r => r[0]).catch(async () => {
-      const v6 = await dns.resolve6(domain);
-      return v6[0];
-    });
+    const { ip } = await resolveFirstIp(domain);
     if (!ip) return sendJSON(res, 200, { domain, error: 'Sin dirección IP' });
-    const info = await fetchJSON(`https://ipapi.co/${ip}/json/`);
+    const info = await lookupIpMeta(ip);
     sendJSON(res, 200, {
       domain,
       ip,
       asn: info.asn,
-      org: info.org || info.org_name,
+      org: info.org || info.isp,
       network: info.network,
-      isp: info.org || info.isp,
-      country: info.country_name,
+      isp: info.isp,
+      country: info.country,
       city: info.city
     });
   } catch (e) {

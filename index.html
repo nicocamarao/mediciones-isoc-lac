@@ -205,7 +205,6 @@
                 { key: 'openports', label: 'Open Ports', default: false },
                 { key: 'traceroute', label: 'Traceroute', default: false },
                 { key: 'redirectchain', label: 'Redirect Chain', default: true },
-                { key: 'associatedhosts', label: 'Associated Hosts', default: false },
                 { key: 'block', label: 'Block Detection', default: false }
             ]
         },
@@ -250,8 +249,6 @@
                 { key: 'listedpages', label: 'Listed Pages', default: false },
                 { key: 'socialtags', label: 'Social Tags', default: false },
                 { key: 'quality', label: 'Quality Metrics', default: false },
-                { key: 'w3c', label: 'W3C Validator', default: false },
-                { key: 'carbon', label: 'Carbon Footprint', default: false },
                 { key: 'archive', label: 'Archive History', default: false },
                 { key: 'ranking', label: 'Global Ranking', default: false },
                 { key: 'malware', label: 'Malware & Phishing Detection', default: false },
@@ -439,6 +436,13 @@
         }).join('')}</ul>`;
     }
 
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString('es-UY', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
     function initializeSummary(selectedChecks) {
         summaryData = {};
         summaryElements = {};
@@ -598,51 +602,96 @@
                     const data = await fetchWithTimeout(`${API_BASE}/serverlocation/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const parts = [data.city, data.region, data.country].filter(Boolean).join(', ');
-                    const details = parts ? `${parts} (${data.ip})` : data.ip;
-                    return { label, status: data.ip ? 'ok' : 'fail', details: details || 'Sin datos' };
+                    const details = [];
+                    if (parts || data.ip) details.push(parts ? `${parts} (${data.ip})` : data.ip);
+                    if (data.timezone) details.push(`Zona horaria: ${data.timezone}`);
+                    if (data.latitude != null && data.longitude != null) {
+                        details.push(`Coordenadas: ${data.latitude}, ${data.longitude}`);
+                    }
+                    return {
+                        label,
+                        status: data.ip ? 'ok' : 'fail',
+                        details: details.length ? details : 'Sin datos'
+                    };
                 }
                 case 'serverinfo': {
                     const data = await fetchWithTimeout(`${API_BASE}/serverinfo/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const lines = [];
-                    if (data.asn) lines.push(`ASN: ${data.asn}`);
-                    if (data.org) lines.push(`Org: ${data.org}`);
-                    if (data.network) lines.push(`Red: ${data.network}`);
+                    if (data.ip) lines.push(`IP analizada: ${data.ip}`);
+                    if (data.asn) lines.push(`ASN: AS${data.asn}`);
+                    if (data.org) lines.push(`Organización: ${data.org}`);
+                    if (data.network) lines.push(`Prefijo: ${data.network}`);
+                    if (data.isp) lines.push(`ISP: ${data.isp}`);
                     if (data.city || data.country) lines.push(`Ubicación: ${[data.city, data.country].filter(Boolean).join(', ')}`);
                     return { label, status: lines.length ? 'ok' : 'fail', details: lines.length ? lines : 'Sin datos' };
                 }
                 case 'serverstatus': {
                     const data = await fetchWithTimeout(`${API_BASE}/serverstatus/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.statusCode && data.statusCode < 500 ? 'ok' : 'fail', details: `HTTP ${data.statusCode || 'sin respuesta'}` };
+                    const code = data.statusCode;
+                    if (!code) return { label, status: 'error', details: 'Sin respuesta' };
+                    if (code >= 500) return { label, status: 'fail', details: `HTTP ${code}` };
+                    if (code >= 400) return { label, status: 'fail', details: `HTTP ${code}` };
+                    if (code >= 300) {
+                        const target = data.location ? ` → ${data.location}` : '';
+                        return { label, status: 'info', details: `HTTP ${code} (redirección)${target}` };
+                    }
+                    return { label, status: 'ok', details: `HTTP ${code}` };
                 }
                 case 'openports': {
                     const data = await fetchWithTimeout(`${API_BASE}/openports/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const open = data.ports?.filter(p => p.open).map(p => p.port) || [];
-                    return {
-                        label,
-                        status: open.length ? 'ok' : 'fail',
-                        details: open.length ? `Abiertos: ${open.join(', ')}` : 'Sin puertos comunes abiertos'
-                    };
+                    const expected = new Set([53, 80, 443, 25, 110, 143, 465, 587, 993, 995]);
+                    const unusual = open.filter(port => !expected.has(port));
+                    if (!open.length) {
+                        return { label, status: 'ok', details: 'Sin puertos comunes abiertos' };
+                    }
+                    if (unusual.length) {
+                        const details = [`Puertos no estándar: ${unusual.join(', ')}`];
+                        if (open.length > unusual.length) {
+                            const standard = open.filter(port => expected.has(port));
+                            details.push(`Puertos esperados: ${standard.join(', ')}`);
+                        }
+                        return { label, status: 'fail', details };
+                    }
+                    return { label, status: 'ok', details: `Puertos estándar: ${open.join(', ')}` };
                 }
                 case 'traceroute': {
                     const data = await fetchWithTimeout(`${API_BASE}/traceroute/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const hops = data.hops?.slice(0, 10) || [];
-                    return { label, status: hops.length ? 'ok' : 'fail', details: hops.length ? hops : 'Sin datos' };
+                    return { label, status: hops.length ? 'ok' : 'info', details: hops.length ? hops : 'Sin datos' };
                 }
                 case 'redirectchain': {
                     const data = await fetchWithTimeout(`${API_BASE}/redirectchain/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
-                    const chain = data.chain?.map(item => `${item.statusCode || '-'} → ${item.url}`) || [];
-                    return { label, status: chain.length ? 'ok' : 'fail', details: chain.length ? chain : 'Sin redirecciones' };
-                }
-                case 'associatedhosts': {
-                    const data = await fetchWithTimeout(`${API_BASE}/associatedhosts/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const hosts = data.hosts?.map(h => `${h.host} (${h.ip})`) || [];
-                    return { label, status: hosts.length ? 'ok' : 'fail', details: hosts.length ? hosts : 'Sin hosts asociados' };
+                    const chain = (data.chain || []).filter(Boolean);
+                    if (!chain.length) {
+                        return { label, status: 'info', details: 'Sin redirecciones' };
+                    }
+                    const deduped = [];
+                    const seen = new Set();
+                    chain.forEach(step => {
+                        const key = `${step.statusCode}-${step.url}-${step.location || ''}`;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            deduped.push(step);
+                        }
+                    });
+                    const finalStep = deduped[deduped.length - 1];
+                    const lines = deduped.map((step, index) => {
+                        const code = step.statusCode ? `HTTP ${step.statusCode}` : 'Sin código';
+                        const destination = step.location || step.url;
+                        const note = index === deduped.length - 1 ? 'destino final' : 'redirección';
+                        return `${index + 1}. ${code} → ${destination} (${note})`;
+                    });
+                    const summary = `Cadena de ${deduped.length} pasos. Último destino: ${finalStep.location || finalStep.url}`;
+                    let status = 'info';
+                    if (finalStep.statusCode >= 400) status = 'fail';
+                    else if (deduped.length === 1 && finalStep.statusCode < 300) status = 'ok';
+                    return { label, status, details: [summary, ...lines] };
                 }
                 case 'block': {
                     const data = await fetchWithTimeout(`${API_BASE}/block/${ascii}`);
@@ -748,16 +797,6 @@
                     if (typeof data.bestPractices === 'number') lines.push(`Mejores prácticas: ${(data.bestPractices * 100).toFixed(0)}`);
                     if (typeof data.seo === 'number') lines.push(`SEO: ${(data.seo * 100).toFixed(0)}`);
                     return { label, status: lines.length ? 'ok' : 'info', details: lines.length ? lines : 'Sin datos de Lighthouse' };
-                }
-                case 'carbon': {
-                    const data = await fetchWithTimeout(`${API_BASE}/carbon/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const footprint = data.data?.statistics?.co2?.grid?.grams;
-                    return {
-                        label,
-                        status: footprint !== undefined ? 'info' : 'error',
-                        details: footprint !== undefined ? `${footprint.toFixed(2)}g CO₂ por visita` : 'Sin datos'
-                    };
                 }
                 case 'archive': {
                     const data = await fetchWithTimeout(`${API_BASE}/archive/${ascii}`);
@@ -872,11 +911,13 @@
                     return { label, status: ips.length ? 'ok' : 'fail', details: ips.length ? ips.join(', ') : 'No tiene IPv6' };
                 }
                 case 'asn': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${ascii}&type=A`);
-                    const ip = data.Answer?.find(r => r.type === 1)?.data;
-                    if (!ip) return { label, status: 'fail', details: 'Sin IPv4' };
-                    const info = await fetchWithTimeout(`https://ipapi.co/${ip}/json/`);
-                    return { label, status: info.asn ? 'ok' : 'fail', details: info.asn || 'Sin datos' };
+                    const data = await fetchWithTimeout(`${API_BASE}/serverinfo/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    return {
+                        label,
+                        status: data.asn ? 'ok' : 'fail',
+                        details: data.asn ? `AS${data.asn}${data.org ? ` (${data.org})` : ''}` : 'Sin datos'
+                    };
                 }
                 case 'dmarc': {
                     const data = await fetchWithTimeout(`https://dns.google/resolve?name=_dmarc.${ascii}&type=TXT`);
@@ -920,24 +961,32 @@
                     if (!data.results?.length) return { label, status: 'error', details: 'Sin datos' };
                     const details = data.results.map(r => {
                         const state = r.state === 'valid' ? 'válido' : r.state === 'invalid' ? 'inválido' : 'desconocido';
-                        return `${r.ip}: ${state}${r.asn ? ' AS' + r.asn : ''}`;
-                    }).join('; ');
-                    let status = 'error';
-                    if (data.results.some(r => r.state === 'valid')) status = 'ok';
-                    else if (data.results.some(r => r.state === 'invalid')) status = 'fail';
+                        const asn = r.asn ? ` AS${r.asn}` : '';
+                        const prefix = r.prefix ? ` (${r.prefix})` : '';
+                        return `${r.ip}: ${state}${asn}${prefix}`;
+                    });
+                    let status = 'info';
+                    if (data.results.some(r => r.state === 'invalid')) status = 'fail';
+                    else if (data.results.some(r => r.state === 'valid')) status = data.valid ? 'ok' : 'info';
                     return { label, status, details };
+                }
+                case 'domaininfo': {
+                    const data = await fetchWithTimeout(`${API_BASE}/domaininfo/${ascii}`);
+                    if (data.error) return { label, status: 'error', details: data.error };
+                    const lines = [];
+                    if (data.registry) lines.push(`Registro: ${data.registry}`);
+                    if (Array.isArray(data.status) && data.status.length) {
+                        lines.push(`Estados: ${data.status.join(', ')}`);
+                    }
+                    if (data.creation) lines.push(`Creación: ${formatDate(data.creation)}`);
+                    if (data.expiration) lines.push(`Expira: ${formatDate(data.expiration)}`);
+                    return { label, status: lines.length ? 'ok' : 'info', details: lines.length ? lines : 'Sin datos' };
                 }
                 case 'whois': {
                     const data = await fetchWithTimeout(`${API_BASE}/whois/${ascii}`);
                     if (data.error) return { label, status: 'error', details: data.error };
                     const details = data.country ? `${data.name || 'Desconocido'} (${data.country})` : (data.name || 'Desconocido');
                     return { label, status: data.name ? 'ok' : 'fail', details };
-                }
-                case 'w3c': {
-                    const data = await fetchWithTimeout(`${API_BASE}/w3c/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const details = `${data.errors} errores, ${data.warnings} advertencias`;
-                    return { label, status: data.errors === 0 ? 'ok' : 'fail', details };
                 }
                 case 'https': {
                     const data = await getSecurityHeaders(domain);
