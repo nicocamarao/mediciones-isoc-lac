@@ -78,7 +78,7 @@ function smtpQuery(server, port) {
       buffer = lines.pop();
       for (const line of lines) {
         if (!ehloSent && /^220 /.test(line)) {
-          socket.write('EHLO example.com\r\n');
+          socket.write('EHLO www.google.com\r\n');
           ehloSent = true;
         } else if (ehloSent && /^250[ -]/.test(line)) {
           if (/SMTPUTF8/i.test(line)) {
@@ -771,7 +771,7 @@ async function handleOpenPorts(domain, res) {
     ports.map(
       port =>
         new Promise(resolve => {
-          const socket = net.createConnection({ host: domain, port, timeout: 3000 });
+          const socket = net.createConnection({ host: domain, port, timeout: 4000 });
           socket.on('connect', () => {
             results.push({ port, open: true });
             socket.destroy();
@@ -1328,6 +1328,6 @@ const server = http.createServer(async (req, res) => {
   sendJSON(res, 404, { error: 'Not found' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
