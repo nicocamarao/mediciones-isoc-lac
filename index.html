@@ -69,7 +69,25 @@
 
         <div id="history" class="mt-6 hidden"></div>
         <div id="map" class="w-full h-64 mb-8 hidden"></div>
-        <div id="results-container" class="mt-8">
+        <div id="results-container" class="mt-8 space-y-6">
+            <div id="summary" class="hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+                <div class="px-4 py-3 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-800">Resumen acumulado</h2>
+                    <p class="text-sm text-gray-500">Totales en tiempo real por verificación</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
+                            <tr>
+                                <th class="px-4 py-3">Verificación</th>
+                                <th class="px-4 py-3">Sí</th>
+                                <th class="px-4 py-3">No</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryBody" class="divide-y divide-gray-200 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
             <div id="loader" class="hidden items-center justify-center py-4">
                 <div class="loader"></div><p class="ml-3 text-gray-600">Analizando...</p>
             </div>
@@ -83,6 +101,8 @@
     const countrySelect = document.getElementById('countrySelect');
     const resultsContainer = document.getElementById('results');
     const loader = document.getElementById('loader');
+    const summarySection = document.getElementById('summary');
+    const summaryBody = document.getElementById('summaryBody');
     let checkboxes = [];
     const selectAllBtn = document.getElementById('selectAll');
     const historyButton = document.getElementById('historyButton');
@@ -92,6 +112,8 @@
     const aboutText = document.getElementById('aboutText');
     const mapDiv = document.getElementById('map');
     let map; let mapMarkers = [];
+    let summaryData = {};
+    let summaryElements = {};
         const API_BASE = 'http://localhost:4000';
     const headerCache = {};
     const tlsCache = {};
@@ -397,6 +419,96 @@
             return `<pre class="text-xs text-gray-700 whitespace-pre-wrap">${escapeHtml(JSON.stringify(details, null, 2))}</pre>`;
         }
         return `<span class="text-sm">${escapeHtml(details)}</span>`;
+    }
+
+    function renderTooltipList(items, emptyText, isPositive = false) {
+        if (!items.length) {
+            return `<div class="text-xs text-gray-500">${emptyText}</div>`;
+        }
+        return `<ul class="space-y-1 text-xs text-gray-700">${items.map(item => {
+            if (isPositive) {
+                return `<li>${escapeHtml(item.domain)}</li>`;
+            }
+            const statusText = item.status === 'fail'
+                ? 'falló'
+                : item.status === 'error'
+                    ? 'error'
+                    : item.status || '';
+            const suffix = statusText ? ` (${escapeHtml(statusText)})` : '';
+            return `<li>${escapeHtml(item.domain)}${suffix}</li>`;
+        }).join('')}</ul>`;
+    }
+
+    function initializeSummary(selectedChecks) {
+        summaryData = {};
+        summaryElements = {};
+        summaryBody.innerHTML = '';
+        if (!selectedChecks.length) {
+            summarySection.classList.add('hidden');
+            return;
+        }
+        summarySection.classList.remove('hidden');
+        selectedChecks.forEach(checkKey => {
+            const label = checkConfig[checkKey]?.label || checkKey;
+            summaryData[checkKey] = { label, positive: 0, negative: 0, positives: [], negatives: [] };
+
+            const row = document.createElement('tr');
+            const labelCell = document.createElement('td');
+            labelCell.className = 'px-4 py-3 font-medium text-gray-700';
+            labelCell.textContent = label;
+            row.appendChild(labelCell);
+
+            const positiveCell = document.createElement('td');
+            positiveCell.className = 'px-4 py-3 text-green-600';
+            const positiveWrapper = document.createElement('div');
+            positiveWrapper.className = 'relative group inline-block';
+            const positiveCount = document.createElement('span');
+            positiveCount.className = 'font-semibold cursor-help';
+            positiveCount.textContent = '0';
+            const positiveTooltip = document.createElement('div');
+            positiveTooltip.className = 'summary-tooltip hidden group-hover:block absolute z-20 left-1/2 transform -translate-x-1/2 mt-2 w-56 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg p-3';
+            positiveTooltip.innerHTML = renderTooltipList([], 'Sin resultados positivos', true);
+            positiveWrapper.appendChild(positiveCount);
+            positiveWrapper.appendChild(positiveTooltip);
+            positiveCell.appendChild(positiveWrapper);
+            row.appendChild(positiveCell);
+
+            const negativeCell = document.createElement('td');
+            negativeCell.className = 'px-4 py-3 text-red-600';
+            const negativeWrapper = document.createElement('div');
+            negativeWrapper.className = 'relative group inline-block';
+            const negativeCount = document.createElement('span');
+            negativeCount.className = 'font-semibold cursor-help';
+            negativeCount.textContent = '0';
+            const negativeTooltip = document.createElement('div');
+            negativeTooltip.className = 'summary-tooltip hidden group-hover:block absolute z-20 left-1/2 transform -translate-x-1/2 mt-2 w-56 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg p-3';
+            negativeTooltip.innerHTML = renderTooltipList([], 'Sin resultados negativos');
+            negativeWrapper.appendChild(negativeCount);
+            negativeWrapper.appendChild(negativeTooltip);
+            negativeCell.appendChild(negativeWrapper);
+            row.appendChild(negativeCell);
+
+            summaryBody.appendChild(row);
+            summaryElements[checkKey] = { positiveCount, negativeCount, positiveTooltip, negativeTooltip };
+        });
+    }
+
+    function updateSummary(checkKey, domain, status) {
+        if (!summaryData[checkKey]) return;
+        const entry = summaryData[checkKey];
+        if (status === 'ok') {
+            entry.positive += 1;
+            entry.positives.push({ domain, status });
+        } else {
+            entry.negative += 1;
+            entry.negatives.push({ domain, status });
+        }
+        const elements = summaryElements[checkKey];
+        if (!elements) return;
+        elements.positiveCount.textContent = entry.positive;
+        elements.negativeCount.textContent = entry.negative;
+        elements.positiveTooltip.innerHTML = renderTooltipList(entry.positives, 'Sin resultados positivos', true);
+        elements.negativeTooltip.innerHTML = renderTooltipList(entry.negatives, 'Sin resultados negativos');
     }
 
     function getStatusHtml(status, details = '') {
@@ -933,9 +1045,11 @@
                 const res = await getCheckResult(checkType, domain);
                 finalResults[checkType] = res;
                 placeholders[checkType].innerHTML = getStatusHtml(res.status, res.details);
+                updateSummary(checkType, domain, res.status);
             } catch (err) {
                 finalResults[checkType] = { label: checkConfig[checkType].label, status: 'error', details: err.message };
                 placeholders[checkType].innerHTML = getStatusHtml('error', err.message);
+                updateSummary(checkType, domain, 'error');
             }
         });
         await Promise.allSettled(promises);
@@ -950,11 +1064,13 @@
 
         const domains = domainsInput.value.trim().split(',').map(d => d.trim()).filter(Boolean);
         const selectedChecks = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.dataset.check);
+        initializeSummary(selectedChecks);
 
         if (!domains.length || !selectedChecks.length) {
             loader.style.display = 'none';
             checkButton.disabled = false;
             resultsContainer.innerHTML = `<div class="text-center text-gray-500 p-4">${!domains.length ? 'Introduce al menos un dominio.' : 'Selecciona al menos una verificación.'}</div>`;
+            initializeSummary([]);
             return;
         }
 
