@@ -19,6 +19,36 @@
         .check-label { transition: all 0.2s ease-in-out; }
         .check-label:hover { background-color: #f9fafb; }
         .result-item .label { min-width: 140px; }
+        .summary-table details {
+            position: relative;
+            display: inline-block;
+        }
+        .summary-table details > summary {
+            list-style: none;
+            cursor: pointer;
+        }
+        .summary-table details > summary::-webkit-details-marker {
+            display: none;
+        }
+        .summary-table details .tooltip-panel {
+            display: none;
+            position: absolute;
+            top: 120%;
+            right: 50%;
+            transform: translateX(50%);
+            width: 16rem;
+            max-height: 16rem;
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            z-index: 30;
+        }
+        .summary-table details[open] .tooltip-panel {
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -70,6 +100,21 @@
         <div id="history" class="mt-6 hidden"></div>
         <div id="map" class="w-full h-64 mb-8 hidden"></div>
         <div id="results-container" class="mt-8">
+            <div id="summary" class="hidden summary-table">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">Resumen acumulado</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg text-sm">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="px-4 py-2 border-b text-left">Tipo de verificación</th>
+                                <th class="px-4 py-2 border-b text-center">Resultados positivos</th>
+                                <th class="px-4 py-2 border-b text-center">Resultados negativos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryBody"></tbody>
+                    </table>
+                </div>
+            </div>
             <div id="loader" class="hidden items-center justify-center py-4">
                 <div class="loader"></div><p class="ml-3 text-gray-600">Analizando...</p>
             </div>
@@ -83,6 +128,8 @@
     const countrySelect = document.getElementById('countrySelect');
     const resultsContainer = document.getElementById('results');
     const loader = document.getElementById('loader');
+    const summarySection = document.getElementById('summary');
+    const summaryBody = document.getElementById('summaryBody');
     let checkboxes = [];
     const selectAllBtn = document.getElementById('selectAll');
     const historyButton = document.getElementById('historyButton');
@@ -95,6 +142,8 @@
         const API_BASE = 'http://localhost:4000';
     const headerCache = {};
     const tlsCache = {};
+    let summaryState = {};
+    let summaryOrder = [];
 
     const countryTlds = {
         'Uruguay': ['uy','com.uy','edu.uy','gub.uy','org.uy','net.uy','mil.uy','destinosnaturales.gub.uy','agesic.gub.uy'],
@@ -306,6 +355,87 @@
     }
 
     renderCheckOptions();
+
+    function resetSummary(selectedChecks) {
+        summaryState = {};
+        summaryOrder = selectedChecks.slice();
+        selectedChecks.forEach(check => {
+            summaryState[check] = {
+                label: checkConfig[check]?.label || check,
+                ok: 0,
+                okDomains: [],
+                fail: 0,
+                failDomains: []
+            };
+        });
+        if (selectedChecks.length) {
+            summarySection.classList.remove('hidden');
+            renderSummaryTable();
+        } else {
+            summarySection.classList.add('hidden');
+            summaryBody.innerHTML = '';
+        }
+    }
+
+    function renderSummaryTable() {
+        if (!summaryOrder.length) {
+            summaryBody.innerHTML = '';
+            return;
+        }
+        const rows = summaryOrder.map(checkType => {
+            const entry = summaryState[checkType];
+            if (!entry) return '';
+            const okList = entry.okDomains.length
+                ? entry.okDomains.map(d => `<div class="text-sm text-gray-700">${escapeHtml(d)}</div>`).join('')
+                : '<div class="text-xs text-gray-500">Sin resultados positivos</div>';
+            const failList = entry.failDomains.length
+                ? entry.failDomains.map(item => {
+                    const statusLabel = item.status && item.status !== 'fail' ? ` <span class="text-xs text-gray-500">(${escapeHtml(item.status)})</span>` : '';
+                    return `<div class="text-sm text-gray-700">${escapeHtml(item.domain)}${statusLabel}</div>`;
+                }).join('')
+                : '<div class="text-xs text-gray-500">Sin resultados negativos</div>';
+
+            const okCell = entry.okDomains.length
+                ? `<div class="flex items-center justify-center space-x-2">
+                        <span class="text-green-600 font-semibold">${entry.ok}</span>
+                        <details class="summary-details">
+                            <summary class="text-xs text-blue-600 hover:text-blue-800">Ver lista</summary>
+                            <div class="tooltip-panel">${okList}</div>
+                        </details>
+                   </div>`
+                : `<span class="text-green-600 font-semibold">${entry.ok}</span>`;
+
+            const failCell = entry.failDomains.length
+                ? `<div class="flex items-center justify-center space-x-2">
+                        <span class="text-red-600 font-semibold">${entry.fail}</span>
+                        <details class="summary-details">
+                            <summary class="text-xs text-blue-600 hover:text-blue-800">Ver lista</summary>
+                            <div class="tooltip-panel">${failList}</div>
+                        </details>
+                   </div>`
+                : `<span class="text-red-600 font-semibold">${entry.fail}</span>`;
+
+            return `<tr data-check="${checkType}">
+                        <td class="px-4 py-2 border-b text-gray-800 font-medium">${escapeHtml(entry.label)}</td>
+                        <td class="px-4 py-2 border-b text-center">${okCell}</td>
+                        <td class="px-4 py-2 border-b text-center">${failCell}</td>
+                    </tr>`;
+        }).join('');
+        summaryBody.innerHTML = rows;
+    }
+
+    function updateSummary(checkType, domain, status) {
+        const entry = summaryState[checkType];
+        if (!entry) return;
+        if (status === 'ok') {
+            entry.ok += 1;
+            entry.okDomains.push(domain);
+        } else {
+            entry.fail += 1;
+            entry.failDomains.push({ domain, status });
+        }
+        renderSummaryTable();
+    }
 
     function loadHistory() {
         const history = JSON.parse(localStorage.getItem('domainHistory') || '[]');
@@ -933,9 +1063,11 @@
                 const res = await getCheckResult(checkType, domain);
                 finalResults[checkType] = res;
                 placeholders[checkType].innerHTML = getStatusHtml(res.status, res.details);
+                updateSummary(checkType, domain, res.status);
             } catch (err) {
                 finalResults[checkType] = { label: checkConfig[checkType].label, status: 'error', details: err.message };
                 placeholders[checkType].innerHTML = getStatusHtml('error', err.message);
+                updateSummary(checkType, domain, 'error');
             }
         });
         await Promise.allSettled(promises);
@@ -955,9 +1087,12 @@
             loader.style.display = 'none';
             checkButton.disabled = false;
             resultsContainer.innerHTML = `<div class="text-center text-gray-500 p-4">${!domains.length ? 'Introduce al menos un dominio.' : 'Selecciona al menos una verificación.'}</div>`;
+            summarySection.classList.add('hidden');
+            summaryBody.innerHTML = '';
             return;
         }
 
+        resetSummary(selectedChecks);
         const historyEntry = { date: new Date().toLocaleString(), checks: selectedChecks, domains: [] };
         const promises = domains.map(d => analyzeDomain(d, selectedChecks));
         const results = await Promise.all(promises);
