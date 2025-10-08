@@ -20,3 +20,8 @@ npm start
  - `GET /whois/:dominio` – extrae datos de whois.com y recurre a RDAP como respaldo para obtener organización y país.
 
 El cliente web en `index.html` consume estos endpoints y muestra los resultados de cada método para una verificación más resiliente.
+
+## Mario Bros en HTML5
+
+En la carpeta `mario/` se incluye un pequeño juego tipo *Mario Bros* desarrollado con Canvas. Para jugarlo, abre `mario/index.html` en un navegador compatible con HTML5.
+
