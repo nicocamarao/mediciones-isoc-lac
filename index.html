@@ -1,1154 +1,2229 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suite de Análisis de Dominios</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        .loader {
-            border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6;
-            border-radius: 50%; width: 24px; height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .check-label { transition: all 0.2s ease-in-out; }
-        .check-label:hover { background-color: #f9fafb; }
-        .result-item .label { min-width: 140px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Herramienta de Mediciones ISOC-LAC 2026</title>
+  <style>
+    :root{
+      --bg:#eef3ef;
+      --surface:#ffffff;
+      --surface-2:#f7faf8;
+      --border:#d5ded7;
+      --text:#17211b;
+      --muted:#5d6a64;
+      --accent:#0d6852;
+      --accent-soft:#dff0e9;
+      --ok:#0b7a4b;
+      --warn:#9a6a00;
+      --fail:#aa2e25;
+      --info:#2458a6;
+      --shadow:0 18px 48px rgba(18, 33, 27, 0.08);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(13,104,82,.10), transparent 28%),
+        radial-gradient(circle at top right, rgba(36,88,166,.10), transparent 24%),
+        linear-gradient(180deg, #f7faf8 0%, var(--bg) 100%);
+    }
+    .page{max-width:1200px;margin:0 auto;padding:24px}
+    .hero,.panel{
+      background:rgba(255,255,255,.90);
+      backdrop-filter: blur(6px);
+      border:1px solid rgba(213,222,215,.95);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+    }
+    .hero{padding:28px}
+    .hero-grid{display:grid;gap:18px}
+    .kicker{
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-size:.74rem;
+      font-weight:800;
+      color:var(--accent);
+      margin:0 0 8px;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(2rem, 4vw, 3.4rem);
+      line-height:1.02;
+      letter-spacing:-.03em;
+    }
+    .lead,.note,.category-note,.results-note,.muted{
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .lead{max-width:72ch;font-size:1.02rem;margin:0}
+    .inline-note{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:var(--accent-soft);
+      color:var(--accent);
+      font-size:.86rem;
+      font-weight:700;
+      border:1px solid rgba(13,104,82,.18);
+    }
+    .layout{display:grid;gap:18px;margin-top:18px}
+    .panel{padding:20px}
+    .panel-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .panel-head h2{
+      margin:0;
+      font-size:1.3rem;
+      letter-spacing:-.02em;
+    }
+    .panel-head p{margin:0}
+    .form-grid{display:grid;gap:14px}
+    textarea{
+      width:100%;
+      min-height:96px;
+      padding:14px 16px;
+      resize:vertical;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      font:inherit;
+      line-height:1.5;
+      outline:none;
+    }
+    textarea:focus{border-color:rgba(13,104,82,.5);box-shadow:0 0 0 4px rgba(13,104,82,.12)}
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+    .button{
+      appearance:none;
+      border:1px solid var(--border);
+      background:var(--surface);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:999px;
+      cursor:pointer;
+      font:inherit;
+      font-weight:650;
+      transition:transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .button:hover{transform:translateY(-1px);border-color:#b8c6bd}
+    .button.primary{
+      background:linear-gradient(180deg, #0e745a 0%, #0a5e49 100%);
+      color:#fff;
+      border-color:transparent;
+    }
+    .button.primary:hover{border-color:transparent}
+    .button.ghost{background:var(--surface-2)}
+    .counter{
+      margin-left:auto;
+      color:var(--muted);
+      font-size:.92rem;
+      font-weight:600;
+    }
+    .loading{
+      display:none;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:.95rem;
+    }
+    .spinner{
+      width:18px;height:18px;border-radius:50%;
+      border:3px solid rgba(13,104,82,.18);
+      border-top-color:var(--accent);
+      animation:spin .9s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .categories{display:grid;gap:12px}
+    .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .tab-button{
+      appearance:none;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      color:var(--text);
+      padding:9px 13px;
+      border-radius:999px;
+      cursor:pointer;
+      font:inherit;
+      font-weight:700;
+    }
+    .tab-button.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:transparent;
+    }
+    .tab-label{display:inline-flex;align-items:center;gap:8px}
+    .tab-info{
+      position:relative;
+      display:inline-flex;
+      width:18px;
+      height:18px;
+      align-items:center;
+      justify-content:center;
+      border-radius:50%;
+      border:1px solid currentColor;
+      font-size:.72rem;
+      line-height:1;
+      font-weight:800;
+      cursor:help;
+    }
+    .tab-info::after{
+      content:attr(data-tip);
+      position:absolute;
+      left:50%;
+      top:calc(100% + 10px);
+      transform:translateX(-50%) translateY(6px);
+      width:min(280px, 72vw);
+      padding:10px 12px;
+      border-radius:12px;
+      background:#17211b;
+      color:#fff;
+      font-size:.75rem;
+      line-height:1.45;
+      font-weight:600;
+      white-space:normal;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .12s ease, transform .12s ease;
+      box-shadow:var(--shadow);
+      z-index:3;
+    }
+    .tab-info:hover::after,
+    .tab-info:focus-visible::after{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+    .tab-panel{
+      display:none;
+      border:1px solid var(--border);
+      border-radius:20px;
+      background:var(--surface);
+      overflow:hidden;
+    }
+    .tab-panel.active{display:block}
+    details{
+      border:1px solid var(--border);
+      border-radius:20px;
+      background:var(--surface);
+      overflow:hidden;
+    }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      padding:16px 18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+    }
+    summary::-webkit-details-marker{display:none}
+    .cat-title{margin:0;font-size:1.05rem;line-height:1.2}
+    .cat-sub{margin:6px 0 0;color:var(--muted);font-size:.95rem;line-height:1.45}
+    .cat-count{
+      flex:0 0 auto;
+      padding:8px 12px;
+      border-radius:999px;
+      background:var(--surface-2);
+      color:var(--muted);
+      font-size:.82rem;
+      font-weight:700;
+      border:1px solid var(--border);
+      white-space:nowrap;
+    }
+    .check-list{display:grid;gap:10px;padding:0 16px 16px}
+    .check-item{
+      display:grid;
+      gap:10px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+    }
+    .check-item.coming-soon{
+      opacity:.72;
+      background:linear-gradient(180deg, rgba(255,255,255,.75), rgba(247,250,248,.95));
+    }
+    .check-head{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:12px;
+      align-items:start;
+    }
+    .check-head input{margin-top:3px}
+    .check-title{font-weight:750}
+    .check-desc{margin-top:6px;color:var(--muted);font-size:.9rem;line-height:1.45}
+    .summary-strip{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+    .summary-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--surface);
+      font-size:.88rem;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .summary-chip strong{font-size:1rem}
+    .results-wrap{display:grid;gap:16px}
+    .result-shell{display:grid;gap:12px}
+    .result-nav{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .nav-group{display:flex;gap:8px;align-items:center}
+    .nav-button{
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      box-shadow:var(--shadow);
+      cursor:pointer;
+      font-size:20px;
+      line-height:1;
+    }
+    .nav-button:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+    .result-counter{color:var(--muted);font-size:.9rem;font-weight:700}
+    .result-page{display:none}
+    .result-page.active{display:block}
+    .empty-state{
+      padding:18px;
+      border-radius:18px;
+      border:1px dashed var(--border);
+      background:var(--surface-2);
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .result-card{
+      border:1px solid var(--border);
+      border-radius:22px;
+      background:var(--surface);
+      box-shadow:0 10px 28px rgba(18,33,27,.05);
+      overflow:hidden;
+    }
+    .result-card.ok{border-color:rgba(11,122,75,.28)}
+    .result-card.warning{border-color:rgba(154,106,0,.28)}
+    .result-card.fail{border-color:rgba(170,46,37,.30)}
+    .result-card.error{border-color:rgba(95,106,100,.30)}
+    .result-head{
+      padding:18px;
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-start;
+      border-bottom:1px solid var(--border);
+    }
+    .domain-title{margin:0;font-size:1.25rem;letter-spacing:-.02em}
+    .domain-sub{margin:6px 0 0;color:var(--muted);font-size:.92rem;line-height:1.45}
+    .result-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+    .problem-summary{
+      padding:0 18px 18px;
+      border-bottom:1px solid var(--border);
+      color:var(--muted);
+      line-height:1.5;
+    }
+    .problem-summary ul{margin:8px 0 0;padding-left:18px}
+    .problem-summary li{margin:.25rem 0}
+    .compliance{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--surface);
+      font-size:.88rem;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .status{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:.78rem;
+      font-weight:800;
+      border:1px solid transparent;
+    }
+    .status.ok{background:rgba(11,122,75,.12);color:var(--ok);border-color:rgba(11,122,75,.18)}
+    .status.warning{background:rgba(154,106,0,.12);color:var(--warn);border-color:rgba(154,106,0,.18)}
+    .status.fail{background:rgba(170,46,37,.12);color:var(--fail);border-color:rgba(170,46,37,.18)}
+    .status.info{background:rgba(36,88,166,.12);color:var(--info);border-color:rgba(36,88,166,.18)}
+    .status.error{background:rgba(95,106,100,.12);color:#6b7671;border-color:rgba(95,106,100,.18)}
+    .status.pending{background:#eef1f0;color:#53615b;border-color:var(--border)}
+    .result-list{padding:14px;display:grid;gap:10px}
+    .result-row{
+      padding:14px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      display:grid;
+      gap:10px;
+    }
+    .result-row.ok{border-color:rgba(11,122,75,.28);background:rgba(11,122,75,.05)}
+    .result-row.warning{border-color:rgba(154,106,0,.28);background:rgba(154,106,0,.05)}
+    .result-row.fail{border-color:rgba(170,46,37,.30);background:rgba(170,46,37,.05)}
+    .result-row.error{border-color:rgba(95,106,100,.30);background:rgba(95,106,100,.05)}
+    .result-inline{
+      padding:12px;
+      border-radius:14px;
+      border:1px dashed rgba(213,222,215,.9);
+      background:rgba(255,255,255,.82);
+      display:grid;
+      gap:10px;
+    }
+    .row-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .row-title{font-weight:750;line-height:1.35}
+    .row-body{line-height:1.55;color:var(--text)}
+    .row-body ul{margin:0;padding-left:18px}
+    .row-body li{margin:.2rem 0}
+    .graph-box{
+      margin-top:10px;
+      padding:12px;
+      border-radius:18px;
+      background:linear-gradient(180deg, #f8fbf9, #eef5f1);
+      border:1px solid var(--border);
+    }
+    .graph-top{
+      display:flex;
+      gap:12px;
+      justify-content:space-between;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .graph-top h4{margin:0;font-size:1rem}
+    .graph-top p{margin:4px 0 0;color:var(--muted);font-size:.9rem;line-height:1.45}
+    .graph-top a{color:var(--accent);font-weight:750;text-decoration:none}
+    .graph-top a:hover{text-decoration:underline}
+    .graph-box img{
+      width:100%;
+      display:block;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+    }
+    .dnsviz-graph{
+      max-height:320px;
+      height:320px;
+      object-fit:contain;
+    }
+    .dnsviz-chain{
+      margin-top:12px;
+      display:grid;
+      gap:8px;
+    }
+    .dnsviz-chain-item{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.85);
+      display:grid;
+      gap:4px;
+    }
+    .dnsviz-chain-top{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .dnsviz-chain-name{font-weight:750}
+    .dnsviz-chain-meta{color:var(--muted);font-size:.82rem;line-height:1.35}
+    .aux-panel{
+      border:1px solid var(--border);
+      border-radius:20px;
+      background:var(--surface);
+      overflow:hidden;
+      padding:0;
+    }
+    .aux-panel > summary{
+      list-style:none;
+      cursor:pointer;
+      padding:16px 18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+    }
+    .aux-panel > summary::-webkit-details-marker{display:none}
+    .aux-body{padding:0 18px 18px}
+    .pending-grid{display:grid;gap:10px}
+    .pending-item{
+      padding:14px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      color:var(--muted);
+      line-height:1.55;
+    }
+    .footer-note{font-size:.9rem;color:var(--muted);line-height:1.6}
+    .chat-fab{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      z-index:30;
+      width:min(360px, calc(100vw - 36px));
+      border:1px solid var(--border);
+      border-radius:20px;
+      background:rgba(255,255,255,.96);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .chat-fab.collapsed .chat-body{display:none}
+    .chat-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      background:var(--surface-2);
+    }
+    .chat-head strong{font-size:.92rem}
+    .chat-toggle{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      cursor:pointer;
+      font:inherit;
+      font-weight:800;
+    }
+    .chat-body{padding:12px 14px;display:grid;gap:10px}
+    .chat-log{
+      min-height:110px;
+      max-height:210px;
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--surface-2);
+      padding:10px;
+      font-size:.88rem;
+      line-height:1.5;
+    }
+    .chat-msg{margin:0 0 10px}
+    .chat-msg strong{display:block;margin-bottom:4px}
+    .chat-form{display:flex;gap:8px}
+    .chat-form input{
+      flex:1;
+      min-width:0;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:10px 12px;
+      font:inherit;
+    }
+    .chat-form button{
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:10px 14px;
+      background:var(--accent);
+      color:#fff;
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .chat-hints{display:flex;flex-wrap:wrap;gap:6px}
+    .chat-hint{
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:5px 8px;
+      background:var(--surface-2);
+      font-size:.78rem;
+      cursor:pointer;
+    }
+    @media (max-width: 720px){
+      .page{padding:14px}
+      .hero,.panel{border-radius:18px}
+      summary,.check-item,.result-head,.result-list{padding-left:14px;padding-right:14px}
+      .summary-chip{white-space:normal}
+      .check-head{grid-template-columns:auto 1fr}
+      .check-head .check-badge{grid-column:2}
+      .counter{margin-left:0;width:100%}
+      .chat-fab{right:10px;bottom:10px;width:calc(100vw - 20px)}
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="hero-grid">
+        <div>
+          <p class="kicker">Internet standards / padrões modernos</p>
+          <h1>Herramienta de Mediciones ISOC-LAC 2026</h1>
+        </div>
+        <p class="lead">
+          Medimos dominios, correo, DNS, TLS y cumplimiento web con una base inspirada en Internet.nl, pero ejecutada en Node.js para reutilizar nuestras rutas y mantener el flujo estable.
+          <br>
+          <span class="muted">ES:</span> las pruebas se ejecutan una por una para reducir timeouts y rate limits.
+          <br>
+          <span class="muted">PT:</span> os testes rodam um por um para reduzir timeouts e rate limits.
+        </p>
+        <div class="inline-note">
+          <span class="pill">DNSViz gráfico DNSSEC integrado</span>
+          <span class="pill">Mediciones en servidor</span>
+          <span class="pill">ES / PT</span>
+        </div>
+      </div>
+    </header>
 
-    <div class="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 my-8">
-        <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Internet Society Uruguay (Mediciones ISOC-LAC)</h1>
-            <p class="text-gray-500 mt-2">Proyecto colaborativo de capítulos de Internet Society para mediciones abiertas de la región LAC.</p>
-            <button id="aboutBtn" class="text-blue-600 underline text-sm mt-2">Acerca de</button>
-            <div id="aboutText" class="hidden mt-4 text-sm text-gray-700">
-                El Capítulo Uruguay de Internet Society, junto a otros capítulos de la región,
-                desarrolló esta herramienta abierta para medir la adopción de tecnologías y buenas prácticas
-                en América Latina y el Caribe. Esta plataforma se integrará con ISOC Pulse para
-                recopilar y compartir información regional.
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Dominios</h2>
+            <p class="muted">Separados por coma. También acepta saltos de línea.</p>
+          </div>
+          <div id="selectionCount" class="counter">0 mediciones seleccionadas</div>
+        </div>
+        <div class="form-grid">
+          <textarea id="domains" placeholder="ejemplo.com, nic.uy, internet.org"></textarea>
+          <div class="toolbar">
+            <button id="runButton" class="button primary" type="button">Analizar</button>
+            <button data-preset="core" class="button ghost" type="button">Core</button>
+            <button data-preset="all" class="button ghost" type="button">Todas</button>
+            <button data-preset="https" class="button ghost" type="button">HTTPS</button>
+            <button data-preset="tls" class="button ghost" type="button">TLS</button>
+            <button data-preset="ip" class="button ghost" type="button">IP</button>
+            <button data-preset="dnssec" class="button ghost" type="button">DNSSEC</button>
+            <button data-preset="mailauth" class="button ghost" type="button">Correo auth</button>
+            <button data-preset="mailtransport" class="button ghost" type="button">Transporte</button>
+            <button data-preset="ua" class="button ghost" type="button">UA</button>
+            <button data-preset="route" class="button ghost" type="button">Ruta</button>
+            <button data-preset="lab" class="button ghost" type="button">Laboratorio</button>
+            <button id="clearButton" class="button ghost" type="button">Limpiar</button>
+          </div>
+          <div id="loading" class="loading">
+            <span class="spinner"></span>
+            <span>Analizando uno por uno para evitar saturación.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Mediciones y resultados</h2>
+            <p class="muted">Cada bloque explica qué mide y por qué importa. Las categorías siguen la idea de Internet.nl. El gráfico DNSViz se carga desde nuestro servidor para evitar CORS y mantener la experiencia estable.</p>
+          </div>
+        </div>
+        <div class="result-nav">
+          <div id="resultTabs" class="tabs"></div>
+          <div class="nav-group">
+            <button id="prevResult" class="nav-button" type="button" aria-label="Dominio anterior">‹</button>
+            <button id="nextResult" class="nav-button" type="button" aria-label="Siguiente dominio">›</button>
+          </div>
+        </div>
+        <div class="panel-head" style="margin-top:4px">
+          <div>
+            <h3 style="margin:0;font-size:1rem;letter-spacing:-.02em">Resumen activo</h3>
+            <p class="results-note">Los resultados se pintan dentro de cada fila del panel de checks.</p>
+          </div>
+          <div id="summary" class="summary-strip"></div>
+          <div id="resultCounter" class="result-counter">0 / 0</div>
+        </div>
+        <div id="catalogTabs" class="tabs"></div>
+        <div id="catalog" class="categories"></div>
+      </section>
+
+      <section class="panel">
+        <details class="aux-panel">
+          <summary>
+            <div>
+              <h2 class="cat-title">Externos / Externos</h2>
+              <p class="cat-sub">Herramientas auxiliares que consumen datos públicos por `GET`.</p>
             </div>
-        </div>
-
-        <div class="mb-6">
-            <label for="countrySelect" class="block text-sm font-medium text-gray-700 mb-2">Selecciona un país</label>
-            <select id="countrySelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                <option value="" selected disabled>-- País --</option>
-            </select>
-        </div>
-
-        <div class="mb-6">
-            <label for="domains" class="block text-sm font-medium text-gray-700 mb-2">Dominios (separados por coma)</label>
-            <textarea id="domains" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="google.com, nic.uy, lacnic.net"></textarea>
-        </div>
-
-        <div class="mb-6">
-            <div class="flex justify-between items-center mb-3">
-                <label class="block text-sm font-medium text-gray-700">Verificaciones a realizar</label>
-                <button id="selectAll" type="button" class="text-blue-600 text-sm">Seleccionar todos</button>
-            </div>
-            <div id="checksContainer" class="space-y-3"></div>
-        </div>
-
-        <div class="flex flex-col items-center justify-center">
-            <button id="checkButton" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105 flex items-center justify-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 9a2 2 0 114 0 2 2 0 01-4 0z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a4 4 0 00-3.446 6.032l-2.261 2.26a1 1 0 101.414 1.414l2.26-2.26a4 4 0 10-1.15-7.446z" clip-rule="evenodd" /></svg>
-                <span>Analizar Dominios</span>
-            </button>
-            <div class="flex space-x-4 mt-4">
-                <button id="historyButton" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Ver Historial</button>
-                <button id="clearHistoryButton" class="bg-gray-400 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">Limpiar Historial</button>
-            </div>
-        </div>
-
-        <div id="history" class="mt-6 hidden"></div>
-        <div id="map" class="w-full h-64 mb-8 hidden"></div>
-        <div id="results-container" class="mt-8 space-y-6">
-            <div id="summary" class="hidden bg-white border border-gray-200 rounded-lg shadow-sm">
-                <div class="px-4 py-3 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-800">Resumen acumulado</h2>
-                    <p class="text-sm text-gray-500">Totales en tiempo real por verificación</p>
+            <span class="cat-count">aux</span>
+          </summary>
+          <div class="aux-body">
+            <div class="form-grid" style="margin-top:12px">
+              <label class="check-item">
+                <div class="check-title">Espectro Wi‑Fi / Wi‑Fi spectrum</div>
+                <div class="check-desc">
+                  <strong>ES:</strong> pega un <code>variantId</code> público de Wi‑Fi Alliance para leer bandas, capacidades y clases.
+                  <br>
+                  <strong>PT:</strong> cole um <code>variantId</code> público da Wi‑Fi Alliance para ler bandas, capacidades e classes.
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm text-left">
-                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
-                            <tr>
-                                <th class="px-4 py-3">Verificación</th>
-                                <th class="px-4 py-3">Sí</th>
-                                <th class="px-4 py-3">No</th>
-                            </tr>
-                        </thead>
-                        <tbody id="summaryBody" class="divide-y divide-gray-200 bg-white"></tbody>
-                    </table>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                  <input id="wifiVariant" type="text" placeholder="WFA115006" style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--border);border-radius:999px;font:inherit">
+                  <button id="wifiProbe" class="button primary" type="button">Probar</button>
                 </div>
+              </label>
+              <div id="wifiSpectrumResult" class="result-row">
+                <div class="row-head">
+                  <div class="row-title">Esperando variantId</div>
+                  <span class="status pending">Pendiente</span>
+                </div>
+                <div class="row-body">
+                  <p class="muted">ES: cuando ejecutes la prueba, aquí verás las bandas y las capacidades detectadas.</p>
+                  <p class="muted">PT: quando executar o teste, aqui você verá as bandas e capacidades detectadas.</p>
+                </div>
+              </div>
             </div>
-            <div id="loader" class="hidden items-center justify-center py-4">
-                <div class="loader"></div><p class="ml-3 text-gray-600">Analizando...</p>
-            </div>
-            <div id="results" class="space-y-6"></div>
-        </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel">
+        <p class="footer-note">
+          Nota: muchas mediciones dependen de terceros, pero el núcleo se ejecuta desde <code>server.js</code>.
+          DNSViz, RIPE, DNS y SMTP se consultan desde el servidor para no depender del navegador.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <aside id="helpChat" class="chat-fab collapsed" aria-label="Ayuda contextual">
+    <div class="chat-head">
+      <strong>Ayuda rápida</strong>
+      <button id="chatToggle" class="chat-toggle" type="button">Abrir</button>
     </div>
+    <div class="chat-body">
+      <div id="chatLog" class="chat-log" aria-live="polite"></div>
+      <div class="chat-hints">
+        <button type="button" class="chat-hint" data-chat-term="dnssec">dnssec</button>
+        <button type="button" class="chat-hint" data-chat-term="dnsviz">dnsviz</button>
+        <button type="button" class="chat-hint" data-chat-term="ipv6">ipv6</button>
+        <button type="button" class="chat-hint" data-chat-term="rpki">rpki</button>
+        <button type="button" class="chat-hint" data-chat-term="w3c">w3c</button>
+        <button type="button" class="chat-hint" data-chat-term="ofds">ofds</button>
+        <button type="button" class="chat-hint" data-chat-term="smtputf8">smtputf8</button>
+      </div>
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" type="text" placeholder="Escribe dnssec, ipv6, spf..." autocomplete="off">
+        <button type="submit">Ver</button>
+      </form>
+    </div>
+  </aside>
 
-<script>
-    const checkButton = document.getElementById('checkButton');
+  <script>
+    const API_BASE = location.protocol === 'file:' ? 'http://localhost:4000' : '';
     const domainsInput = document.getElementById('domains');
-    const countrySelect = document.getElementById('countrySelect');
-    const resultsContainer = document.getElementById('results');
-    const loader = document.getElementById('loader');
-    const summarySection = document.getElementById('summary');
-    const summaryBody = document.getElementById('summaryBody');
-    let checkboxes = [];
-    const selectAllBtn = document.getElementById('selectAll');
-    const historyButton = document.getElementById('historyButton');
-    const clearHistoryButton = document.getElementById('clearHistoryButton');
-    const historyDiv = document.getElementById('history');
-    const aboutBtn = document.getElementById('aboutBtn');
-    const aboutText = document.getElementById('aboutText');
-    const mapDiv = document.getElementById('map');
-    let map; let mapMarkers = [];
-    let summaryData = {};
-    let summaryElements = {};
-        const API_BASE = 'http://localhost:4000';
-    const headerCache = {};
-    const tlsCache = {};
+    const runButton = document.getElementById('runButton');
+    const clearButton = document.getElementById('clearButton');
+    const loading = document.getElementById('loading');
+    const catalogEl = document.getElementById('catalog');
+    const summaryEl = document.getElementById('summary');
+    const selectionCount = document.getElementById('selectionCount');
+    const catalogTabs = document.getElementById('catalogTabs');
+    const resultTabs = document.getElementById('resultTabs');
+    const wifiVariant = document.getElementById('wifiVariant');
+    const wifiProbe = document.getElementById('wifiProbe');
+    const wifiSpectrumResult = document.getElementById('wifiSpectrumResult');
+    const prevResult = document.getElementById('prevResult');
+    const nextResult = document.getElementById('nextResult');
+    const resultCounter = document.getElementById('resultCounter');
 
-    const countryTlds = {
-        'Uruguay': ['uy','com.uy','edu.uy','gub.uy','org.uy','net.uy','mil.uy','destinosnaturales.gub.uy','agesic.gub.uy'],
-        'Argentina': ['ar','com.ar','gob.ar','edu.ar','org.ar','net.ar'],
-        'Brasil': ['br','com.br','gov.br','edu.br','org.br','net.br'],
-        'Ecuador': ['ec','com.ec','gob.ec','edu.ec','org.ec','net.ec'],
-        'Bolivia': ['bo','com.bo','gob.bo','edu.bo','org.bo','net.bo'],
-        'Chile': ['cl','com.cl','gob.cl','edu.cl','org.cl','net.cl'],
-        'Paraguay': ['py','com.py','gov.py','edu.py','org.py','net.py'],
-        'Perú': ['pe','com.pe','gob.pe','edu.pe','org.pe','net.pe'],
-        'Colombia': ['co','com.co','gov.co','edu.co','org.co','net.co'],
-        'México': ['mx','com.mx','gob.mx','edu.mx','org.mx','net.mx']
+    const apiCache = new Map();
+    const apiFailureCache = new Map();
+    const analyzedDomains = [];
+    const resultTabButtons = [];
+    const catalogPanels = new Map();
+    const catalogResultSlots = new Map();
+    const domainResultsStore = new Map();
+    const helpChat = document.getElementById('helpChat');
+    const chatToggle = document.getElementById('chatToggle');
+    const chatLog = document.getElementById('chatLog');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    let currentResultIndex = 0;
+    let activeCatalog = 'https';
+
+    const make = (tag, className, text) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
     };
 
-    for (const country of Object.keys(countryTlds)) {
-        const opt = document.createElement('option');
-        opt.value = country;
-        opt.textContent = country;
-        countrySelect.appendChild(opt);
-    }
-
-    countrySelect.addEventListener('change', () => {
-        const domains = countryTlds[countrySelect.value] || [];
-        domainsInput.value = domains.join(', ');
+    const check = (id, labelEs, labelPt, descEs, descPt, selected = true) => ({
+      id,
+      label: `${labelEs} / ${labelPt}`,
+      descEs,
+      descPt,
+      defaultSelected: selected
     });
 
-    aboutBtn.addEventListener('click', () => {
-        aboutText.classList.toggle('hidden');
+    const checkSoon = (id, labelEs, labelPt, descEs, descPt) => ({
+      ...check(id, labelEs, labelPt, descEs, descPt, false),
+      comingSoon: true
     });
 
-    function initMap() {
-        map = L.map('map').setView([0, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-    }
-    initMap();
-
-    function clearMap() {
-        mapMarkers.forEach(m => map.removeLayer(m));
-        mapMarkers = [];
-    }
-
-    async function updateMap(domains) {
-        if (!domains.length) return;
-        clearMap();
-        mapDiv.classList.remove('hidden');
-        map.invalidateSize();
-        const generics = [];
-        const coords = {};
-        for (const d of domains) {
-            const tld = d.split('.').pop().toLowerCase();
-            if (tld.length === 2) {
-                if (!coords[tld]) {
-                    try {
-                        const info = await fetchWithTimeout(`https://restcountries.com/v3.1/alpha/${tld}`);
-                        const c = info[0];
-                        coords[tld] = { lat: c.latlng[0], lon: c.latlng[1], country: c.name.common, domains: [] };
-                    } catch (e) { generics.push(d); continue; }
-                }
-                coords[tld].domains.push(d);
-            } else generics.push(d);
-        }
-        Object.values(coords).forEach(c => {
-            const marker = L.marker([c.lat, c.lon]).addTo(map).bindPopup(`${c.country}: ${c.domains.join(', ')}`);
-            mapMarkers.push(marker);
-        });
-        if (generics.length) {
-            const marker = L.marker([0, 0]).addTo(map).bindPopup(`Genéricos: ${generics.join(', ')}`);
-            mapMarkers.push(marker);
-        }
-        map.setView([0, 0], 2);
-    }
-
-    const groupDefinitions = [
-        {
-            title: 'IP y Red',
-            checks: [
-                { key: 'ipinfo', label: 'More IP Info', default: true },
-                { key: 'serverlocation', label: 'Server Location', default: true },
-                { key: 'serverinfo', label: 'Server Info', default: true },
-                { key: 'ipv4', label: 'IPv4', default: true },
-                { key: 'ipv6', label: 'IPv6', default: false },
-                { key: 'asn', label: 'ASN', default: true },
-                { key: 'serverstatus', label: 'Server Status', default: true },
-                { key: 'openports', label: 'Open Ports', default: false },
-                { key: 'traceroute', label: 'Traceroute', default: false },
-                { key: 'redirectchain', label: 'Redirect Chain', default: true },
-                { key: 'block', label: 'Block Detection', default: false }
-            ]
-        },
-        {
-            title: 'DNS y Seguridad',
-            checks: [
-                { key: 'dnsrecords', label: 'DNS Records', default: true },
-                { key: 'txtrecords', label: 'TXT Records', default: true },
-                { key: 'dnsserver', label: 'DNS Server', default: true },
-                { key: 'dnssecurity', label: 'DNS Security Extensions', default: true },
-                { key: 'rpki', label: 'RPKI', default: false },
-                { key: 'caa', label: 'CAA', default: false },
-                { key: 'tlsa', label: 'TLSA', default: false }
-            ]
-        },
-        {
-            title: 'Correo y Mensajería',
-            checks: [
-                { key: 'emailconfig', label: 'Email Configuration', default: true },
-                { key: 'mx', label: 'MX', default: false },
-                { key: 'smtputf8', label: 'SMTPUTF8', default: false },
-                { key: 'dmarc', label: 'DMARC', default: true },
-                { key: 'spf', label: 'SPF', default: true },
-                { key: 'dkim', label: 'DKIM', default: false }
-            ]
-        },
-        {
-            title: 'Identidad y Cumplimiento',
-            checks: [
-                { key: 'whois', label: 'Whois Lookup', default: true },
-                { key: 'domaininfo', label: 'Domain Info', default: true },
-                { key: 'securitytxt', label: 'Security.txt', default: false }
-            ]
-        },
-        {
-            title: 'Contenido y Experiencia',
-            checks: [
-                { key: 'sitefeatures', label: 'Site Features', default: false },
-                { key: 'cookies', label: 'Cookies', default: false },
-                { key: 'crawlrules', label: 'Crawl Rules', default: false },
-                { key: 'linkedpages', label: 'Linked Pages', default: false },
-                { key: 'listedpages', label: 'Listed Pages', default: false },
-                { key: 'socialtags', label: 'Social Tags', default: false },
-                { key: 'quality', label: 'Quality Metrics', default: false },
-                { key: 'archive', label: 'Archive History', default: false },
-                { key: 'ranking', label: 'Global Ranking', default: false },
-                { key: 'malware', label: 'Malware & Phishing Detection', default: false },
-                { key: 'screenshot', label: 'Screenshot', default: false }
-            ]
-        },
-        {
-            title: 'Seguridad Web y TLS',
-            checks: [
-                { key: 'https', label: 'HTTPS', default: true },
-                { key: 'redirect', label: 'HTTPS Redirect', default: true },
-                { key: 'hsts', label: 'HTTP Strict Transport Security', default: true },
-                { key: 'csp', label: 'Content Security Policy', default: false },
-                { key: 'xfo', label: 'X-Frame-Options', default: false },
-                { key: 'xcto', label: 'X-Content-Type-Options', default: false },
-                { key: 'referrer', label: 'Referrer-Policy', default: false },
-                { key: 'permissions', label: 'Permissions-Policy', default: false },
-                { key: 'xxss', label: 'X-XSS-Protection', default: false },
-                { key: 'headers', label: 'Headers', default: false },
-                { key: 'server', label: 'Server Header', default: false },
-                { key: 'compression', label: 'HTTP Compression', default: false },
-                { key: 'ocsp', label: 'OCSP Stapling', default: false },
-                { key: 'tls', label: 'TLS Version', default: true },
-                { key: 'key', label: 'Key Exchange', default: false },
-                { key: 'sslchain', label: 'SSL Chain Info', default: false },
-                { key: 'tlsciphers', label: 'TLS Cipher Suites', default: false },
-                { key: 'tlsconfig', label: 'TLS Security Config', default: false },
-                { key: 'tlssimulation', label: 'TLS Handshake Simulation', default: false },
-                { key: 'httpsecurity', label: 'HTTP Security Features', default: false },
-                { key: 'firewall', label: 'Firewall Detection', default: false }
-            ]
-        }
+    const groups = [
+      {
+        id: 'https',
+        title: 'HTTPS / Web',
+        descEs: 'Activación, redirección y cabeceras defensivas para publicación web.',
+        descPt: 'Ativação, redireção e cabeçalhos defensivos para publicação web.',
+        infoEs: 'Mide HTTPS, redirección, HSTS, CSP, cabeceras defensivas, `security.txt` y CAA.',
+        infoPt: 'Mede HTTPS, redireção, HSTS, CSP, cabeçalhos defensivos, `security.txt` e CAA.',
+        open: true,
+        checks: [
+          check('https', 'HTTPS activo', 'HTTPS ativo', 'Comprueba si el sitio responde por HTTPS.', 'Verifica se o site responde por HTTPS.'),
+          check('redirect', 'Redirección a HTTPS', 'Redireção para HTTPS', 'Comprueba si HTTP redirige hacia HTTPS.', 'Verifica se HTTP redireciona para HTTPS.'),
+          check('hsts', 'HSTS', 'HSTS', 'Comprueba la política HSTS y su vigencia.', 'Verifica a política HSTS e sua validade.'),
+          check('csp', 'Content Security Policy', 'Content Security Policy', 'Comprueba si la política CSP está publicada.', 'Verifica se a política CSP está publicada.'),
+          check('xfo', 'X-Frame-Options', 'X-Frame-Options', 'Protege contra incrustación no deseada.', 'Protege contra incorporação não desejada.'),
+          check('xcto', 'X-Content-Type-Options', 'X-Content-Type-Options', 'Evita la interpretación MIME ambigua.', 'Evita interpretação MIME ambígua.'),
+          check('referrer', 'Referrer-Policy', 'Referrer-Policy', 'Controla qué información sale en el Referer.', 'Controla que informação sai no Referer.'),
+          check('permissions', 'Permissions-Policy', 'Permissions-Policy', 'Restringe capacidades sensibles del navegador.', 'Restringe capacidades sensíveis do navegador.'),
+          check('serverbanner', 'Server banner', 'Banner Server', 'Mira si el servidor expone su versión.', 'Verifica se o servidor expõe sua versão.'),
+          check('compression', 'Compresión HTTP', 'Compressão HTTP', 'Detecta si la respuesta usa compresión.', 'Detecta se a resposta usa compressão.'),
+          check('securitytxt', 'security.txt', 'security.txt', 'Busca el archivo RFC 9116 de contacto de seguridad.', 'Procura o arquivo RFC 9116 de contato de segurança.'),
+          check('caa', 'CAA', 'CAA', 'Indica qué CA puede emitir certificados.', 'Indica qual CA pode emitir certificados.')
+        ]
+      },
+      {
+        id: 'tls',
+        title: 'TLS / Criptografia',
+        descEs: 'Versión, cifrado y certificado de la conexión.',
+        descPt: 'Versão, cifra e certificado da conexão.',
+        infoEs: 'Mide la versión TLS, la cadena de certificados y OCSP stapling.',
+        infoPt: 'Mede a versão TLS, a cadeia de certificados e OCSP stapling.',
+        open: true,
+        checks: [
+          check('tls', 'TLS', 'TLS', 'Mide la versión TLS negociada y la cifra.', 'Mede a versão TLS negociada e a cifra.'),
+          check('sslchain', 'Cadena SSL', 'Cadeia SSL', 'Revisa la cadena de certificados presentada.', 'Revisa a cadeia de certificados apresentada.'),
+          check('ocsp', 'OCSP stapling', 'OCSP stapling', 'Comprueba si el servidor entrega respuesta OCSP.', 'Verifica se o servidor entrega resposta OCSP.')
+        ]
+      },
+      {
+        id: 'ip',
+        title: 'IP / Endereços',
+        descEs: 'Publicación de direcciones A y AAAA en DNS.',
+        descPt: 'Publicação de endereços A e AAAA no DNS.',
+        infoEs: 'Mide IPv4 e IPv6 publicados por el dominio.',
+        infoPt: 'Mede IPv4 e IPv6 publicados pelo domínio.',
+        open: true,
+        checks: [
+          check('ipv4', 'IPv4', 'IPv4', 'Comprueba si el dominio publica direcciones A.', 'Verifica se o domínio publica endereços A.'),
+          check('ipv6', 'IPv6', 'IPv6', 'Comprueba si el dominio publica direcciones AAAA.', 'Verifica se o domínio publica endereços AAAA.')
+        ]
+      },
+      {
+        id: 'dnssec',
+        title: 'DNSSEC / DNS',
+        descEs: 'Firma DNS, registros principales y la cadena DNSViz.',
+        descPt: 'Assinatura DNS, registros principais e a cadeia DNSViz.',
+        infoEs: 'Mide DNSSEC, DNSViz, registros DNS y TXT.',
+        infoPt: 'Mede DNSSEC, DNSViz, registros DNS e TXT.',
+        open: true,
+        checks: [
+          check('dnssec', 'DNSSEC', 'DNSSEC', 'Verifica DS y DNSKEY en la cadena del dominio.', 'Verifica DS e DNSKEY na cadeia do domínio.'),
+          check('dnsviz', 'DNSViz', 'DNSViz', 'Muestra la cadena de autenticación completa por niveles.', 'Mostra a cadeia de autenticação completa por níveis.'),
+          check('dnsrecords', 'Registros DNS', 'Registros DNS', 'Muestra un resumen de los registros principales.', 'Mostra um resumo dos registros principais.'),
+          check('txtrecords', 'TXT', 'TXT', 'Lista los TXT presentes en el dominio.', 'Lista os TXT presentes no domínio.')
+        ]
+      },
+      {
+        id: 'mailauth',
+        title: 'DKIM, SPF y DMARC / Autenticação',
+        descEs: 'Autenticación de correo basada en DNS.',
+        descPt: 'Autenticação de e-mail baseada em DNS.',
+        infoEs: 'Mide SPF, DMARC, DKIM y la verificación DNSSEC asociada al correo.',
+        infoPt: 'Mede SPF, DMARC, DKIM e a verificação DNSSEC associada ao e-mail.',
+        open: true,
+        checks: [
+          check('maildnssec', 'DNSSEC del correo', 'DNSSEC do e-mail', 'Revisa DNSSEC en el dominio y en sus MX.', 'Revisa DNSSEC no domínio e nos MX.'),
+          check('spf', 'SPF', 'SPF', 'Comprueba la política SPF y su estricta configuración.', 'Verifica a política SPF e sua configuração estrita.'),
+          check('dmarc', 'DMARC', 'DMARC', 'Comprueba la política DMARC del dominio.', 'Verifica a política DMARC do domínio.'),
+          check('dkim', 'DKIM', 'DKIM', 'Comprueba el soporte DKIM del dominio.', 'Verifica o suporte DKIM do domínio.')
+        ]
+      },
+      {
+        id: 'mailtransport',
+        title: 'MX y transporte / Transporte',
+        descEs: 'Servidores receptores y capacidades de transporte seguro.',
+        descPt: 'Servidores receptores e capacidades de transporte seguro.',
+        infoEs: 'Mide MX, IPv6 en MX y STARTTLS.',
+        infoPt: 'Mede MX, IPv6 nos MX e STARTTLS.',
+        open: true,
+        checks: [
+          check('mx', 'MX', 'MX', 'Comprueba si hay servidores receptores de correo.', 'Verifica se há servidores receptores de e-mail.'),
+          check('mailipv6', 'IPv6 en MX', 'IPv6 nos MX', 'Comprueba si los MX publican AAAA.', 'Verifica se os MX publicam AAAA.'),
+          check('starttls', 'STARTTLS', 'STARTTLS', 'Comprueba si los MX anuncian STARTTLS.', 'Verifica se os MX anunciam STARTTLS.')
+        ]
+      },
+      {
+        id: 'ua',
+        title: 'Universal Acceptance / Aceitação universal',
+        descEs: 'SMTPUTF8 en los servidores MX.',
+        descPt: 'SMTPUTF8 nos servidores MX.',
+        infoEs: 'Mide si los MX anuncian SMTPUTF8 y aceptan direcciones internacionales.',
+        infoPt: 'Mede se os MX anunciam SMTPUTF8 e aceitam endereços internacionais.',
+        open: true,
+        checks: [
+          check('smtputf8', 'SMTPUTF8', 'SMTPUTF8', 'Comprueba si los MX anuncian SMTPUTF8.', 'Verifica se os MX anunciam SMTPUTF8.')
+        ]
+      },
+      {
+        id: 'route',
+        title: 'Ruta y confianza / Rota e confiança',
+        descEs: 'Origen de ruta, ASN y validación de la red.',
+        descPt: 'Origem de rota, ASN e validação da rede.',
+        infoEs: 'Mide RPKI, routing y datos básicos de infraestructura.',
+        infoPt: 'Mede RPKI, routing e dados básicos de infraestrutura.',
+        open: true,
+        checks: [
+          check('rpki', 'RPKI', 'RPKI', 'Valida la autorización de origen de ruta.', 'Valida a autorização de origem da rota.'),
+          check('routing', 'Routing', 'Routing', 'Muestra la ruta ASN/prefix y el estado de validación.', 'Mostra a rota ASN/prefix e o estado de validação.'),
+          check('serverinfo', 'Servidor / ASN', 'Servidor / ASN', 'Muestra ASN, organización y red asociada.', 'Mostra ASN, organização e rede associada.')
+        ]
+      },
+      {
+        id: 'future',
+        title: 'Próximamente / Aproximadamente',
+        descEs: 'Mediciones en preparación para integrar con una fuente estable.',
+        descPt: 'Medições em preparação para integrar com uma fonte estável.',
+        infoEs: 'Mostramos el plan de integración sin activar todavía las rutas inestables.',
+        infoPt: 'Mostramos o plano de integração sem ativar ainda as rotas instáveis.',
+        open: false,
+        checks: [
+          checkSoon('w3c', 'W3C', 'W3C', 'Próximamente: validación de HTML y accesibilidad.', 'Em breve: validação de HTML e acessibilidade.'),
+          checkSoon('ofds', 'OFDS', 'OFDS', 'Aproximadamente: integración de la fuente OFDS cuando se estabilice.', 'Aproximadamente: integração da fonte OFDS quando estabilizar.')
+        ]
+      },
+      {
+        id: 'lab',
+        title: 'Laboratorio / Laboratório',
+        descEs: 'Herramientas extra para inspección, referencias y exploración.',
+        descPt: 'Ferramentas extras para inspeção, referências e exploração.',
+        infoEs: 'Mide estado HTTP, redirecciones, puertos, traceroute, sitemap, enlaces, social tags, calidad, archivo y ranking.',
+        infoPt: 'Mede estado HTTP, redireções, portas, traceroute, sitemap, links, social tags, qualidade, arquivo e ranking.',
+        open: false,
+        checks: [
+          check('serverstatus', 'Estado HTTP', 'Estado HTTP', 'Revisa el código de respuesta inicial.', 'Revisa o código de resposta inicial.'),
+          check('redirectchain', 'Cadena de redirección', 'Cadeia de redireção', 'Sigue la secuencia completa de redirecciones.', 'Segue a sequência completa de redireções.'),
+          check('openports', 'Puertos abiertos', 'Portas abertas', 'Busca puertos comunes expuestos.', 'Procura portas comuns expostas.'),
+          check('traceroute', 'Traceroute', 'Traceroute', 'Intenta obtener un trazo básico hacia el dominio.', 'Tenta obter um traçado básico até o domínio.'),
+          check('sitefeatures', 'Features del sitio', 'Recursos do site', 'Detecta formularios, login, búsqueda y otros patrones.', 'Detecta formulários, login, busca e outros padrões.'),
+          check('cookies', 'Cookies', 'Cookies', 'Revisa si el sitio deja cookies en la respuesta.', 'Verifica se o site deixa cookies na resposta.'),
+          check('listedpages', 'Sitemap', 'Sitemap', 'Lee páginas listadas en sitemap.xml.', 'Lê páginas listadas no sitemap.xml.'),
+          check('linkedpages', 'Enlaces', 'Links', 'Extrae enlaces internos y externos de la portada.', 'Extrai links internos e externos da página inicial.'),
+          check('socialtags', 'Social tags', 'Tags sociais', 'Busca metadatos Open Graph y similares.', 'Procura metadados Open Graph e similares.'),
+          check('quality', 'Calidad web', 'Qualidade web', 'Consulta métricas Lighthouse/PageSpeed.', 'Consulta métricas Lighthouse/PageSpeed.'),
+          check('archive', 'Archivo web', 'Arquivo web', 'Mira si existen capturas históricas.', 'Verifica se existem capturas históricas.'),
+          check('ranking', 'Ranking', 'Ranking', 'Consulta una posición aproximada en Tranco.', 'Consulta uma posição aproximada no Tranco.')
+        ]
+      }
     ];
 
-    const checkConfig = {};
-    groupDefinitions.forEach(group => {
-        group.checks.forEach(check => {
-            checkConfig[check.key] = { label: check.label };
-        });
+    const helpDocs = [
+      {
+        terms: ['dnssec', 'dns sec'],
+        title: 'DNSSEC',
+        es: 'Valida que el dominio tenga DNSSEC activo, que existan DS en el padre y DNSKEY en el hijo, y que la cadena sea consistente. También mostramos DNSViz para ver la cadena de autenticación.',
+        pt: 'Valida que o domínio tenha DNSSEC ativo, que existam DS no pai e DNSKEY no filho, e que a cadeia esteja consistente. Também mostramos DNSViz para ver a cadeia de autenticação.'
+      },
+      {
+        terms: ['dnsviz'],
+        title: 'DNSViz',
+        es: 'Muestra la cadena completa de autenticación DNSSEC por niveles, desde el dominio hasta sus ancestros y la raíz, junto con el gráfico del proveedor.',
+        pt: 'Mostra a cadeia completa de autenticação DNSSEC por níveis, do domínio até seus ancestrais e a raiz, junto com o gráfico do provedor.'
+      },
+      {
+        terms: ['ipv6'],
+        title: 'IPv6',
+        es: 'Comprueba si el dominio publica registros AAAA y si los servicios críticos también responden por IPv6, incluyendo MX cuando aplica.',
+        pt: 'Verifica se o domínio publica registros AAAA e se os serviços críticos também respondem por IPv6, incluindo MX quando aplicável.'
+      },
+      {
+        terms: ['ipv4'],
+        title: 'IPv4',
+        es: 'Comprueba si el dominio publica registros A y si la infraestructura principal sigue siendo alcanzable por IPv4.',
+        pt: 'Verifica se o domínio publica registros A e se a infraestrutura principal continua alcançável por IPv4.'
+      },
+      {
+        terms: ['rpki', 'routing'],
+        title: 'RPKI y routing',
+        es: 'Mostramos la ruta ASN/prefix que observamos para cada IP y la validación RPKI. El objetivo es saber si la ruta que anuncia el origen es válida, inválida o no encontrada.',
+        pt: 'Mostramos a rota ASN/prefix observada para cada IP e a validação RPKI. O objetivo é saber se a rota anunciada é válida, inválida ou não encontrada.'
+      },
+      {
+        terms: ['spf'],
+        title: 'SPF',
+        es: 'Revisa si el dominio publica SPF y si la política es estricta o débil. Un SPF estricto reduce la suplantación de correo.',
+        pt: 'Verifica se o domínio publica SPF e se a política é estrita ou fraca. Um SPF estrito reduz a falsificação de e-mail.'
+      },
+      {
+        terms: ['dmarc'],
+        title: 'DMARC',
+        es: 'Comprueba la política DMARC del dominio y si está en modo rechazo, monitoreo o ausente. Sirve para alinear autenticación y reporte.',
+        pt: 'Verifica a política DMARC do domínio e se está em modo rejeição, monitoramento ou ausente. Serve para alinhar autenticação e reporte.'
+      },
+      {
+        terms: ['dkim'],
+        title: 'DKIM',
+        es: 'Detecta si el dominio parece soportar DKIM. Es una señal de que puede firmar correo con identidad del dominio.',
+        pt: 'Detecta se o domínio parece suportar DKIM. É um sinal de que pode assinar e-mail com a identidade do domínio.'
+      },
+      {
+        terms: ['starttls'],
+        title: 'STARTTLS',
+        es: 'Comprueba si los servidores MX anuncian STARTTLS. Eso indica si el correo puede negociar cifrado en tránsito.',
+        pt: 'Verifica se os servidores MX anunciam STARTTLS. Isso indica se o e-mail pode negociar criptografia em trânsito.'
+      },
+      {
+        terms: ['smtputf8', 'universal acceptance', 'ua'],
+        title: 'Universal Acceptance',
+        es: 'Comprueba si los MX anuncian SMTPUTF8, útil para aceptación universal de direcciones con caracteres no ASCII.',
+        pt: 'Verifica se os MX anunciam SMTPUTF8, útil para aceitação universal de endereços com caracteres não ASCII.'
+      },
+      {
+        terms: ['w3c', 'accesibilidad'],
+        title: 'W3C',
+        es: 'Próximamente: validación HTML y accesibilidad desde una fuente estable. Por ahora no la activamos porque la integración aún está en preparación.',
+        pt: 'Em breve: validação HTML e acessibilidade a partir de uma fonte estável. Por enquanto não ativamos porque a integração ainda está em preparação.'
+      },
+      {
+        terms: ['ofds'],
+        title: 'OFDS',
+        es: 'Aproximadamente: esta medición quedará para una fuente estable cuando definamos bien el endpoint y el formato de respuesta.',
+        pt: 'Aproximadamente: esta medição ficará para uma fonte estável quando definirmos bem o endpoint e o formato de resposta.'
+      },
+      {
+        terms: ['hsts'],
+        title: 'HSTS',
+        es: 'Valida si el sitio publica una política HSTS con duración suficiente para forzar HTTPS en navegadores.',
+        pt: 'Valida se o site publica uma política HSTS com duração suficiente para forçar HTTPS nos navegadores.'
+      },
+      {
+        terms: ['tls', 'ssl'],
+        title: 'TLS',
+        es: 'Mide la versión TLS negociada y la cifra usada por el sitio o el servicio de correo.',
+        pt: 'Mede a versão TLS negociada e a cifra usada pelo site ou serviço de e-mail.'
+      },
+      {
+        terms: ['security.txt', 'securitytxt'],
+        title: 'security.txt',
+        es: 'Busca el archivo RFC 9116 de contacto de seguridad para ver si el sitio expone un canal de reporte.',
+        pt: 'Procura o arquivo RFC 9116 de contato de segurança para ver se o site expõe um canal de reporte.'
+      },
+      {
+        terms: ['caa'],
+        title: 'CAA',
+        es: 'Comprueba qué autoridades certificadoras pueden emitir certificados para el dominio.',
+        pt: 'Verifica quais autoridades certificadoras podem emitir certificados para o domínio.'
+      },
+      {
+        terms: ['dnsrecords', 'txtrecords'],
+        title: 'Registros DNS',
+        es: 'Muestra el resumen de registros principales y los TXT publicados, útil para inventario rápido.',
+        pt: 'Mostra o resumo dos registros principais e os TXT publicados, útil para inventário rápido.'
+      },
+      {
+        terms: ['openports'],
+        title: 'Puertos abiertos',
+        es: 'Busca puertos comunes expuestos para detectar servicios visibles desde Internet.',
+        pt: 'Procura portas comuns expostas para detectar serviços visíveis da Internet.'
+      },
+      {
+        terms: ['traceroute'],
+        title: 'Traceroute',
+        es: 'Intenta obtener un rastro básico hacia el dominio para inspeccionar la ruta de red.',
+        pt: 'Tenta obter um rastro básico até o domínio para inspecionar a rota de rede.'
+      },
+      {
+        terms: ['wifi', 'spectrum'],
+        title: 'Espectro Wi-Fi',
+        es: 'Lee un `variantId` público de Wi-Fi Alliance y extrae bandas, capacidades y clases si la fuente responde.',
+        pt: 'Lê um `variantId` público da Wi-Fi Alliance e extrai bandas, capacidades e classes se a fonte responder.'
+      }
+    ];
+
+    const checkMap = new Map();
+    const categoryMap = new Map();
+    const coreIds = [];
+    const labIds = [];
+    const allIds = [];
+
+    groups.forEach(group => {
+      categoryMap.set(group.id, group);
+      group.checks.forEach(item => {
+        checkMap.set(item.id, { ...item, group: group.id, groupTitle: group.title });
+        allIds.push(item.id);
+        if (group.id === 'lab') labIds.push(item.id);
+        else coreIds.push(item.id);
+      });
     });
 
-    function renderCheckOptions() {
-        const container = document.getElementById('checksContainer');
-        container.innerHTML = '';
-        groupDefinitions.forEach(group => {
-            const details = document.createElement('details');
-            details.className = 'border rounded-lg bg-white shadow-sm';
-            details.open = true;
-            const summary = document.createElement('summary');
-            summary.className = 'cursor-pointer select-none px-3 py-2 font-semibold text-gray-700 flex items-center justify-between';
-            summary.innerHTML = `<span>${group.title}</span><span class="text-xs text-gray-500">${group.checks.length} checks</span>`;
-            details.appendChild(summary);
-            const wrapper = document.createElement('div');
-            wrapper.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2 px-3 pb-3';
-            group.checks.forEach(check => {
-                const label = document.createElement('label');
-                label.className = 'check-label flex items-center p-2 border rounded-lg cursor-pointer bg-gray-50';
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.dataset.check = check.key;
-                if (check.default) input.checked = true;
-                input.className = 'h-4 w-4 rounded';
-                const span = document.createElement('span');
-                span.className = 'ml-2 text-sm';
-                span.textContent = check.label;
-                label.appendChild(input);
-                label.appendChild(span);
-                wrapper.appendChild(label);
-            });
-            details.appendChild(wrapper);
-            container.appendChild(details);
+    const statusLabels = {
+      ok: 'Correcto',
+      warning: 'Aviso',
+      fail: 'Fallo',
+      info: 'Info',
+      error: 'Error',
+      pending: 'En curso'
+    };
+
+    const statusOrder = { ok: 4, warning: 3, info: 2, fail: 1, error: 0, pending: -1 };
+
+    function statusClass(status) {
+      return status || 'info';
+    }
+
+    function createStatusBadge(status) {
+      const badge = make('span', `status ${statusClass(status)}`);
+      badge.textContent = statusLabels[status] || status;
+      return badge;
+    }
+
+    function calculateCompliance(results) {
+      const relevant = results.filter(item => ['ok', 'warning', 'fail', 'error'].includes(item.status));
+      if (!relevant.length) return 0;
+      const ok = relevant.filter(item => item.status === 'ok').length;
+      return Math.round((ok / relevant.length) * 100);
+    }
+
+    function clearNode(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    function appendLines(container, lines, emptyText = 'Sin detalles') {
+      clearNode(container);
+      const list = make('ul');
+      list.style.margin = '0';
+      list.style.paddingLeft = '18px';
+      if (!lines || !lines.length) {
+        const p = make('p', 'muted', emptyText);
+        p.style.margin = '0';
+        container.appendChild(p);
+        return;
+      }
+      lines.forEach(line => {
+        const li = make('li');
+        li.textContent = line;
+        list.appendChild(li);
+      });
+      container.appendChild(list);
+    }
+
+    function setSummary(counts, totalChecks) {
+      clearNode(summaryEl);
+      const items = [
+        ['total', totalChecks, 'Total'],
+        ['ok', counts.ok, 'Correctas'],
+        ['warning', counts.warning, 'Avisos'],
+        ['info', counts.info, 'Info'],
+        ['fail', counts.fail, 'Fallos'],
+        ['error', counts.error, 'Errores']
+      ];
+      items.forEach(([status, value, label]) => {
+        const chip = make('span', 'summary-chip');
+        const dot = make('span');
+        dot.className = `status ${status}`;
+        dot.style.padding = '0';
+        dot.style.width = '10px';
+        dot.style.height = '10px';
+        dot.style.borderRadius = '999px';
+        dot.style.display = 'inline-block';
+        const strong = make('strong', '', String(value));
+        chip.append(dot, document.createTextNode(` ${label} `), strong);
+        summaryEl.appendChild(chip);
+      });
+    }
+
+    function updateSelectionCount() {
+      const selected = getSelectedIds();
+      selectionCount.textContent = `${selected.length} mediciones activas`;
+    }
+
+    function setCatalogTab(id) {
+      activeCatalog = id;
+      catalogTabs.querySelectorAll('[data-catalog-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.catalogTab === id);
+      });
+      catalogPanels.forEach((panel, key) => {
+        panel.classList.toggle('active', key === id);
+      });
+    }
+
+    function renderCatalog() {
+      clearNode(catalogEl);
+      clearNode(catalogTabs);
+      catalogPanels.clear();
+
+      groups.forEach(group => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'tab-button';
+        button.dataset.catalogTab = group.id;
+        const label = make('span', 'tab-label');
+        const info = make('span', 'tab-info', 'i');
+        info.tabIndex = 0;
+        info.dataset.tip = `${group.infoEs || group.descEs} / ${group.infoPt || group.descPt}`;
+        label.append(document.createTextNode(group.title.split(' / ')[0]), info);
+        button.appendChild(label);
+        button.title = info.dataset.tip;
+        button.addEventListener('click', () => setCatalogTab(group.id));
+        catalogTabs.appendChild(button);
+      });
+
+      groups.forEach(group => {
+        const details = document.createElement('section');
+        details.className = 'tab-panel';
+        details.dataset.catalogPanel = group.id;
+        details.open = Boolean(group.open);
+
+        const summary = document.createElement('div');
+        summary.className = 'panel-head';
+        const left = document.createElement('div');
+        const title = make('h3', 'cat-title', group.title);
+        const sub = make('p', 'cat-sub', `${group.descEs} / ${group.descPt}`);
+        left.append(title, sub);
+        summary.append(left, make('span', 'cat-count', `${group.checks.length} mediciones`));
+        details.appendChild(summary);
+
+        const list = make('div', 'check-list');
+        group.checks.forEach(item => {
+          const label = document.createElement('label');
+          label.className = 'check-item';
+          if (item.comingSoon) label.classList.add('coming-soon');
+
+          const head = make('div', 'check-head');
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.dataset.check = item.id;
+          checkbox.checked = !item.comingSoon;
+          checkbox.disabled = Boolean(item.comingSoon);
+
+          const text = document.createElement('div');
+          const title = make('div', 'check-title', item.label);
+          const desc = document.createElement('div');
+          desc.className = 'check-desc';
+          desc.innerHTML = `<strong>ES:</strong> ${item.descEs}<br><strong>PT:</strong> ${item.descPt}`;
+          text.append(title, desc);
+
+          const badge = make('span', `status ${item.comingSoon ? 'info' : 'pending'}`);
+          badge.style.alignSelf = 'start';
+          badge.textContent = item.comingSoon ? 'Próximamente' : (group.id === 'lab' ? 'Laboratorio' : 'Core');
+
+          head.append(checkbox, text, badge);
+          label.appendChild(head);
+          const inline = buildInlineResultSlot(item);
+          label.appendChild(inline.row);
+          catalogResultSlots.set(item.id, inline);
+          list.appendChild(label);
         });
-        checkboxes = container.querySelectorAll('input[type="checkbox"][data-check]');
+
+        details.appendChild(list);
+        catalogEl.appendChild(details);
+        catalogPanels.set(group.id, details);
+      });
+      updateSelectionCount();
+      setCatalogTab(activeCatalog);
     }
 
-    renderCheckOptions();
+    function getSelectedIds() {
+      return Array.from(document.querySelectorAll('input[type="checkbox"][data-check]'))
+        .filter(node => !node.disabled)
+        .map(node => node.dataset.check);
+    }
 
-    function loadHistory() {
-        const history = JSON.parse(localStorage.getItem('domainHistory') || '[]');
-        if (!history.length) {
-            historyDiv.innerHTML = '<div class="text-center text-gray-500">Sin historial</div>';
-            return;
-        }
-        let html = '';
-        history.forEach(entry => {
-            html += `<div class="mb-4"><h4 class="font-semibold mb-2">${entry.date}</h4>`;
-            html += '<div class="overflow-auto"><table class="min-w-full text-sm border"><thead><tr><th class="border px-2 py-1">Dominio</th>';
-            entry.checks.forEach(c => { html += `<th class="border px-2 py-1">${checkConfig[c]?.label || c}</th>`; });
-            html += '</tr></thead><tbody>';
-            entry.domains.forEach(d => {
-                html += `<tr><td class="border px-2 py-1">${d.domain}</td>`;
-                entry.checks.forEach(c => {
-                    const val = d.results[c]?.status || '-';
-                    html += `<td class="border px-2 py-1 text-center">${val}</td>`;
-                });
-                html += '</tr>';
-            });
-            html += '</tbody></table></div></div>';
+    function setPreset(name) {
+      const ids = name === 'all' ? new Set(allIds)
+        : name === 'core' ? new Set(coreIds)
+        : name === 'lab' ? new Set(labIds)
+        : new Set((categoryMap.get(name)?.checks || []).map(item => item.id));
+      document.querySelectorAll('input[type="checkbox"][data-check]').forEach(node => {
+        node.checked = !node.disabled && ids.has(node.dataset.check);
+      });
+      updateSelectionCount();
+    }
+
+    function parseDomains(value) {
+      return Array.from(new Set(
+        value
+          .split(/[\n,]+/)
+          .map(item => item.trim())
+          .filter(Boolean)
+          .map(normalizeInputDomain)
+          .filter(Boolean)
+      ));
+    }
+
+    function normalizeInputDomain(value) {
+      const cleaned = String(value || '').trim();
+      if (!cleaned) return '';
+      try {
+        if (/^https?:\/\//i.test(cleaned)) return new URL(cleaned).hostname;
+        if (cleaned.includes('/')) return new URL(`http://${cleaned}`).hostname;
+      } catch (e) {}
+      return cleaned.replace(/\.$/, '');
+    }
+
+    function apiPath(path) {
+      return `${API_BASE}${path}`;
+    }
+
+    async function apiJson(path, timeout = 25000) {
+      const url = apiPath(path);
+      if (apiCache.has(url)) return apiCache.get(url);
+      const failure = apiFailureCache.get(url);
+      if (failure && Date.now() - failure.timestamp < 10 * 60 * 1000) {
+        throw new Error(failure.message);
+      }
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      const promise = fetch(url, { signal: controller.signal, cache: 'no-store' })
+        .then(async response => {
+          clearTimeout(timer);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          return data;
+        })
+        .catch(error => {
+          clearTimeout(timer);
+          const message = error.name === 'AbortError' ? 'Timeout' : 'Servicio no disponible';
+          apiFailureCache.set(url, { timestamp: Date.now(), message });
+          throw new Error(message);
         });
-        historyDiv.innerHTML = html;
+      apiCache.set(url, promise);
+      try {
+        return await promise;
+      } catch (error) {
+        apiCache.delete(url);
+        throw error;
+      }
     }
 
-    function saveHistory(entry) {
-        const history = JSON.parse(localStorage.getItem('domainHistory') || '[]');
-        history.push(entry);
-        localStorage.setItem('domainHistory', JSON.stringify(history));
+    async function getHeaders(domain) { return apiJson(`/headers/${encodeURIComponent(domain)}`); }
+    async function getTlsInfo(domain) { return apiJson(`/tlsinfo/${encodeURIComponent(domain)}`); }
+    async function getSslChain(domain) { return apiJson(`/sslchain/${encodeURIComponent(domain)}`); }
+    async function getDnssec(domain) { return apiJson(`/dnssec/${encodeURIComponent(domain)}`); }
+    async function getDnsviz(domain) { return apiJson(`/dnsviz/${encodeURIComponent(domain)}`); }
+    async function getMx(domain) { return apiJson(`/mx/${encodeURIComponent(domain)}`); }
+    async function getMailIpv6(domain) { return apiJson(`/mailipv6/${encodeURIComponent(domain)}`); }
+    async function getMailDnssec(domain) { return apiJson(`/maildnssec/${encodeURIComponent(domain)}`); }
+    async function getSmtpUtf8(domain) { return apiJson(`/smtputf8/${encodeURIComponent(domain)}`); }
+    async function getStarttls(domain) { return apiJson(`/starttls/${encodeURIComponent(domain)}`); }
+    async function getSpf(domain) { return apiJson(`/spf/${encodeURIComponent(domain)}`); }
+    async function getDmarc(domain) { return apiJson(`/dmarc/${encodeURIComponent(domain)}`); }
+    async function getDkim(domain) { return apiJson(`/dkim/${encodeURIComponent(domain)}?selector=support`); }
+    async function getIpv4(domain) { return apiJson(`/ipv4/${encodeURIComponent(domain)}`); }
+    async function getIpv6(domain) { return apiJson(`/ipv6/${encodeURIComponent(domain)}`); }
+    async function getDnsrecords(domain) { return apiJson(`/dnsrecords/${encodeURIComponent(domain)}`); }
+    async function getTxtrecords(domain) { return apiJson(`/txtrecords/${encodeURIComponent(domain)}`); }
+    async function getRpki(domain) { return apiJson(`/rpki/${encodeURIComponent(domain)}`); }
+    async function getRouting(domain) { return apiJson(`/routing/${encodeURIComponent(domain)}`); }
+    async function getServerInfo(domain) { return apiJson(`/serverinfo/${encodeURIComponent(domain)}`); }
+    async function getDomainInfo(domain) { return apiJson(`/domaininfo/${encodeURIComponent(domain)}`); }
+    async function getWhois(domain) { return apiJson(`/whois/${encodeURIComponent(domain)}`); }
+    async function getServerStatus(domain) { return apiJson(`/serverstatus/${encodeURIComponent(domain)}`); }
+    async function getRedirectChain(domain) { return apiJson(`/redirectchain/${encodeURIComponent(domain)}`); }
+    async function getOpenPorts(domain) { return apiJson(`/openports/${encodeURIComponent(domain)}`); }
+    async function getTraceroute(domain) { return apiJson(`/traceroute/${encodeURIComponent(domain)}`); }
+    async function getSiteFeatures(domain) { return apiJson(`/sitefeatures/${encodeURIComponent(domain)}`); }
+    async function getCookies(domain) { return apiJson(`/cookies/${encodeURIComponent(domain)}`); }
+    async function getListedPages(domain) { return apiJson(`/listedpages/${encodeURIComponent(domain)}`); }
+    async function getLinkedPages(domain) { return apiJson(`/linkedpages/${encodeURIComponent(domain)}`); }
+    async function getSocialTags(domain) { return apiJson(`/socialtags/${encodeURIComponent(domain)}`); }
+    async function getQuality(domain) { return apiJson(`/quality/${encodeURIComponent(domain)}`); }
+    async function getArchive(domain) { return apiJson(`/archive/${encodeURIComponent(domain)}`); }
+    async function getRanking(domain) { return apiJson(`/ranking/${encodeURIComponent(domain)}`); }
+    async function getWifiSpectrum(variantId) { return apiJson(`/wifispectrum/${encodeURIComponent(variantId)}`); }
+
+    function buildRow(title, badgeStatus) {
+      const row = make('section', 'result-row pending');
+      const head = make('div', 'row-head');
+      const left = make('div');
+      left.appendChild(make('div', 'row-title', title));
+      const badge = createStatusBadge(badgeStatus || 'pending');
+      head.append(left, badge);
+      const body = make('div', 'row-body');
+      body.appendChild(make('p', 'muted', 'Procesando...'));
+      row.append(head, body);
+      return { row, badge, body };
     }
 
-    function toASCII(domain) {
-        try { return new URL('http://' + domain).hostname; }
-        catch (e) { return domain; }
+    function buildInlineResultSlot(item) {
+      const row = make('div', 'result-inline');
+      const head = make('div', 'row-head');
+      const left = document.createElement('div');
+      left.appendChild(make('div', 'row-title', 'Pendiente'));
+      const badge = createStatusBadge('pending');
+      head.append(left, badge);
+      const body = make('div', 'row-body');
+      body.appendChild(make('p', 'muted', 'La medición aparecerá aquí al analizar el dominio.'));
+      row.append(head, body);
+      return { row, badge, body, item };
     }
 
-    async function fetchWithTimeout(resource, options = {}, timeout = 20000) {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(resource, { ...options, signal: controller.signal });
-            clearTimeout(id);
-            if (!response.ok) throw new Error('Servicio no disponible');
-            return response.json();
-        } catch (error) {
-            clearTimeout(id);
-            throw new Error(error.name === 'AbortError' ? 'Timeout' : 'Servicio no disponible');
-        }
-    }
+    function renderGraphBox(domain, meta) {
+      const box = make('div', 'graph-box');
+      const top = make('div', 'graph-top');
+      const left = document.createElement('div');
+      left.appendChild(make('h4', '', 'Gráfico DNSViz / Gráfico DNSViz'));
+      const subtitle = make('p');
+      subtitle.textContent = meta.updated ? `Último análisis: ${meta.updated}` : 'DNSViz muestra la cadena de autenticación DNSSEC.';
+      left.appendChild(subtitle);
+      const right = document.createElement('div');
+      const link = document.createElement('a');
+      link.href = meta.pageUrl || `https://dnsviz.net/d/${encodeURIComponent(domain)}/dnssec/`;
+      link.target = '_blank';
+      link.rel = 'noreferrer';
+      link.textContent = 'Abrir en DNSViz';
+      right.appendChild(link);
+      top.append(left, right);
 
-    async function getSecurityHeaders(domain) {
-        const ascii = toASCII(domain);
-        if (headerCache[ascii]) return headerCache[ascii];
-        const data = await fetchWithTimeout(`${API_BASE}/headers/${ascii}`);
-        headerCache[ascii] = data;
-        return data;
-    }
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = `DNSViz para ${domain}`;
+      const svgSrc = `${API_BASE}/dnsviz/${encodeURIComponent(domain)}?format=svg`;
+      img.src = svgSrc;
+      img.onerror = () => {
+        if (img.dataset.fallbackDone === '1') return;
+        img.dataset.fallbackDone = '1';
+        img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320">
+            <rect width="960" height="320" rx="20" fill="#f7faf8"/>
+            <text x="40" y="120" font-size="28" fill="#17211b" font-family="Arial, sans-serif">DNSViz no disponible</text>
+            <text x="40" y="168" font-size="18" fill="#5d6a64" font-family="Arial, sans-serif">El gráfico no pudo cargarse, pero la cadena y los indicios siguen visibles abajo.</text>
+          </svg>`
+        )}`;
+      };
+      img.className = 'dnsviz-graph';
+      box.append(top, img);
 
-    async function getTlsInfo(domain) {
-        const ascii = toASCII(domain);
-        if (tlsCache[ascii]) return tlsCache[ascii];
-        const data = await fetchWithTimeout(`${API_BASE}/tlsinfo/${ascii}`);
-        tlsCache[ascii] = data;
-        return data;
-    }
-
-    function escapeHtml(text) {
-        return String(text)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-    }
-
-    function formatDetails(details) {
-        if (details === undefined || details === null) return '';
-        if (Array.isArray(details)) {
-            return details
-                .map(item => {
-                    if (item && typeof item === 'object' && item.html) {
-                        return `<div class="text-xs text-gray-700">${item.html}</div>`;
-                    }
-                    return `<div class="text-xs text-gray-700">${escapeHtml(item)}</div>`;
-                })
-                .join('');
-        }
-        if (details && typeof details === 'object') {
-            if (details.html) return details.html;
-            return `<pre class="text-xs text-gray-700 whitespace-pre-wrap">${escapeHtml(JSON.stringify(details, null, 2))}</pre>`;
-        }
-        return `<span class="text-sm">${escapeHtml(details)}</span>`;
-    }
-
-    function renderTooltipList(items, emptyText, isPositive = false) {
-        if (!items.length) {
-            return `<div class="text-xs text-gray-500">${emptyText}</div>`;
-        }
-        return `<ul class="space-y-1 text-xs text-gray-700">${items.map(item => {
-            if (isPositive) {
-                return `<li>${escapeHtml(item.domain)}</li>`;
-            }
-            const statusText = item.status === 'fail'
-                ? 'falló'
-                : item.status === 'error'
-                    ? 'error'
-                    : item.status || '';
-            const suffix = statusText ? ` (${escapeHtml(statusText)})` : '';
-            return `<li>${escapeHtml(item.domain)}${suffix}</li>`;
-        }).join('')}</ul>`;
-    }
-
-    function formatDate(dateString) {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        if (Number.isNaN(date.getTime())) return dateString;
-        return date.toLocaleDateString('es-UY', { year: 'numeric', month: 'short', day: 'numeric' });
-    }
-
-    function initializeSummary(selectedChecks) {
-        summaryData = {};
-        summaryElements = {};
-        summaryBody.innerHTML = '';
-        if (!selectedChecks.length) {
-            summarySection.classList.add('hidden');
-            return;
-        }
-        summarySection.classList.remove('hidden');
-        selectedChecks.forEach(checkKey => {
-            const label = checkConfig[checkKey]?.label || checkKey;
-            summaryData[checkKey] = { label, positive: 0, negative: 0, positives: [], negatives: [] };
-
-            const row = document.createElement('tr');
-            const labelCell = document.createElement('td');
-            labelCell.className = 'px-4 py-3 font-medium text-gray-700';
-            labelCell.textContent = label;
-            row.appendChild(labelCell);
-
-            const positiveCell = document.createElement('td');
-            positiveCell.className = 'px-4 py-3 text-green-600';
-            const positiveWrapper = document.createElement('div');
-            positiveWrapper.className = 'relative group inline-block';
-            const positiveCount = document.createElement('span');
-            positiveCount.className = 'font-semibold cursor-help';
-            positiveCount.textContent = '0';
-            const positiveTooltip = document.createElement('div');
-            positiveTooltip.className = 'summary-tooltip hidden group-hover:block absolute z-20 left-1/2 transform -translate-x-1/2 mt-2 w-56 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg p-3';
-            positiveTooltip.innerHTML = renderTooltipList([], 'Sin resultados positivos', true);
-            positiveWrapper.appendChild(positiveCount);
-            positiveWrapper.appendChild(positiveTooltip);
-            positiveCell.appendChild(positiveWrapper);
-            row.appendChild(positiveCell);
-
-            const negativeCell = document.createElement('td');
-            negativeCell.className = 'px-4 py-3 text-red-600';
-            const negativeWrapper = document.createElement('div');
-            negativeWrapper.className = 'relative group inline-block';
-            const negativeCount = document.createElement('span');
-            negativeCount.className = 'font-semibold cursor-help';
-            negativeCount.textContent = '0';
-            const negativeTooltip = document.createElement('div');
-            negativeTooltip.className = 'summary-tooltip hidden group-hover:block absolute z-20 left-1/2 transform -translate-x-1/2 mt-2 w-56 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg p-3';
-            negativeTooltip.innerHTML = renderTooltipList([], 'Sin resultados negativos');
-            negativeWrapper.appendChild(negativeCount);
-            negativeWrapper.appendChild(negativeTooltip);
-            negativeCell.appendChild(negativeWrapper);
-            row.appendChild(negativeCell);
-
-            summaryBody.appendChild(row);
-            summaryElements[checkKey] = { positiveCount, negativeCount, positiveTooltip, negativeTooltip };
+      if (Array.isArray(meta.chain) && meta.chain.length) {
+        const chainBox = make('div', 'dnsviz-chain');
+        meta.chain.forEach(level => {
+          const item = make('div', 'dnsviz-chain-item');
+          const head = make('div', 'dnsviz-chain-top');
+          head.append(
+            make('div', 'dnsviz-chain-name', level.name || 'sin nombre'),
+            createStatusBadge(level.valid ? 'ok' : (level.parent || level.child ? 'warning' : 'info'))
+          );
+          const details = make('div', 'dnsviz-chain-meta');
+          const bits = [
+            level.level ? `Nivel: ${level.level}` : null,
+            level.parent ? 'DS presente' : 'sin DS',
+            level.child ? 'DNSKEY presente' : 'sin DNSKEY',
+            Array.isArray(level.algorithms) && level.algorithms.length ? `Algoritmos: ${level.algorithms.join(', ')}` : null,
+            level.note ? level.note : null
+          ].filter(Boolean);
+          details.textContent = bits.join(' · ');
+          item.append(head, details);
+          chainBox.appendChild(item);
         });
+        box.appendChild(chainBox);
+      }
+      if (Array.isArray(meta.observations) && meta.observations.length) {
+        const obs = make('div', 'dnsviz-chain');
+        obs.appendChild(make('div', 'dnsviz-chain-item', meta.observations.join(' · ')));
+        box.appendChild(obs);
+      }
+      return box;
     }
 
-    function updateSummary(checkKey, domain, status) {
-        if (!summaryData[checkKey]) return;
-        const entry = summaryData[checkKey];
-        if (status === 'ok') {
-            entry.positive += 1;
-            entry.positives.push({ domain, status });
-        } else {
-            entry.negative += 1;
-            entry.negatives.push({ domain, status });
+    function paintCatalogResults(domain, results) {
+      const byId = new Map(results.map(item => [item.id, item]));
+      catalogResultSlots.forEach((slot, id) => {
+        const result = byId.get(id);
+        if (!result) {
+          slot.row.className = 'result-inline';
+          slot.badge.replaceWith(createStatusBadge('pending'));
+          slot.badge = slot.row.querySelector('.status');
+          slot.row.querySelector('.row-title').textContent = 'Pendiente';
+          clearNode(slot.body);
+          slot.body.appendChild(make('p', 'muted', 'La medición aparecerá aquí al analizar el dominio.'));
+          return;
         }
-        const elements = summaryElements[checkKey];
-        if (!elements) return;
-        elements.positiveCount.textContent = entry.positive;
-        elements.negativeCount.textContent = entry.negative;
-        elements.positiveTooltip.innerHTML = renderTooltipList(entry.positives, 'Sin resultados positivos', true);
-        elements.negativeTooltip.innerHTML = renderTooltipList(entry.negatives, 'Sin resultados negativos');
-    }
-
-    function getStatusHtml(status, details = '') {
-        let icon, color;
-        switch (status) {
-            case 'ok':
-                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-green-600';
-                break;
-            case 'fail':
-                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-red-600';
-                break;
-            case 'error':
-                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-gray-500';
-                break;
-            case 'info':
-                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-blue-600';
-                break;
-            default:
-                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                color = 'text-yellow-600';
-                break;
+        slot.row.className = `result-inline ${statusClass(result.status)}`;
+        slot.badge.replaceWith(createStatusBadge(result.status));
+        slot.badge = slot.row.querySelector('.status');
+        slot.row.querySelector('.row-title').textContent = checkMap.get(id)?.label || id;
+        clearNode(slot.body);
+        appendLines(slot.body, result.lines || [], 'Sin detalles');
+        if (result.graphMeta) {
+          slot.body.appendChild(renderGraphBox(domain, result.graphMeta));
         }
-        return `<div class="flex items-start ${color}"><span class="mr-2 flex-shrink-0">${icon}</span><div class="space-y-1">${formatDetails(details)}</div></div>`;
+      });
     }
 
-    function createResultCard(domain, selectedChecks) {
-        const card = document.createElement('div');
-        card.className = 'p-4 rounded-lg bg-gray-50 border border-gray-200 shadow-sm';
-        const title = document.createElement('h3');
-        title.className = 'font-bold text-xl text-gray-800 mb-4 pb-2 border-b';
-        title.textContent = domain;
-        card.appendChild(title);
-
-        const placeholders = {};
-
-        for (const group of groupDefinitions) {
-            const groupKeys = group.checks.map(c => c.key);
-            const filtered = selectedChecks.filter(c => groupKeys.includes(c));
-            if (!filtered.length) continue;
-            const h4 = document.createElement('h4');
-            h4.className = 'text-md font-semibold text-gray-700 mt-4 mb-2';
-            h4.textContent = group.title;
-            card.appendChild(h4);
-            filtered.forEach(c => {
-                const row = document.createElement('div');
-                row.className = 'result-item flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0';
-                const label = document.createElement('span');
-                label.className = 'label text-sm font-medium text-gray-600';
-                label.textContent = checkConfig[c].label;
-                const placeholder = document.createElement('span');
-                placeholder.className = 'text-gray-500 flex items-center';
-                placeholder.innerHTML = '<div class="loader mr-2"></div><span>Cargando...</span>';
-                row.appendChild(label);
-                row.appendChild(placeholder);
-                card.appendChild(row);
-                placeholders[c] = placeholder;
-            });
-        }
-
-        resultsContainer.appendChild(card);
-        return placeholders;
-    }
-
-    async function getCheckResult(checkType, domain) {
-        const { label } = checkConfig[checkType];
-        const ascii = toASCII(domain);
-        try {
-            switch (checkType) {
-                case 'ipinfo': {
-                    const data = await fetchWithTimeout(`${API_BASE}/ipinfo/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const lines = [];
-                    if (data.ipv4?.length) lines.push(`IPv4: ${data.ipv4.join(', ')}`);
-                    if (data.ipv6?.length) lines.push(`IPv6: ${data.ipv6.join(', ')}`);
-                    if (data.geo?.length) {
-                        data.geo.forEach(g => {
-                            lines.push(`${g.ip}: ${[g.city, g.region, g.country].filter(Boolean).join(', ')}${g.asn ? ' (AS' + g.asn + ')' : ''}`);
-                        });
-                    }
-                    return { label, status: lines.length ? 'ok' : 'fail', details: lines.length ? lines : 'Sin datos' };
-                }
-                case 'serverlocation': {
-                    const data = await fetchWithTimeout(`${API_BASE}/serverlocation/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const parts = [data.city, data.region, data.country].filter(Boolean).join(', ');
-                    const details = [];
-                    if (parts || data.ip) details.push(parts ? `${parts} (${data.ip})` : data.ip);
-                    if (data.timezone) details.push(`Zona horaria: ${data.timezone}`);
-                    if (data.latitude != null && data.longitude != null) {
-                        details.push(`Coordenadas: ${data.latitude}, ${data.longitude}`);
-                    }
-                    return {
-                        label,
-                        status: data.ip ? 'ok' : 'fail',
-                        details: details.length ? details : 'Sin datos'
-                    };
-                }
-                case 'serverinfo': {
-                    const data = await fetchWithTimeout(`${API_BASE}/serverinfo/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const lines = [];
-                    if (data.ip) lines.push(`IP analizada: ${data.ip}`);
-                    if (data.asn) lines.push(`ASN: AS${data.asn}`);
-                    if (data.org) lines.push(`Organización: ${data.org}`);
-                    if (data.network) lines.push(`Prefijo: ${data.network}`);
-                    if (data.isp) lines.push(`ISP: ${data.isp}`);
-                    if (data.city || data.country) lines.push(`Ubicación: ${[data.city, data.country].filter(Boolean).join(', ')}`);
-                    return { label, status: lines.length ? 'ok' : 'fail', details: lines.length ? lines : 'Sin datos' };
-                }
-                case 'serverstatus': {
-                    const data = await fetchWithTimeout(`${API_BASE}/serverstatus/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const code = data.statusCode;
-                    if (!code) return { label, status: 'error', details: 'Sin respuesta' };
-                    if (code >= 500) return { label, status: 'fail', details: `HTTP ${code}` };
-                    if (code >= 400) return { label, status: 'fail', details: `HTTP ${code}` };
-                    if (code >= 300) {
-                        const target = data.location ? ` → ${data.location}` : '';
-                        return { label, status: 'info', details: `HTTP ${code} (redirección)${target}` };
-                    }
-                    return { label, status: 'ok', details: `HTTP ${code}` };
-                }
-                case 'openports': {
-                    const data = await fetchWithTimeout(`${API_BASE}/openports/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const open = data.ports?.filter(p => p.open).map(p => p.port) || [];
-                    const expected = new Set([53, 80, 443, 25, 110, 143, 465, 587, 993, 995]);
-                    const unusual = open.filter(port => !expected.has(port));
-                    if (!open.length) {
-                        return { label, status: 'ok', details: 'Sin puertos comunes abiertos' };
-                    }
-                    if (unusual.length) {
-                        const details = [`Puertos no estándar: ${unusual.join(', ')}`];
-                        if (open.length > unusual.length) {
-                            const standard = open.filter(port => expected.has(port));
-                            details.push(`Puertos esperados: ${standard.join(', ')}`);
-                        }
-                        return { label, status: 'fail', details };
-                    }
-                    return { label, status: 'ok', details: `Puertos estándar: ${open.join(', ')}` };
-                }
-                case 'traceroute': {
-                    const data = await fetchWithTimeout(`${API_BASE}/traceroute/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const hops = data.hops?.slice(0, 10) || [];
-                    return { label, status: hops.length ? 'ok' : 'info', details: hops.length ? hops : 'Sin datos' };
-                }
-                case 'redirectchain': {
-                    const data = await fetchWithTimeout(`${API_BASE}/redirectchain/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const chain = (data.chain || []).filter(Boolean);
-                    if (!chain.length) {
-                        return { label, status: 'info', details: 'Sin redirecciones' };
-                    }
-                    const deduped = [];
-                    const seen = new Set();
-                    chain.forEach(step => {
-                        const key = `${step.statusCode}-${step.url}-${step.location || ''}`;
-                        if (!seen.has(key)) {
-                            seen.add(key);
-                            deduped.push(step);
-                        }
-                    });
-                    const finalStep = deduped[deduped.length - 1];
-                    const lines = deduped.map((step, index) => {
-                        const code = step.statusCode ? `HTTP ${step.statusCode}` : 'Sin código';
-                        const destination = step.location || step.url;
-                        const note = index === deduped.length - 1 ? 'destino final' : 'redirección';
-                        return `${index + 1}. ${code} → ${destination} (${note})`;
-                    });
-                    const summary = `Cadena de ${deduped.length} pasos. Último destino: ${finalStep.location || finalStep.url}`;
-                    let status = 'info';
-                    if (finalStep.statusCode >= 400) status = 'fail';
-                    else if (deduped.length === 1 && finalStep.statusCode < 300) status = 'ok';
-                    return { label, status, details: [summary, ...lines] };
-                }
-                case 'block': {
-                    const data = await fetchWithTimeout(`${API_BASE}/block/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const lines = data.results?.map(r => `${r.resolver}: ${r.blocked ? 'bloqueado' : 'acceso'}`) || [];
-                    const blocked = data.results?.some(r => r.blocked);
-                    return { label, status: blocked ? 'fail' : 'ok', details: lines.length ? lines : 'Sin datos' };
-                }
-                case 'dnsrecords': {
-                    const data = await fetchWithTimeout(`${API_BASE}/dnsrecords/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const records = [];
-                    Object.entries(data.records || {}).forEach(([type, values]) => {
-                        if (Array.isArray(values) && values.length) {
-                            const formatted = values
-                                .map(v => (typeof v === 'string' ? v : JSON.stringify(v)))
-                                .join(', ');
-                            records.push(`${type}: ${formatted}`);
-                        }
-                    });
-                    return { label, status: records.length ? 'ok' : 'fail', details: records.length ? records : 'Sin registros' };
-                }
-                case 'txtrecords': {
-                    const data = await fetchWithTimeout(`${API_BASE}/txtrecords/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const records = data.records?.map(r => r.join('')) || [];
-                    return { label, status: records.length ? 'ok' : 'fail', details: records.length ? records : 'Sin TXT' };
-                }
-                case 'dnsserver': {
-                    const data = await fetchWithTimeout(`${API_BASE}/dnsserver/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.servers?.length ? 'ok' : 'fail', details: data.servers?.length ? data.servers : 'Sin NS' };
-                }
-                case 'dnssecurity': {
-                    const data = await fetchWithTimeout(`${API_BASE}/dnssecurity/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const lines = [];
-                    if (data.algorithms?.length) lines.push(`Algoritmos: ${data.algorithms.join(', ')}`);
-                    if (data.doh) lines.push('DoH activo');
-                    lines.push(data.valid ? 'DNSSEC válido' : 'DNSSEC ausente');
-                    return { label, status: data.valid ? 'ok' : 'fail', details: lines };
-                }
-                case 'emailconfig': {
-                    const data = await fetchWithTimeout(`${API_BASE}/emailconfig/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const lines = [
-                        `SPF: ${data.spf ? 'sí' : 'no'}`,
-                        `DMARC: ${data.dmarc ? 'sí' : 'no'}`,
-                        `DKIM: ${data.dkim ? 'sí' : 'no'}`
-                    ];
-                    if (data.mx?.length) lines.push(`MX: ${data.mx.map(m => `${m.exchange} (p${m.priority})`).join(', ')}`);
-                    return { label, status: data.spf || data.dmarc || data.dkim ? 'ok' : 'fail', details: lines };
-                }
-                case 'sitefeatures': {
-                    const data = await fetchWithTimeout(`${API_BASE}/sitefeatures/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const features = data.features || {};
-                    const lines = Object.entries(features).map(([k, v]) => {
-                        const clean = k.replace(/^has/, '').replace(/([A-Z])/g, ' $1').trim();
-                        const formatted = clean.charAt(0).toUpperCase() + clean.slice(1);
-                        return `${formatted}: ${v ? 'sí' : 'no'}`;
-                    });
-                    return { label, status: lines.some(l => /sí$/.test(l)) ? 'ok' : 'info', details: lines };
-                }
-                case 'cookies': {
-                    const data = await fetchWithTimeout(`${API_BASE}/cookies/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const cookies = data.cookies || [];
-                    return { label, status: cookies.length ? 'info' : 'ok', details: cookies.length ? cookies : 'Sin cookies' };
-                }
-                case 'crawlrules': {
-                    const data = await fetchWithTimeout(`${API_BASE}/crawlrules/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    if (!data.found) return { label, status: 'fail', details: 'No encontrado' };
-                    const snippet = escapeHtml((data.content || '').slice(0, 500));
-                    const html = `<pre class="whitespace-pre-wrap text-xs text-gray-700">${snippet}${data.content && data.content.length > 500 ? '…' : ''}</pre>`;
-                    return { label, status: 'ok', details: { html } };
-                }
-                case 'linkedpages': {
-                    const data = await fetchWithTimeout(`${API_BASE}/linkedpages/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const lines = data.links?.slice(0, 20).map(l => `${l.internal ? 'Interno' : 'Externo'}: ${l.href}`) || [];
-                    return { label, status: lines.length ? 'ok' : 'info', details: lines.length ? lines : 'Sin enlaces detectados' };
-                }
-                case 'listedpages': {
-                    const data = await fetchWithTimeout(`${API_BASE}/listedpages/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const pages = data.pages?.slice(0, 20) || [];
-                    return { label, status: pages.length ? 'ok' : 'info', details: pages.length ? pages : 'Sin sitemap' };
-                }
-                case 'socialtags': {
-                    const data = await fetchWithTimeout(`${API_BASE}/socialtags/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const tags = Object.entries(data.tags || {}).map(([k, v]) => `${k}: ${v}`);
-                    return { label, status: tags.length ? 'ok' : 'info', details: tags.length ? tags : 'Sin etiquetas sociales' };
-                }
-                case 'quality': {
-                    const data = await fetchWithTimeout(`${API_BASE}/quality/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const lines = [];
-                    if (typeof data.performance === 'number') lines.push(`Performance: ${(data.performance * 100).toFixed(0)}`);
-                    if (typeof data.accessibility === 'number') lines.push(`Accesibilidad: ${(data.accessibility * 100).toFixed(0)}`);
-                    if (typeof data.bestPractices === 'number') lines.push(`Mejores prácticas: ${(data.bestPractices * 100).toFixed(0)}`);
-                    if (typeof data.seo === 'number') lines.push(`SEO: ${(data.seo * 100).toFixed(0)}`);
-                    return { label, status: lines.length ? 'ok' : 'info', details: lines.length ? lines : 'Sin datos de Lighthouse' };
-                }
-                case 'archive': {
-                    const data = await fetchWithTimeout(`${API_BASE}/archive/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const entries = data.entries?.map(e => `${e.timestamp}: ${e.original} (${e.status})`) || [];
-                    return { label, status: entries.length ? 'ok' : 'info', details: entries.length ? entries : 'Sin historial' };
-                }
-                case 'ranking': {
-                    const data = await fetchWithTimeout(`${API_BASE}/ranking/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return {
-                        label,
-                        status: data.rank ? 'ok' : 'info',
-                        details: data.rank ? `Ranking global ${data.rank}${data.date ? ` (${data.date})` : ''}` : 'Sin ranking'
-                    };
-                }
-                case 'malware': {
-                    const data = await fetchWithTimeout(`${API_BASE}/malware/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const entries = data.entries?.map(e => `${e.url || e.id} (${e.status || 'listado'})`) || [];
-                    const threat = data.threat && data.threat !== 'ok';
-                    return { label, status: threat ? 'fail' : 'ok', details: entries.length ? entries : 'Sin reportes' };
-                }
-                case 'screenshot': {
-                    const data = await fetchWithTimeout(`${API_BASE}/screenshot/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const link = `<a class="text-blue-600 underline" href="${escapeHtml(data.imageUrl)}" target="_blank" rel="noopener">Ver captura</a>`;
-                    return { label, status: 'info', details: { html: link } };
-                }
-                case 'headers': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const entries = Object.entries(data.headers || {}).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
-                    return { label, status: entries.length ? 'ok' : 'info', details: entries.length ? entries : 'Sin encabezados' };
-                }
-                case 'sslchain': {
-                    const data = await fetchWithTimeout(`${API_BASE}/sslchain/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const chain = data.chain?.map(c => `${c.subject?.CN || 'Certificado'} → ${c.issuer?.CN || 'Emisor'} (${c.valid_from} - ${c.valid_to})`) || [];
-                    return { label, status: chain.length ? 'ok' : 'fail', details: chain.length ? chain : 'Sin cadena SSL' };
-                }
-                case 'tlsciphers': {
-                    const data = await fetchWithTimeout(`${API_BASE}/tlsciphers/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const suites = data.suites?.map(s => `${s.protocol}: ${s.cipher}`) || [];
-                    return { label, status: suites.length ? 'ok' : 'info', details: suites.length ? suites : 'Sin información' };
-                }
-                case 'tlsconfig': {
-                    const data = await fetchWithTimeout(`${API_BASE}/tlsconfig/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    if (data.data?.error) return { label, status: 'error', details: data.data.error };
-                    const score = data.data?.score;
-                    const details = [];
-                    if (score !== undefined) details.push(`Puntaje: ${score}`);
-                    if (data.data?.tests) {
-                        Object.entries(data.data.tests).slice(0, 10).forEach(([name, result]) => {
-                            if (result && typeof result === 'object' && result.output) {
-                                details.push(`${name}: ${result.output}`);
-                            }
-                        });
-                    }
-                    return { label, status: score !== undefined ? 'ok' : 'info', details: details.length ? details : 'Sin datos' };
-                }
-                case 'tlssimulation': {
-                    const data = await fetchWithTimeout(`${API_BASE}/tlssimulation/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const scenarios = data.scenarios?.map(s => `${s.client}: ${s.success ? `${s.protocol || 'TLS'} (${s.cipher || 'cifra desconocida'})` : 'falló'}`) || [];
-                    const success = data.scenarios?.every(s => s.success);
-                    return { label, status: success ? 'ok' : 'fail', details: scenarios.length ? scenarios : 'Sin datos' };
-                }
-                case 'httpsecurity': {
-                    const data = await fetchWithTimeout(`${API_BASE}/httpsecurity/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const security = data.security || {};
-                    const lines = Object.entries(security).map(([k, v]) => `${k.toUpperCase()}: ${v ? 'sí' : 'no'}`);
-                    const ok = Object.values(security).some(Boolean);
-                    return { label, status: ok ? 'ok' : 'fail', details: lines.length ? lines : 'Sin cabeceras de seguridad' };
-                }
-                case 'firewall': {
-                    const data = await fetchWithTimeout(`${API_BASE}/firewall/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return {
-                        label,
-                        status: data.detected ? 'ok' : 'info',
-                        details: data.detected ? `Detectado: ${data.waf.join(', ')}` : 'No se identificó WAF'
-                    };
-                }
-                case 'dnssec': {
-                    const data = await fetchWithTimeout(`${API_BASE}/dnssec/${ascii}`);
-                    const ok = data.valid;
-                    const details = ok
-                        ? (data.algorithms?.length ? `Algoritmos: ${data.algorithms.join(', ')}` : 'DNSSEC configurado')
-                        : '¡No tiene DNSSEC!';
-                    return { label, status: ok ? 'ok' : 'fail', details };
-                }
-                case 'ipv4': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${ascii}&type=A`);
-                    const ips = data.Answer?.filter(r => r.type === 1).map(r => r.data) || [];
-                    const geos = [];
-                    for (const ip of ips) {
-                        try {
-                            const info = await fetchWithTimeout(`https://ipapi.co/${ip}/json/`);
-                            geos.push({ ip, country: info.country_name, lat: info.latitude, lon: info.longitude, asn: info.asn });
-                        } catch (e) {}
-                    }
-                    const details = ips.length ? ips.join(', ') : 'No tiene IPv4';
-                    return { label, status: ips.length ? 'ok' : 'fail', details, geos };
-                }
-                case 'ipv6': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${ascii}&type=AAAA`);
-                    const ips = data.Answer?.filter(r => r.type === 28).map(r => r.data) || [];
-                    return { label, status: ips.length ? 'ok' : 'fail', details: ips.length ? ips.join(', ') : 'No tiene IPv6' };
-                }
-                case 'asn': {
-                    const data = await fetchWithTimeout(`${API_BASE}/serverinfo/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return {
-                        label,
-                        status: data.asn ? 'ok' : 'fail',
-                        details: data.asn ? `AS${data.asn}${data.org ? ` (${data.org})` : ''}` : 'Sin datos'
-                    };
-                }
-                case 'dmarc': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=_dmarc.${ascii}&type=TXT`);
-                    const found = data.Answer?.some(r => r.data.includes("v=DMARC1"));
-                    return { label, status: found ? 'ok' : 'fail', details: found ? 'Política encontrada' : 'No permite DMARC' };
-                }
-                case 'spf': {
-                    const data = await fetchWithTimeout(`https://dns.google/resolve?name=${ascii}&type=TXT`);
-                    const found = data.Answer?.some(r => r.data.includes("v=spf1"));
-                    return { label, status: found ? 'ok' : 'fail', details: found ? 'Registro encontrado' : 'No permite SPF' };
-                }
-                case 'dkim': {
-                    const data = await fetchWithTimeout(`${API_BASE}/dkim/${ascii}?selector=default`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Registro encontrado' : 'No permite DKIM' };
-                }
-                case 'mx': {
-                    const data = await fetchWithTimeout(`${API_BASE}/mx/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const details = data.records?.map(r => `${r.exchange} (p${r.priority})`).join(', ') || 'No permite MX';
-                    return { label, status: data.records?.length ? 'ok' : 'fail', details };
-                }
-                case 'smtputf8': {
-                    const data = await fetchWithTimeout(`${API_BASE}/smtputf8/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const details = data.results?.map(r => {
-                        switch (r.status) {
-                            case 'supports': return `${r.server}: sí`;
-                            case 'no': return `${r.server}: no`;
-                            case 'timeout': return `${r.server}: timeout`;
-                            case 'connection-error': return `${r.server}: sin conexión`;
-                            default: return `${r.server}: sin datos`;
-                        }
-                    }).join('; ') || 'No permite SMTPUTF8';
-                    const ok = data.results?.length && data.results.every(r => r.status === 'supports');
-                    return { label, status: ok ? 'ok' : 'fail', details };
-                }
-                case 'rpki': {
-                    const data = await fetchWithTimeout(`${API_BASE}/rpki/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    if (!data.results?.length) return { label, status: 'error', details: 'Sin datos' };
-                    const details = data.results.map(r => {
-                        const state = r.state === 'valid' ? 'válido' : r.state === 'invalid' ? 'inválido' : 'desconocido';
-                        const asn = r.asn ? ` AS${r.asn}` : '';
-                        const prefix = r.prefix ? ` (${r.prefix})` : '';
-                        return `${r.ip}: ${state}${asn}${prefix}`;
-                    });
-                    let status = 'info';
-                    if (data.results.some(r => r.state === 'invalid')) status = 'fail';
-                    else if (data.results.some(r => r.state === 'valid')) status = data.valid ? 'ok' : 'info';
-                    return { label, status, details };
-                }
-                case 'domaininfo': {
-                    const data = await fetchWithTimeout(`${API_BASE}/domaininfo/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const lines = [];
-                    if (data.registry) lines.push(`Registro: ${data.registry}`);
-                    if (Array.isArray(data.status) && data.status.length) {
-                        lines.push(`Estados: ${data.status.join(', ')}`);
-                    }
-                    if (data.creation) lines.push(`Creación: ${formatDate(data.creation)}`);
-                    if (data.expiration) lines.push(`Expira: ${formatDate(data.expiration)}`);
-                    return { label, status: lines.length ? 'ok' : 'info', details: lines.length ? lines : 'Sin datos' };
-                }
-                case 'whois': {
-                    const data = await fetchWithTimeout(`${API_BASE}/whois/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const details = data.country ? `${data.name || 'Desconocido'} (${data.country})` : (data.name || 'Desconocido');
-                    return { label, status: data.name ? 'ok' : 'fail', details };
-                }
-                case 'https': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.https ? 'ok' : 'fail', details: data.https ? 'Accesible' : 'No responde HTTPS' };
-                }
-                case 'redirect': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.redirect ? 'ok' : 'fail', details: data.redirect ? 'Redirige a HTTPS' : 'No redirige' };
-                }
-                case 'hsts': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.hsts ? 'ok' : 'fail', details: data.hsts ? 'Cabecera presente' : 'Sin HSTS' };
-                }
-                case 'csp': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.csp ? 'ok' : 'fail', details: data.csp ? 'Cabecera presente' : 'Sin CSP' };
-                }
-                case 'xfo': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.xfo ? 'ok' : 'fail', details: data.xfo ? 'Cabecera presente' : 'Sin X-Frame-Options' };
-                }
-                case 'xcto': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.xcto ? 'ok' : 'fail', details: data.xcto ? 'Cabecera presente' : 'Sin X-Content-Type-Options' };
-                }
-                case 'referrer': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.referrer ? 'ok' : 'fail', details: data.referrer ? 'Cabecera presente' : 'Sin Referrer-Policy' };
-                }
-                case 'permissions': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.permissions ? 'ok' : 'fail', details: data.permissions ? 'Cabecera presente' : 'Sin Permissions-Policy' };
-                }
-                case 'xxss': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.xxss ? 'ok' : 'fail', details: data.xxss ? 'Cabecera presente' : 'Sin X-XSS-Protection' };
-                }
-                case 'server': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.server ? 'fail' : 'ok', details: data.server || 'No expuesto' };
-                }
-                case 'compression': {
-                    const data = await getSecurityHeaders(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.compression ? 'ok' : 'fail', details: data.compression ? 'Compresión habilitada' : 'Sin compresión' };
-                }
-                case 'ocsp': {
-                    const data = await getTlsInfo(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.ocsp ? 'ok' : 'fail', details: data.ocsp ? 'OCSP válido' : 'Sin OCSP' };
-                }
-                case 'tls': {
-                    const data = await getTlsInfo(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const ok = data.protocol === 'TLSv1.3' || data.protocol === 'TLSv1.2';
-                    return { label, status: ok ? 'ok' : 'fail', details: data.protocol || 'Desconocido' };
-                }
-                case 'key': {
-                    const data = await getTlsInfo(domain);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    const info = data.key || {};
-                    let ok = false;
-                    if (info.type === 'ECDH') ok = info.size >= 224;
-                    else if (info.type === 'DH') ok = info.size >= 2048;
-                    else ok = true;
-                    const details = info.type ? `${info.type}${info.size ? ' ' + info.size : ''}` : 'Sin datos';
-                    return { label, status: ok ? 'ok' : 'fail', details };
-                }
-                case 'caa': {
-                    const data = await fetchWithTimeout(`${API_BASE}/caa/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.records?.length ? 'ok' : 'fail', details: data.records?.length ? data.records.join(', ') : 'No tiene CAA' };
-                }
-                case 'tlsa': {
-                    const data = await fetchWithTimeout(`${API_BASE}/tlsa/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.records?.length ? 'ok' : 'fail', details: data.records?.length ? data.records.join(', ') : 'No tiene TLSA' };
-                }
-                case 'securitytxt': {
-                    const data = await fetchWithTimeout(`${API_BASE}/securitytxt/${ascii}`);
-                    if (data.error) return { label, status: 'error', details: data.error };
-                    return { label, status: data.found ? 'ok' : 'fail', details: data.found ? 'Encontrado' : 'No disponible' };
-                }
-            }
-        } catch (error) {
-            return { label, status: 'error', details: error.message };
-        }
-    }
-
-    async function analyzeDomain(domain, selectedChecks) {
-        const placeholders = createResultCard(domain, selectedChecks);
-        const finalResults = {};
-        const promises = selectedChecks.map(async checkType => {
-            try {
-                const res = await getCheckResult(checkType, domain);
-                finalResults[checkType] = res;
-                placeholders[checkType].innerHTML = getStatusHtml(res.status, res.details);
-                updateSummary(checkType, domain, res.status);
-            } catch (err) {
-                finalResults[checkType] = { label: checkConfig[checkType].label, status: 'error', details: err.message };
-                placeholders[checkType].innerHTML = getStatusHtml('error', err.message);
-                updateSummary(checkType, domain, 'error');
-            }
+    function renderResultPager() {
+      const total = analyzedDomains.length;
+      if (!total) {
+        resultCounter.textContent = '0 / 0';
+        prevResult.disabled = true;
+        nextResult.disabled = true;
+        clearNode(resultTabs);
+        return;
+      }
+      currentResultIndex = Math.max(0, Math.min(currentResultIndex, total - 1));
+      clearNode(resultTabs);
+      resultTabButtons.length = 0;
+      analyzedDomains.forEach((domain, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'tab-button';
+        button.textContent = domain;
+        button.addEventListener('click', () => {
+          currentResultIndex = index;
+          renderResultPager();
         });
-        await Promise.allSettled(promises);
-        return { domain, results: finalResults };
+        if (index === currentResultIndex) button.classList.add('active');
+        resultTabButtons.push(button);
+        resultTabs.appendChild(button);
+      });
+      resultCounter.textContent = `${currentResultIndex + 1} / ${total}`;
+      prevResult.disabled = currentResultIndex === 0;
+      nextResult.disabled = currentResultIndex === total - 1;
+      const domain = analyzedDomains[currentResultIndex];
+      if (domain && domainResultsStore.has(domain)) {
+        paintCatalogResults(domain, domainResultsStore.get(domain));
+      }
     }
 
-    async function handleAnalysis() {
-        resultsContainer.innerHTML = '';
-        loader.style.display = 'flex';
-        checkButton.disabled = true;
-        clearMap();
+    function countStatus(counts, status) {
+      counts[status] = (counts[status] || 0) + 1;
+    }
 
-        const domains = domainsInput.value.trim().split(',').map(d => d.trim()).filter(Boolean);
-        const selectedChecks = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.dataset.check);
-        initializeSummary(selectedChecks);
+    function summarizeDomain(results) {
+      const counts = { ok: 0, warning: 0, info: 0, fail: 0, error: 0 };
+      results.forEach(result => countStatus(counts, result.status));
+      return counts;
+    }
 
-        if (!domains.length || !selectedChecks.length) {
-            loader.style.display = 'none';
-            checkButton.disabled = false;
-            resultsContainer.innerHTML = `<div class="text-center text-gray-500 p-4">${!domains.length ? 'Introduce al menos un dominio.' : 'Selecciona al menos una verificación.'}</div>`;
-            initializeSummary([]);
-            return;
+    function calculateComplianceFromCounts(counts) {
+      const relevant = (counts.ok || 0) + (counts.warning || 0) + (counts.fail || 0) + (counts.error || 0);
+      if (!relevant) return 0;
+      return Math.round(((counts.ok || 0) / relevant) * 100);
+    }
+
+    function renderResultsHeader(total, counts) {
+      clearNode(summaryEl);
+      const compliance = calculateComplianceFromCounts(counts);
+      const items = [
+        ['total', total, 'Total'],
+        ['ok', counts.ok, 'Correctas'],
+        ['warning', counts.warning, 'Avisos'],
+        ['info', counts.info, 'Info'],
+        ['fail', counts.fail, 'Fallos'],
+        ['error', counts.error, 'Errores']
+      ];
+      items.forEach(([status, value, label]) => {
+        const chip = make('span', 'summary-chip');
+        const dot = make('span');
+        dot.className = `status ${status}`;
+        dot.style.padding = '0';
+        dot.style.width = '10px';
+        dot.style.height = '10px';
+        dot.style.borderRadius = '999px';
+        dot.style.display = 'inline-block';
+        chip.append(dot, document.createTextNode(` ${label} `), make('strong', '', String(value)));
+        summaryEl.appendChild(chip);
+      });
+      const complianceChip = make('span', 'summary-chip');
+      complianceChip.append(make('span', 'compliance', `${compliance}%`), document.createTextNode(' Cumplimiento'));
+      summaryEl.appendChild(complianceChip);
+    }
+
+    function appendChatMessage(title, es, pt, note = '') {
+      const item = document.createElement('div');
+      item.className = 'chat-msg';
+      item.innerHTML = `
+        <strong>${title}</strong>
+        <div><span class="muted">ES:</span> ${es}</div>
+        <div><span class="muted">PT:</span> ${pt}</div>
+        ${note ? `<div class="muted" style="margin-top:6px">${note}</div>` : ''}
+      `;
+      chatLog.prepend(item);
+    }
+
+    function findHelpDoc(query) {
+      const cleaned = String(query || '').trim().toLowerCase();
+      if (!cleaned) return null;
+      return helpDocs
+        .map(doc => ({
+          doc,
+          score: doc.terms.reduce((score, term) => score + (cleaned.includes(term) ? term.length : 0), 0)
+        }))
+        .filter(entry => entry.score > 0)
+        .sort((a, b) => b.score - a.score)[0]?.doc || null;
+    }
+
+    function renderChatAnswer(query) {
+      const doc = findHelpDoc(query);
+      if (!doc) {
+        appendChatMessage(
+          'No encontré coincidencia',
+          `Probá con dnssec, dnsviz, ipv6, rpki, ua, w3c o tls.`,
+          `Tente dnssec, dnsviz, ipv6, rpki, ua, w3c ou tls.`,
+          `Consulta: ${query}`
+        );
+        return;
+      }
+      appendChatMessage(doc.title, doc.es, doc.pt, `Consulta: ${query}`);
+    }
+
+    function setChatOpen(open) {
+      helpChat.classList.toggle('collapsed', !open);
+      chatToggle.textContent = open ? 'Cerrar' : 'Abrir';
+    }
+
+    async function runCheck(id, domain) {
+      try {
+        switch (id) {
+          case 'https': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.https ? 'ok' : 'fail',
+              lines: [
+                data.https ? 'El sitio responde por HTTPS.' : 'No responde por HTTPS.',
+                data.server ? `Servidor: ${data.server}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'redirect': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.redirect ? 'ok' : 'fail',
+              lines: [
+                data.redirect ? 'HTTP redirige a HTTPS.' : 'HTTP no redirige a HTTPS.',
+                data.redirect ? 'La redirección apunta a HTTPS.' : null
+              ].filter(Boolean)
+            };
+          }
+          case 'hsts': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.hstsStrict ? 'ok' : (data.hsts ? 'warning' : 'fail'),
+              lines: [
+                data.hsts
+                  ? `HSTS presente${data.hstsMaxAge ? `, max-age=${data.hstsMaxAge}` : ''}.`
+                  : 'No se encontró HSTS.',
+                data.hstsStrict ? 'La política parece suficientemente larga.' : (data.hsts ? 'La política existe pero no llega al nivel ideal.' : null)
+              ].filter(Boolean)
+            };
+          }
+          case 'csp': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.csp ? 'ok' : 'warning',
+              lines: [data.csp ? 'Content-Security-Policy presente.' : 'No se encontró CSP.']
+            };
+          }
+          case 'xfo': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.xfo ? 'ok' : 'warning', lines: [data.xfo ? 'X-Frame-Options presente.' : 'No se encontró X-Frame-Options.'] };
+          }
+          case 'xcto': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.xcto ? 'ok' : 'warning', lines: [data.xcto ? 'X-Content-Type-Options presente.' : 'No se encontró X-Content-Type-Options.'] };
+          }
+          case 'referrer': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.referrer ? 'ok' : 'warning', lines: [data.referrer ? 'Referrer-Policy presente.' : 'No se encontró Referrer-Policy.'] };
+          }
+          case 'permissions': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.permissions ? 'ok' : 'warning', lines: [data.permissions ? 'Permissions-Policy presente.' : 'No se encontró Permissions-Policy.'] };
+          }
+          case 'serverbanner': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.server ? 'warning' : 'ok', lines: [data.server ? `Server expuesto: ${data.server}` : 'No se expone un banner claro.'] };
+          }
+          case 'compression': {
+            const data = await getHeaders(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: 'info', lines: [data.compression ? 'La respuesta usa compresión HTTP.' : 'No se detectó compresión HTTP.'] };
+          }
+          case 'tls': {
+            const data = await getTlsInfo(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const protocol = data.protocol || 'Desconocido';
+            const strong = protocol === 'TLSv1.3' || protocol === 'TLSv1.2';
+            return {
+              status: strong ? 'ok' : (protocol === 'TLSv1.1' || protocol === 'TLSv1' ? 'warning' : 'fail'),
+              lines: [
+                `Protocolo: ${protocol}`,
+                data.cipher ? `Cifra: ${data.cipher}` : null,
+                data.key?.type ? `Intercambio: ${data.key.type}${data.key.size ? ` ${data.key.size}` : ''}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'sslchain': {
+            const data = await getSslChain(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const chain = Array.isArray(data.chain) ? data.chain : [];
+            const first = chain[0] || {};
+            return {
+              status: chain.length ? 'ok' : 'fail',
+              lines: [
+                chain.length ? `Cadena con ${chain.length} certificado(s).` : 'No se pudo obtener la cadena.',
+                first.subject?.CN ? `Sujeto: ${first.subject.CN}` : null,
+                first.issuer?.CN ? `Emisor: ${first.issuer.CN}` : null,
+                first.valid_to ? `Vence: ${first.valid_to}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'ocsp': {
+            const data = await getTlsInfo(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.ocsp ? 'ok' : 'info', lines: [data.ocsp ? 'OCSP stapling disponible.' : 'No se detectó OCSP stapling.'] };
+          }
+          case 'securitytxt': {
+            const data = await apiJson(`/securitytxt/${encodeURIComponent(domain)}`);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.found ? 'ok' : 'fail', lines: [data.found ? 'Encontrado en /.well-known/security.txt' : 'No se encontró security.txt.'] };
+          }
+          case 'w3c': {
+            return {
+              status: 'info',
+              lines: ['Próximamente: validación HTML y accesibilidad.', 'La fuente estable aún está en preparación.']
+            };
+          }
+          case 'ofds': {
+            return {
+              status: 'info',
+              lines: ['Aproximadamente: integración OFDS cuando haya una fuente estable.', 'Por ahora queda visible como plan de trabajo.']
+            };
+          }
+          case 'caa': {
+            const data = await apiJson(`/caa/${encodeURIComponent(domain)}`);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: Array.isArray(data.records) && data.records.length ? 'ok' : 'info',
+              lines: Array.isArray(data.records) && data.records.length
+                ? data.records.map(r => typeof r === 'string' ? r : JSON.stringify(r))
+                : ['No hay registros CAA.']
+            };
+          }
+          case 'ipv4': {
+            const data = await getIpv4(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.present ? 'ok' : 'fail', lines: data.records?.length ? data.records.map(ip => `A: ${ip}`) : ['No hay registros A.'] };
+          }
+          case 'ipv6': {
+            const data = await getIpv6(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return { status: data.present ? 'ok' : 'fail', lines: data.records?.length ? data.records.map(ip => `AAAA: ${ip}`) : ['No hay registros AAAA.'] };
+          }
+          case 'dnssec': {
+            const data = await getDnssec(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.valid ? 'ok' : 'fail',
+              lines: [
+                data.valid ? 'DNSSEC válido.' : 'DNSSEC no está validado.',
+                data.methods?.google?.parent ? 'DS presente en el padre.' : 'No se detectó DS en el padre.',
+                data.methods?.google?.child ? 'DNSKEY presente en el hijo.' : 'No se detectó DNSKEY en el hijo.',
+                Array.isArray(data.algorithms) && data.algorithms.length ? `Algoritmos: ${data.algorithms.join(', ')}` : null
+              ].filter(Boolean),
+            };
+          }
+          case 'dnsviz': {
+            const data = await getDnsviz(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const chainNames = Array.isArray(data.chain) ? data.chain.map(level => level.name).filter(Boolean) : [];
+            return {
+              status: data.available ? 'ok' : 'warning',
+              lines: [
+                data.available ? 'DNSViz disponible.' : 'DNSViz no respondió por completo.',
+                data.updated ? `Actualizado: ${data.updated}` : null,
+                chainNames.length ? `Cadena: ${chainNames.join(' → ')}` : null
+              ].filter(Boolean),
+              graphMeta: data
+            };
+          }
+          case 'dnsrecords': {
+            const data = await getDnsrecords(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const entries = data.records || {};
+            const lines = Object.entries(entries).map(([type, values]) => `${type}: ${Array.isArray(values) ? values.length : 0}`);
+            return { status: lines.length ? 'info' : 'warning', lines: lines.length ? lines : ['Sin registros.'] };
+          }
+          case 'txtrecords': {
+            const data = await getTxtrecords(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const records = Array.isArray(data.records) ? data.records.flat().map(String) : [];
+            return { status: records.length ? 'info' : 'warning', lines: records.length ? records : ['Sin TXT.'] };
+          }
+          case 'mx': {
+            const data = await getMx(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const records = Array.isArray(data.records) ? data.records : [];
+            return {
+              status: records.length ? 'ok' : 'fail',
+              lines: records.length
+                ? records.map(row => `${row.exchange} (p${row.priority})`)
+                : ['No hay servidores MX.']
+            };
+          }
+          case 'mailipv6': {
+            const data = await getMailIpv6(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const results = Array.isArray(data.mx) ? data.mx : [];
+            const all = results.length && results.every(item => item.present);
+            const some = results.some(item => item.present);
+            return {
+              status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
+              lines: results.length
+                ? results.map(item => `${item.exchange}: ${item.present ? `AAAA ${item.ipv6.join(', ')}` : 'sin IPv6'}`)
+                : ['No hay MX para evaluar.']
+            };
+          }
+          case 'maildnssec': {
+            const data = await getMailDnssec(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const mx = Array.isArray(data.mx) ? data.mx : [];
+            const allSecure = mx.length && mx.every(item => item.secure);
+            const someSecure = mx.some(item => item.secure);
+            return {
+              status: !mx.length ? 'info' : (allSecure && data.domainDnssec?.secure ? 'ok' : (someSecure || data.domainDnssec?.secure ? 'warning' : 'fail')),
+              lines: [
+                data.domainDnssec?.secure ? 'DNSSEC del dominio: válido.' : 'DNSSEC del dominio: no válido.',
+                ...mx.map(item => `${item.exchange}: ${item.secure ? 'seguro' : 'no seguro'}`)
+              ].filter(Boolean)
+            };
+          }
+          case 'spf': {
+            const data = await getSpf(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.policyStatus === 'strict' ? 'ok' : (data.policyStatus === 'weak' ? 'warning' : 'fail'),
+              lines: [
+                `Estado: ${data.policyStatus || 'missing'}`,
+                data.records?.length ? `Registro: ${data.records[0]}` : 'Sin SPF.',
+                data.parsed?.[0]?.policy ? `Política: ${data.parsed[0].policy}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'dmarc': {
+            const data = await getDmarc(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.policyStatus === 'strict' ? 'ok' : (data.policyStatus === 'weak' ? 'warning' : 'fail'),
+              lines: [
+                `Estado: ${data.policyStatus || 'missing'}`,
+                data.records?.length ? `Registro: ${data.records[0]}` : 'Sin DMARC.',
+                data.parsed?.[0]?.policy ? `Política: ${data.parsed[0].policy}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'dkim': {
+            const data = await getDkim(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.supported ? 'ok' : 'fail',
+              lines: [data.supported ? 'El dominio soporta DKIM.' : 'No se detectó soporte DKIM.']
+            };
+          }
+          case 'starttls': {
+            const data = await getStarttls(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const results = Array.isArray(data.results) ? data.results : [];
+            const all = results.length && results.every(item => item.status === 'supports');
+            const some = results.some(item => item.status === 'supports');
+            return {
+              status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
+              lines: results.length
+                ? results.map(item => `${item.server}: ${item.status === 'supports' ? 'STARTTLS sí' : 'STARTTLS no'}`)
+                : ['No hay MX para evaluar STARTTLS.']
+            };
+          }
+          case 'smtputf8': {
+            const data = await getSmtpUtf8(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const results = Array.isArray(data.results) ? data.results : [];
+            const all = results.length && results.every(item => item.status === 'supports');
+            const some = results.some(item => item.status === 'supports');
+            return {
+              status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
+              lines: results.length
+                ? results.map(item => `${item.server}: ${item.status === 'supports' ? 'SMTPUTF8 sí' : 'SMTPUTF8 no'}`)
+                : ['No hay MX para evaluar SMTPUTF8.']
+            };
+          }
+          case 'rpki': {
+            const data = await getRpki(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const results = Array.isArray(data.results) ? data.results : [];
+            const anyInvalid = results.some(item => String(item.state || '').startsWith('invalid'));
+            const anyValid = results.some(item => item.state === 'valid');
+            const anyUnknown = results.some(item => item.state !== 'valid' && item.state !== 'invalid');
+            return {
+              status: anyInvalid ? 'fail' : (anyValid && !anyUnknown ? 'ok' : 'info'),
+              lines: results.length
+                ? results.map(item => `${item.ip}: ${item.state}${item.asn ? ` (AS${item.asn})` : ''}${item.prefix ? ` ${item.prefix}` : ''}`)
+                : ['Sin direcciones para validar.']
+            };
+          }
+          case 'routing': {
+            const data = await getRouting(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const rows = Array.isArray(data.results) ? data.results : [];
+            return {
+              status: rows.length ? 'info' : 'warning',
+              lines: rows.length
+                ? rows.flatMap(item => [
+                    `${item.ip}: ${item.state}${item.asn ? ` (AS${item.asn})` : ''}${item.prefix ? ` ${item.prefix}` : ''}`,
+                    Array.isArray(item.routes) && item.routes.length
+                      ? `Rutas: ${item.routes.map(route => `AS${route.asn} ${route.prefix}`).join(' | ')}`
+                      : null
+                  ].filter(Boolean))
+                : ['Sin rutas visibles.']
+            };
+          }
+          case 'serverinfo': {
+            const data = await getServerInfo(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.ip ? 'info' : 'warning',
+              lines: [
+                data.ip ? `IP: ${data.ip}` : null,
+                data.asn ? `ASN: AS${data.asn}` : null,
+                data.org ? `Organización: ${data.org}` : null,
+                data.network ? `Red: ${data.network}` : null,
+                data.isp ? `ISP: ${data.isp}` : null,
+                data.city || data.country ? `Ubicación: ${[data.city, data.country].filter(Boolean).join(', ')}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'domaininfo': {
+            const data = await getDomainInfo(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: 'info',
+              lines: [
+                data.registry ? `Registro: ${data.registry}` : null,
+                Array.isArray(data.status) && data.status.length ? `Estados: ${data.status.join(', ')}` : null,
+                data.creation ? `Creación: ${data.creation}` : null,
+                data.expiration ? `Expira: ${data.expiration}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'whois': {
+            const data = await getWhois(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.name ? 'info' : 'warning',
+              lines: [
+                data.name ? `Nombre: ${data.name}` : 'No se encontró nombre.',
+                data.country ? `País: ${data.country}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'serverstatus': {
+            const data = await getServerStatus(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const code = data.statusCode || 0;
+            const status = code >= 400 ? 'fail' : (code >= 300 ? 'info' : 'ok');
+            return {
+              status,
+              lines: [
+                code ? `HTTP ${code}` : 'Sin código.',
+                data.location ? `Location: ${data.location}` : null
+              ].filter(Boolean)
+            };
+          }
+          case 'redirectchain': {
+            const data = await getRedirectChain(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const chain = Array.isArray(data.chain) ? data.chain : [];
+            const final = chain[chain.length - 1] || {};
+            return {
+              status: chain.length ? (final.statusCode >= 400 ? 'fail' : 'info') : 'info',
+              lines: chain.length
+                ? chain.map((step, index) => `${index + 1}. HTTP ${step.statusCode || '?'} → ${step.location || step.url}`)
+                : ['Sin redirecciones.']
+            };
+          }
+          case 'openports': {
+            const data = await getOpenPorts(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const open = Array.isArray(data.ports) ? data.ports : [];
+            const expected = new Set([53, 80, 443, 25, 110, 143, 465, 587, 993, 995]);
+            const unusual = open.filter(item => !expected.has(item.port));
+            return {
+              status: !open.length ? 'ok' : (unusual.length ? 'warning' : 'info'),
+              lines: open.length
+                ? open.map(item => `Puerto ${item.port}: abierto`)
+                : ['No se detectaron puertos comunes abiertos.']
+            };
+          }
+          case 'traceroute': {
+            const data = await getTraceroute(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const hops = Array.isArray(data.hops) ? data.hops : [];
+            return { status: hops.length ? 'info' : 'warning', lines: hops.length ? hops : ['Sin saltos visibles.'] };
+          }
+          case 'sitefeatures': {
+            const data = await getSiteFeatures(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const features = data.features || {};
+            const lines = Object.entries(features).map(([key, value]) => `${key}: ${value ? 'sí' : 'no'}`);
+            return { status: lines.length ? 'info' : 'warning', lines: lines.length ? lines : ['Sin rasgos detectados.'] };
+          }
+          case 'cookies': {
+            const data = await getCookies(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const cookies = Array.isArray(data.cookies) ? data.cookies : [];
+            return { status: cookies.length ? 'warning' : 'ok', lines: cookies.length ? cookies.map(String) : ['No se detectaron cookies.'] };
+          }
+          case 'listedpages': {
+            const data = await getListedPages(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const pages = Array.isArray(data.pages) ? data.pages : [];
+            return { status: pages.length ? 'info' : 'info', lines: pages.length ? pages.slice(0, 20) : ['Sitemap vacío o no disponible.'] };
+          }
+          case 'linkedpages': {
+            const data = await getLinkedPages(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const links = Array.isArray(data.links) ? data.links : [];
+            return {
+              status: links.length ? 'info' : 'info',
+              lines: links.length ? links.slice(0, 20).map(link => `${link.internal ? 'Interno' : 'Externo'}: ${link.href}`) : ['Sin enlaces detectados.']
+            };
+          }
+          case 'socialtags': {
+            const data = await getSocialTags(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const tags = data.tags || {};
+            const lines = Object.entries(tags).map(([key, value]) => `${key}: ${value}`);
+            return { status: lines.length ? 'info' : 'info', lines: lines.length ? lines : ['Sin metadatos sociales.'] };
+          }
+          case 'quality': {
+            const data = await getQuality(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const lines = [];
+            if (typeof data.performance === 'number') lines.push(`Performance: ${(data.performance * 100).toFixed(0)}%`);
+            if (typeof data.accessibility === 'number') lines.push(`Accesibilidad: ${(data.accessibility * 100).toFixed(0)}%`);
+            if (typeof data.bestPractices === 'number') lines.push(`Best practices: ${(data.bestPractices * 100).toFixed(0)}%`);
+            if (typeof data.seo === 'number') lines.push(`SEO: ${(data.seo * 100).toFixed(0)}%`);
+            return { status: lines.length ? 'info' : 'warning', lines: lines.length ? lines : ['Sin datos de Lighthouse.'] };
+          }
+          case 'archive': {
+            const data = await getArchive(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const entries = Array.isArray(data.entries) ? data.entries : [];
+            return {
+              status: entries.length ? 'info' : 'info',
+              lines: entries.length ? entries.map(item => `${item.timestamp}: ${item.original} (${item.status})`) : ['Sin historial en archivo web.']
+            };
+          }
+          case 'ranking': {
+            const data = await getRanking(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            return {
+              status: data.rank ? 'info' : 'info',
+              lines: [data.rank ? `Ranking Tranco: ${data.rank}` : 'Sin ranking disponible.', data.date ? `Lista: ${data.date}` : null].filter(Boolean)
+            };
+          }
+          default:
+            return { status: 'error', lines: ['Medición no implementada.'] };
         }
-
-        const historyEntry = { date: new Date().toLocaleString(), checks: selectedChecks, domains: [] };
-        const promises = domains.map(d => analyzeDomain(d, selectedChecks));
-        const results = await Promise.all(promises);
-        historyEntry.domains = results;
-        await updateMap(domains);
-        saveHistory(historyEntry);
-
-        loader.style.display = 'none';
-        checkButton.disabled = false;
+      } catch (error) {
+        return { status: 'error', lines: [error.message || 'Servicio no disponible'] };
+      }
     }
 
-    historyButton.addEventListener('click', () => {
-        const hidden = historyDiv.classList.toggle('hidden');
-        if (!hidden) loadHistory();
+    async function analyzeDomain(domain, selectedIds, counts) {
+      const results = [];
+
+      for (const id of selectedIds) {
+        const result = await runCheck(id, domain);
+        results.push({ id, ...result });
+        countStatus(counts, result.status);
+        domainResultsStore.set(domain, results.slice());
+        paintCatalogResults(domain, results);
+        renderResultsHeader(counts.totalChecks, counts);
+      }
+
+      domainResultsStore.set(domain, results.slice());
+      paintCatalogResults(domain, results);
+      if (!analyzedDomains.includes(domain)) analyzedDomains.push(domain);
+      currentResultIndex = analyzedDomains.indexOf(domain);
+      renderResultPager();
+      return { domain, results };
+    }
+
+    function resetState() {
+      analyzedDomains.length = 0;
+      domainResultsStore.clear();
+      currentResultIndex = 0;
+      setSummary({ ok: 0, warning: 0, info: 0, fail: 0, error: 0 }, 0);
+      paintCatalogResults('', []);
+      resultCounter.textContent = '0 / 0';
+      clearNode(resultTabs);
+    }
+
+    function renderWifiSpectrumResult(data) {
+      const status = data.error ? 'error' : (data.bands?.length ? 'ok' : 'warning');
+      const rows = [
+        data.certId ? `Certification ID: ${data.certId}` : null,
+        data.productName ? `Product: ${data.productName}` : null,
+        data.modelVariant ? `Variant: ${data.modelVariant}` : null,
+        data.bands?.length ? `Bandas: ${data.bands.map(b => `${b.band} tx:${b.tx} rx:${b.rx}`).join(' | ')}` : 'No se detectaron bandas.',
+        data.capabilities?.length ? `Capacidades: ${data.capabilities.slice(0, 10).join(' | ')}` : null,
+        !data.bands?.length && data.lines?.length ? `Crudo: ${data.lines.slice(0, 5).join(' | ')}` : null,
+        data.error ? `Error: ${data.error}` : null
+      ].filter(Boolean);
+      wifiSpectrumResult.className = `result-row ${status}`;
+      clearNode(wifiSpectrumResult);
+      const head = make('div', 'row-head');
+      const left = document.createElement('div');
+      left.appendChild(make('div', 'row-title', 'Espectro Wi‑Fi / Wi‑Fi spectrum'));
+      if (data.sourceUrl) {
+        const small = make('div', 'muted', data.sourceUrl);
+        small.style.wordBreak = 'break-all';
+        left.appendChild(small);
+      }
+      head.append(left, createStatusBadge(status));
+      const body = make('div', 'row-body');
+      appendLines(body, rows, 'Sin datos');
+      wifiSpectrumResult.append(head, body);
+    }
+
+    async function handleWifiProbe() {
+      const variantId = wifiVariant.value.trim();
+      if (!variantId) {
+        renderWifiSpectrumResult({ error: 'Falta variantId' });
+        return;
+      }
+      wifiProbe.disabled = true;
+      renderWifiSpectrumResult({ sourceUrl: 'Consultando...', bands: [] });
+      try {
+        const data = await getWifiSpectrum(variantId);
+        renderWifiSpectrumResult(data);
+      } catch (error) {
+        renderWifiSpectrumResult({ error: error.message || 'Servicio no disponible' });
+      } finally {
+        wifiProbe.disabled = false;
+      }
+    }
+
+    async function handleRun() {
+      const domains = parseDomains(domainsInput.value);
+      const selectedIds = getSelectedIds();
+      updateSelectionCount();
+
+      if (!domains.length) {
+        resetState();
+        summaryEl.innerHTML = '<span class="summary-chip">Introduce al menos un dominio.</span>';
+        return;
+      }
+
+      apiCache.clear();
+      apiFailureCache.clear();
+      domainResultsStore.clear();
+      analyzedDomains.length = 0;
+      currentResultIndex = 0;
+      loading.style.display = 'flex';
+      runButton.disabled = true;
+
+      const totals = { ok: 0, warning: 0, info: 0, fail: 0, error: 0, totalChecks: domains.length * selectedIds.length };
+      renderResultsHeader(totals.totalChecks, totals);
+
+      try {
+        for (const domain of domains) {
+          await analyzeDomain(domain, selectedIds, totals);
+        }
+      } finally {
+        loading.style.display = 'none';
+        runButton.disabled = false;
+        renderResultsHeader(totals.totalChecks, totals);
+        renderResultPager();
+      }
+    }
+
+    function resetSelection() {
+      document.querySelectorAll('input[type="checkbox"][data-check]').forEach(node => {
+        node.checked = false;
+      });
+      updateSelectionCount();
+    }
+
+    runButton.addEventListener('click', handleRun);
+    wifiProbe.addEventListener('click', handleWifiProbe);
+    prevResult.addEventListener('click', () => {
+      currentResultIndex = Math.max(0, currentResultIndex - 1);
+      renderResultPager();
+    });
+    nextResult.addEventListener('click', () => {
+      currentResultIndex = Math.min(analyzedDomains.length - 1, currentResultIndex + 1);
+      renderResultPager();
+    });
+    clearButton.addEventListener('click', () => {
+      domainsInput.value = '';
+      resetSelection();
+      resetState();
     });
 
-    clearHistoryButton.addEventListener('click', () => {
-        localStorage.removeItem('domainHistory');
-        loadHistory();
+    document.querySelectorAll('[data-preset]').forEach(button => {
+      button.addEventListener('click', () => setPreset(button.dataset.preset));
     });
 
-    selectAllBtn.addEventListener('click', () => {
-        checkboxes.forEach(cb => cb.checked = true);
+    document.addEventListener('change', event => {
+      if (event.target && event.target.matches('input[type="checkbox"][data-check]')) {
+        updateSelectionCount();
+      }
     });
 
-    checkButton.addEventListener('click', handleAnalysis);
-</script>
+    chatToggle.addEventListener('click', () => setChatOpen(helpChat.classList.contains('collapsed')));
+    chatForm.addEventListener('submit', event => {
+      event.preventDefault();
+      renderChatAnswer(chatInput.value);
+      chatInput.value = '';
+      setChatOpen(true);
+    });
+    document.querySelectorAll('[data-chat-term]').forEach(button => {
+      button.addEventListener('click', () => {
+        const term = button.dataset.chatTerm || '';
+        chatInput.value = term;
+        renderChatAnswer(term);
+        setChatOpen(true);
+      });
+    });
+
+    renderCatalog();
+    resetState();
+    setSummary({ ok: 0, warning: 0, info: 0, fail: 0, error: 0 }, 0);
+    renderResultPager();
+    wifiVariant.value = 'WFA115006';
+    renderWifiSpectrumResult({ bands: [], sourceUrl: 'Pega un variantId y pulsa Probar.' });
+    appendChatMessage(
+      'Ayuda rápida',
+      'Escribe una medición para ver qué valida el sistema.',
+      'Escreva uma medição para ver o que o sistema valida.'
+    );
+    setChatOpen(false);
+  </script>
 </body>
 </html>

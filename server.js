@@ -1,7 +1,9 @@
 const http = require('http');
 const dns = require('dns').promises;
+const fs = require('fs/promises');
 const DEFAULT_SERVERS = ['8.8.8.8', '8.8.4.4'];
 dns.setServers(DEFAULT_SERVERS);
+const path = require('path');
 const net = require('net');
 const https = require('https');
 const tls = require('tls');
@@ -10,8 +12,16 @@ const { URL } = require('url');
 
 const htmlCache = new Map();
 const headerCache = new Map();
+const INDEX_PATH = path.join(__dirname, 'index.html');
+
+function cleanDomain(domain) {
+  return String(domain || '')
+    .trim()
+    .replace(/\.+$/, '');
+}
 
 async function resolveAddresses(domain) {
+  domain = cleanDomain(domain);
   const v4 = await dns.resolve4(domain).catch(() => []);
   const v6 = await dns.resolve6(domain).catch(() => []);
   return { v4, v6 };
@@ -22,6 +32,44 @@ async function resolveFirstIp(domain) {
   if (v4.length) return { ip: v4[0], family: 4 };
   if (v6.length) return { ip: v6[0], family: 6 };
   return { ip: null, family: null };
+}
+
+function ipToCymruQuery(ipIn) {
+  const ip = net.isIP(ipIn);
+  if (!ip) throw new Error(`Error parsing IP address ${ipIn}.`);
+  if (ip === 4) {
+    const split = String(ipIn).split('.').slice(0, 3).reverse();
+    return `${split.join('.')}.origin.asn.cymru.com.`;
+  }
+  const [left, right = ''] = String(ipIn).toLowerCase().split('::');
+  const leftParts = left ? left.split(':').filter(Boolean) : [];
+  const rightParts = right ? right.split(':').filter(Boolean) : [];
+  const fill = Math.max(0, 8 - leftParts.length - rightParts.length);
+  const expanded = [...leftParts, ...Array(fill).fill('0'), ...rightParts]
+    .map(part => part.padStart(4, '0'))
+    .join('');
+  const hex = expanded.padEnd(32, '0').slice(0, 12);
+  return `${hex.split('').reverse().join('.')}.origin6.asn.cymru.com.`;
+}
+
+async function resolveOriginRoutesViaCymru(ipIn) {
+  const query = ipToCymruQuery(ipIn);
+  const txt = await dns.resolveTxt(query);
+  const rows = txt
+    .flat()
+    .map(String)
+    .filter(Boolean);
+  const routes = [];
+  for (const row of rows) {
+    const [left, right] = row.split('|').map(part => part && part.trim());
+    if (!left || !right) continue;
+    const prefix = right;
+    const asns = left.split(' ').map(item => item.trim()).filter(Boolean);
+    for (const asn of asns) {
+      routes.push({ asn: Number(asn), prefix });
+    }
+  }
+  return routes;
 }
 
 async function lookupIpMeta(ip) {
@@ -76,10 +124,56 @@ const ALGO_MAP = {
 
 function normalizeDomain(domain) {
   try {
-    return domainToASCII(domain.toLowerCase());
+    return domainToASCII(cleanDomain(domain).toLowerCase());
   } catch (e) {
-    return domain;
+    return cleanDomain(domain);
   }
+}
+
+function sendHTML(res, status, html) {
+  res.writeHead(status, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Access-Control-Allow-Origin': '*'
+  });
+  res.end(html);
+}
+
+function sendSVG(res, status, svg) {
+  res.writeHead(status, {
+    'Content-Type': 'image/svg+xml; charset=utf-8',
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'no-store'
+  });
+  res.end(svg);
+}
+
+function placeholderSvg(title, subtitle = '') {
+  const safeTitle = String(title || '').replace(/[<&>]/g, s => ({
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;'
+  })[s]);
+  const safeSubtitle = String(subtitle || '').replace(/[<&>]/g, s => ({
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;'
+  })[s]);
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-label="${safeTitle}">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f6f8fb"/>
+      <stop offset="100%" stop-color="#e8eef5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="700" rx="28" fill="url(#g)"/>
+  <rect x="60" y="60" width="1080" height="580" rx="24" fill="#ffffff" stroke="#d0d7e2"/>
+  <text x="110" y="190" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="700" fill="#16324f">${safeTitle}</text>
+  <text x="110" y="250" font-family="Inter, Arial, sans-serif" font-size="24" fill="#4d6177">${safeSubtitle || 'DNSViz no respondió con un gráfico listo para mostrar.'}</text>
+  <rect x="110" y="320" width="980" height="220" rx="20" fill="#f7fafc" stroke="#d7e0ea" stroke-dasharray="10 10"/>
+  <text x="600" y="430" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600" fill="#274261">DNSSEC / DNSViz</text>
+  <text x="600" y="470" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" fill="#5a7088">Se mostrará el gráfico real cuando el análisis esté disponible.</text>
+</svg>`;
 }
 
 function errorMessage(e) {
@@ -95,7 +189,8 @@ function errorMessage(e) {
 function sendJSON(res, status, data) {
   res.writeHead(status, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'no-store'
   });
   res.end(JSON.stringify(data));
 }
@@ -115,6 +210,7 @@ function smtpQuery(server, port) {
     const socket = net.createConnection(port, server);
     let buffer = '';
     let ehloSent = false;
+    let capabilities = [];
     const timer = setTimeout(() => {
       socket.destroy();
       resolve({ status: 'timeout' });
@@ -126,18 +222,19 @@ function smtpQuery(server, port) {
       buffer = lines.pop();
       for (const line of lines) {
         if (!ehloSent && /^220 /.test(line)) {
-          socket.write('EHLO www.google.com\r\n');
+          socket.write('EHLO mediciones.isoc-lac\r\n');
           ehloSent = true;
         } else if (ehloSent && /^250[ -]/.test(line)) {
+          capabilities.push(line.replace(/^250[ -]/, '').trim());
           if (/SMTPUTF8/i.test(line)) {
             clearTimeout(timer);
             socket.end();
-            return resolve({ status: 'supports' });
+            return resolve({ status: 'supports', capabilities });
           }
           if (line.startsWith('250 ')) {
             clearTimeout(timer);
             socket.end();
-            return resolve({ status: 'no' });
+            return resolve({ status: 'no', capabilities });
           }
         }
       }
@@ -145,12 +242,12 @@ function smtpQuery(server, port) {
 
     socket.on('error', () => {
       clearTimeout(timer);
-      resolve({ status: 'connection-error' });
+      resolve({ status: 'connection-error', capabilities });
     });
 
     socket.on('end', () => {
       clearTimeout(timer);
-      resolve({ status: 'no' });
+      resolve({ status: 'no', capabilities });
     });
   });
 }
@@ -174,8 +271,34 @@ async function handleSmtpUtf8(domain, res) {
     const mx = await dns.resolveMx(domain);
     const results = [];
     for (const record of mx) {
-      const { status } = await checkSmtpUtf8(record.exchange);
-      results.push({ server: record.exchange, status });
+      const result = await checkSmtpUtf8(record.exchange);
+      results.push({
+        server: record.exchange,
+        priority: record.priority,
+        status: result.status,
+        capabilities: result.capabilities || []
+      });
+    }
+    sendJSON(res, 200, { domain, results });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleStarttls(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const mx = await dns.resolveMx(domain);
+    const results = [];
+    for (const record of mx) {
+      const result = await checkSmtpUtf8(record.exchange);
+      const starttls = (result.capabilities || []).some(cap => /^STARTTLS\b/i.test(cap));
+      results.push({
+        server: record.exchange,
+        priority: record.priority,
+        status: starttls ? 'supports' : 'no',
+        capabilities: result.capabilities || []
+      });
     }
     sendJSON(res, 200, { domain, results });
   } catch (e) {
@@ -211,6 +334,34 @@ async function dnssecGoogle(domain) {
   return result;
 }
 
+async function dnssecChain(domain) {
+  domain = normalizeDomain(domain);
+  const labels = domain.split('.').filter(Boolean);
+  const chain = [];
+  for (let i = 0; i < labels.length; i += 1) {
+    const name = labels.slice(i).join('.');
+    const google = await dnssecGoogle(name);
+    chain.push({
+      name,
+      level: i === 0 ? 'target' : (i === labels.length - 1 ? 'tld' : 'ancestor'),
+      parent: google.parent,
+      child: google.child,
+      algorithms: [...new Set(google.algorithms.filter(Boolean))],
+      valid: google.parent && google.child
+    });
+  }
+  chain.push({
+    name: 'raíz',
+    level: 'root',
+    parent: true,
+    child: true,
+    algorithms: [],
+    valid: true,
+    note: 'ancla de confianza'
+  });
+  return chain;
+}
+
 async function handleDnssec(domain, res) {
   domain = normalizeDomain(domain);
   const google = await dnssecGoogle(domain);
@@ -222,12 +373,136 @@ async function handleDnssec(domain, res) {
 async function handleDkim(domain, selector, res) {
   domain = normalizeDomain(domain);
   try {
+    if (!selector || selector === 'support') {
+      const supported = await detectDkimSupport(domain);
+      sendJSON(res, 200, { domain, supported, selector: null });
+      return;
+    }
     const txt = await dns.resolveTxt(`${selector}._domainkey.${domain}`);
-    const flat = txt.flat().join('');
-    const found = /v=DKIM1/i.test(flat);
-    sendJSON(res, 200, { domain, selector, found });
+    const records = extractTxtRecords(txt);
+    const found = records.some(row => /v=DKIM1/i.test(row));
+    sendJSON(res, 200, { domain, selector, supported: found || records.length > 0, found, records });
   } catch (e) {
-    sendJSON(res, 200, { domain, selector, found: false });
+    if (e.code === 'ENODATA' && (!selector || selector === 'support')) {
+      sendJSON(res, 200, { domain, supported: true, selector: null });
+      return;
+    }
+    sendJSON(res, 200, { domain, selector, supported: false, found: false });
+  }
+}
+
+async function handleSpf(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const txt = await dns.resolveTxt(domain).catch(() => []);
+    const records = extractTxtRecords(txt).filter(row => /^v=spf1\b/i.test(row));
+    const parsed = records.map(parseSpfPolicy);
+    const strict = parsed.some(item => item.strict);
+    const valid = parsed.some(item => item.valid);
+    sendJSON(res, 200, {
+      domain,
+      records,
+      parsed,
+      valid,
+      strict,
+      policyStatus: !records.length ? 'missing' : strict ? 'strict' : valid ? 'weak' : 'invalid'
+    });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleDmarc(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const txt = await dns.resolveTxt(`_dmarc.${domain}`).catch(() => []);
+    const records = extractTxtRecords(txt).filter(row => /^v=dmarc1\b/i.test(row));
+    const parsed = records.map(parseDmarcPolicy);
+    const strict = parsed.some(item => item.strict);
+    const valid = parsed.some(item => item.valid);
+    sendJSON(res, 200, {
+      domain,
+      records,
+      parsed,
+      valid,
+      strict,
+      policyStatus: !records.length ? 'missing' : strict ? 'strict' : valid ? 'weak' : 'invalid'
+    });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleIpv4(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const records = await dns.resolve4(domain).catch(() => []);
+    sendJSON(res, 200, { domain, records, present: records.length > 0 });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleIpv6(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const records = await dns.resolve6(domain).catch(() => []);
+    sendJSON(res, 200, { domain, records, present: records.length > 0 });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleMailDnssec(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const mx = await dns.resolveMx(domain).catch(() => []);
+    const domainDnssec = await dnssecGoogle(domain);
+    const results = [];
+    for (const record of mx) {
+      const exchange = normalizeDomain(record.exchange);
+      const exchangeDnssec = await dnssecGoogle(exchange);
+      results.push({
+        exchange,
+        secure: exchangeDnssec.parent && exchangeDnssec.child,
+        algorithms: [...new Set(exchangeDnssec.algorithms.filter(Boolean))]
+      });
+    }
+    sendJSON(res, 200, {
+      domain,
+      domainDnssec: {
+        secure: domainDnssec.parent && domainDnssec.child,
+        algorithms: [...new Set(domainDnssec.algorithms.filter(Boolean))]
+      },
+      mx: results
+    });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleMailIpv6(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const mx = await dns.resolveMx(domain).catch(() => []);
+    const results = [];
+    for (const record of mx) {
+      const exchange = normalizeDomain(record.exchange);
+      const ipv6 = await dns.resolve6(exchange).catch(() => []);
+      results.push({
+        exchange,
+        priority: record.priority,
+        ipv6,
+        present: ipv6.length > 0
+      });
+    }
+    sendJSON(res, 200, {
+      domain,
+      mx: results,
+      present: results.length > 0 && results.every(item => item.present)
+    });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
 }
 
@@ -286,11 +561,73 @@ function fetchText(target, options = {}) {
   });
 }
 
-function fetchHeaders(target, useHttp = false) {
-  return fetchPage(target, { method: 'HEAD', useHttp }).then(({ headers, statusCode }) => ({
-    headers,
-    statusCode
-  }));
+function parseWifiSpectrumCertificate(text, sourceUrl) {
+  const lines = String(text || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+  const certId = (text.match(/Certification ID:\s*(WFA\d+)/i) || [null, null])[1] || null;
+  const productName = (text.match(/Product Name\s+(.+)/i) || [null, null])[1] || null;
+  const modelVariant = (text.match(/Product Model Variant\s+(.+)/i) || [null, null])[1] || null;
+  const bands = [];
+  for (const line of lines) {
+    const match = line.match(/^(2\.4|5|6)\s*GHz\s*\|\s*(\d+)\s*\|\s*(\d+)$/i);
+    if (match) {
+      bands.push({
+        band: `${match[1]} GHz`,
+        tx: Number(match[2]),
+        rx: Number(match[3])
+      });
+    }
+  }
+  const capabilityPatterns = [
+    /Spectrum & Regulatory/i,
+    /Channel Width in \d(\.4)? GHz/i,
+    /WMM®?-Power Save/i,
+    /Legacy Power Save/i,
+    /Unschedule auto PS/i,
+    /Protected Management Frames/i,
+    /802\.11[a-z]?/i,
+    /WPA[23]/i,
+    /Wi-Fi CERTIFIED/i,
+    /Wi-Fi Agile Multiband/i,
+    /Wi-Fi Enhanced Open/i,
+    /EAP (TLS|TTLS|PEAP|methods)/i,
+    /MCS Index/i
+  ];
+  const capabilities = [];
+  for (const line of lines) {
+    if (capabilityPatterns.some(pattern => pattern.test(line)) && !capabilities.includes(line)) {
+      capabilities.push(line);
+    }
+  }
+  const classification = lines.filter(line =>
+    /Wi-Fi CERTIFIED|Connectivity|Optimization|Security|Spectrum & Regulatory/i.test(line)
+  );
+  return {
+    sourceUrl,
+    certId,
+    productName,
+    modelVariant,
+    bands,
+    capabilities: capabilities.slice(0, 25),
+    classifications: Array.from(new Set(classification)).slice(0, 25),
+    lines: lines.slice(0, 40)
+  };
+}
+
+async function fetchHeaders(target, useHttp = false) {
+  try {
+    const head = await fetchPage(target, { method: 'HEAD', useHttp });
+    if (head.statusCode === 405 || head.statusCode === 501) {
+      throw new Error('HEAD not allowed');
+    }
+    return { headers: head.headers, statusCode: head.statusCode };
+  } catch (e) {
+    const get = await fetchPage(target, { method: 'GET', useHttp });
+    return { headers: get.headers, statusCode: get.statusCode };
+  }
 }
 
 function fetchPage(target, options = {}) {
@@ -343,6 +680,104 @@ function cacheSet(cache, key, value) {
   cache.set(key, { timestamp: Date.now(), value });
 }
 
+function flattenTxt(records) {
+  return Array.isArray(records) ? records.flat().join('') : '';
+}
+
+function extractTxtRecords(records) {
+  return (Array.isArray(records) ? records : []).map(row => row.join('')).filter(Boolean);
+}
+
+function parseSpfPolicy(record) {
+  const value = String(record || '').trim();
+  if (!/^v=spf1\b/i.test(value)) {
+    return { valid: false, strict: false, policy: 'missing' };
+  }
+  const strictMatch = value.match(/([+?~-])all\b/i);
+  const token = strictMatch ? strictMatch[1] : null;
+  if (token === '-') {
+    return { valid: true, strict: true, policy: 'reject' };
+  }
+  if (token === '~') {
+    return { valid: true, strict: false, policy: 'softfail' };
+  }
+  if (token === '+' || token === '?') {
+    return { valid: true, strict: false, policy: 'weak' };
+  }
+  return { valid: true, strict: false, policy: 'missing-all' };
+}
+
+function parseDmarcPolicy(record) {
+  const value = String(record || '').trim();
+  if (!/^v=dmarc1\b/i.test(value)) {
+    return { valid: false, strict: false, policy: 'missing' };
+  }
+  const p = (value.match(/(?:^|;)\s*p=([^;]+)/i) || [])[1];
+  const sp = (value.match(/(?:^|;)\s*sp=([^;]+)/i) || [])[1];
+  const effective = String(sp || p || '').trim().toLowerCase();
+  if (effective === 'reject' || effective === 'quarantine') {
+    return { valid: true, strict: true, policy: effective || 'strict' };
+  }
+  if (effective === 'none') {
+    return { valid: true, strict: false, policy: 'none' };
+  }
+  return { valid: true, strict: false, policy: effective || 'missing' };
+}
+
+async function detectDkimSupport(domain) {
+  try {
+    await dns.resolveTxt(`_domainkey.${domain}`);
+    return true;
+  } catch (e) {
+    if (e.code === 'ENODATA') return true;
+    if (e.code === 'ENOTFOUND') return false;
+    throw e;
+  }
+}
+
+async function resolveDnsvizMeta(domain) {
+  const baseUrl = `https://dnsviz.net/d/${domain}/dnssec/`;
+  let currentUrl = baseUrl;
+  let page = null;
+  for (let i = 0; i < 4; i += 1) {
+    page = await fetchPage(currentUrl, { timeout: 20000 }).catch(() => null);
+    if (!page) break;
+    if (page.statusCode >= 300 && page.statusCode < 400 && page.headers?.location) {
+      currentUrl = page.headers.location.startsWith('http')
+        ? page.headers.location
+        : new URL(page.headers.location, currentUrl).toString();
+      continue;
+    }
+    break;
+  }
+
+  const finalUrl = currentUrl;
+  const svgUrl = new URL('auth_graph.svg?download=1', finalUrl).toString();
+  const pngUrl = new URL('auth_graph.png?download=1', finalUrl).toString();
+  const body = String(page?.body || '');
+  const updated =
+    body.match(/Updated:\s*([^<\n]+)/i)?.[1]?.trim() ||
+    body.match(/Updated\s+([0-9:-]+\sUTC[^<\n]*)/i)?.[1]?.trim() ||
+    '';
+  const observations = [];
+  if (/nsec3/i.test(body)) observations.push('NSEC3 mencionado en el reporte');
+  if (/fallback/i.test(body) && /tcp/i.test(body)) observations.push('Fallback por TCP mencionado');
+  if (/tcp/i.test(body) && !observations.includes('Fallback por TCP mencionado')) {
+    observations.push('TCP presente en la cadena de validación');
+  }
+  if (/delegation/i.test(body)) observations.push('Delegación visible');
+  if (/insecure/i.test(body)) observations.push('Zona no segura mencionada');
+  return {
+    domain,
+    pageUrl: finalUrl,
+    svgUrl,
+    pngUrl,
+    updated: updated || null,
+    observations,
+    available: Boolean(page && page.statusCode >= 200 && page.statusCode < 400)
+  };
+}
+
 async function fetchWebsite(domain) {
   const cached = cacheGet(htmlCache, domain);
   if (cached) return cached;
@@ -363,57 +798,35 @@ async function fetchWebsite(domain) {
 
 async function rpkiValidity(ip) {
   try {
-    const info = await fetchJSON(
-      `https://stat.ripe.net/data/network-info/data.json?resource=${ip}`
-    );
-    const prefix =
-      info?.data?.prefix || info?.data?.resources?.[0] || info?.data?.resource;
-    const asnEntry = info?.data?.asns?.[0];
-    const asn =
-      typeof asnEntry === 'number'
-        ? asnEntry
-        : typeof asnEntry === 'object'
-        ? asnEntry.asn || asnEntry.id
-        : null;
-
-    let state = 'unknown';
-
-    if (asn) {
-      try {
-        const cf = await fetchJSON(
-          `https://rpki.cloudflare.com/api/v1/validity?ip=${encodeURIComponent(
-            ip
-          )}&asn=${asn}`
-        );
-        const validity =
-          cf?.state?.validity ||
-          cf?.state ||
-          cf?.validity ||
-          cf?.result ||
-          null;
-        if (validity) state = String(validity).toLowerCase();
-      } catch (e) {}
+    const routes = await resolveOriginRoutesViaCymru(ip).catch(() => []);
+    let chosen = routes[0] || null;
+    if (!chosen) {
+      const info = await fetchJSON(`https://stat.ripe.net/data/network-info/data.json?resource=${ip}`);
+      const prefix = info?.data?.prefix || info?.data?.resource || null;
+      const asnEntry = info?.data?.asns?.[0];
+      const asn =
+        typeof asnEntry === 'number'
+          ? asnEntry
+          : typeof asnEntry === 'object'
+          ? asnEntry.asn || asnEntry.id
+          : null;
+      if (asn && prefix) chosen = { asn, prefix };
     }
 
-    if (state === 'unknown') {
-      try {
-        const ripe = await fetchJSON(
-          prefix
-            ? `https://stat.ripe.net/data/rpki-validation/data.json?resource=${encodeURIComponent(
-                prefix
-              )}${asn ? `&origin_asn=${asn}` : ''}`
-            : `https://stat.ripe.net/data/rpki-validation/data.json?resource=${encodeURIComponent(
-                ip
-              )}`
-        );
-        const validity =
-          ripe?.data?.validity || ripe?.status || ripe?.state || ripe?.validity;
-        if (validity) state = String(validity).toLowerCase();
-      } catch (e) {}
-    }
+    if (!chosen) return { state: 'unknown', asn: null, prefix: null, routes: [] };
 
-    if (!['valid', 'invalid'].includes(state)) state = 'unknown';
-    return { state, asn: asn || null, prefix: prefix || null };
+    const ripe = await fetchJSON(
+      `https://stat.ripe.net/data/rpki-validation/data.json?resource=${encodeURIComponent(chosen.asn)}&prefix=${encodeURIComponent(chosen.prefix)}`
+    ).catch(() => null);
+    const status = String(ripe?.data?.status || ripe?.status || ripe?.state || 'unknown').toLowerCase();
+    const description = ripe?.data?.description || ripe?.description || null;
+    return {
+      state: ['valid', 'invalid_asn', 'invalid_length', 'unknown'].includes(status) ? status : 'unknown',
+      reason: description,
+      asn: chosen.asn || null,
+      prefix: chosen.prefix || null,
+      routes
+    };
   } catch (e) {
     return { state: 'error', asn: null };
   }
@@ -427,11 +840,35 @@ async function handleRpki(domain, res) {
     if (!ips.length) return sendJSON(res, 200, { domain, error: 'Sin direcciones IP' });
     const results = [];
     for (const ip of ips) {
-      const { state, asn, prefix } = await rpkiValidity(ip);
-      results.push({ ip, state, asn, prefix });
+      const details = await rpkiValidity(ip);
+      results.push({ ip, ...details });
     }
     const overall = results.length && results.every(r => r.state === 'valid');
     sendJSON(res, 200, { domain, results, valid: Boolean(overall) });
+  } catch (e) {
+    sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function handleRouting(domain, res) {
+  domain = normalizeDomain(domain);
+  try {
+    const { v4, v6 } = await resolveAddresses(domain);
+    const ips = [...v4, ...v6];
+    if (!ips.length) return sendJSON(res, 200, { domain, error: 'Sin direcciones IP' });
+    const results = [];
+    for (const ip of ips) {
+      const details = await rpkiValidity(ip);
+      results.push({
+        ip,
+        asn: details.asn,
+        prefix: details.prefix,
+        state: details.state,
+        reason: details.reason || null,
+        routes: details.routes || []
+      });
+    }
+    sendJSON(res, 200, { domain, results });
   } catch (e) {
     sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
@@ -479,7 +916,7 @@ async function handleW3C(domain, res) {
   domain = normalizeDomain(domain);
   try {
     const data = await fetchJSON(
-      `https://validator.w3.org/nu/?doc=https://${domain}&out=json`
+      `https://validator.w3.org/nu/?doc=${encodeURIComponent(`https://${domain}`)}&out=json`
     );
     const messages = Array.isArray(data.messages) ? data.messages : [];
     const errors = messages.filter(m => m.type === 'error').length;
@@ -497,16 +934,21 @@ async function handleHeaders(domain, res) {
     const httpRes = await fetchHeaders(`http://${domain}`, true).catch(
       () => null
     );
+    const hstsHeader = httpsRes.headers['strict-transport-security'] || '';
+    const hstsMatch = String(hstsHeader).match(/max-age=(\d+)/i);
+    const hstsMaxAge = hstsMatch ? Number(hstsMatch[1]) : null;
     const result = {
       domain,
-      https: httpsRes.statusCode === 200,
+      https: httpsRes.statusCode >= 200 && httpsRes.statusCode < 400,
       redirect:
         httpRes &&
         httpRes.statusCode >= 300 &&
         httpRes.statusCode < 400 &&
         typeof httpRes.headers.location === 'string' &&
         httpRes.headers.location.startsWith('https://'),
-      hsts: Boolean(httpsRes.headers['strict-transport-security']),
+      hsts: Boolean(hstsHeader),
+      hstsMaxAge,
+      hstsStrict: Boolean(hstsHeader) && (hstsMaxAge === null || hstsMaxAge >= 31536000),
       csp: Boolean(httpsRes.headers['content-security-policy']),
       xfo: Boolean(httpsRes.headers['x-frame-options']),
       xcto: Boolean(httpsRes.headers['x-content-type-options']),
@@ -812,7 +1254,7 @@ async function handleTxtRecords(domain, res) {
 async function handleServerStatus(domain, res) {
   domain = normalizeDomain(domain);
   try {
-    const page = await fetchPage(`https://${domain}`, { method: 'HEAD' });
+    const page = await fetchHeaders(`https://${domain}`);
     sendJSON(res, 200, {
       domain,
       statusCode: page.statusCode,
@@ -820,10 +1262,7 @@ async function handleServerStatus(domain, res) {
     });
   } catch (e) {
     try {
-      const page = await fetchPage(`http://${domain}`, {
-        method: 'HEAD',
-        useHttp: true
-      });
+      const page = await fetchHeaders(`http://${domain}`, true);
       sendJSON(res, 200, {
         domain,
         statusCode: page.statusCode,
@@ -1095,18 +1534,19 @@ async function handleEmailConfig(domain, res) {
       dns.resolveTxt(domain).catch(() => []),
       dns.resolveMx(domain).catch(() => [])
     ]);
-    const flat = txt.map(row => row.join('')).join(' ');
-    const spf = /v=spf1/i.test(flat);
-    const dmarc = /v=DMARC1/i.test(flat);
-    let dkim = false;
-    try {
-      const def = await dns.resolveTxt(`default._domainkey.${domain}`);
-      dkim = def.flat().some(v => /v=DKIM1/i.test(v));
-    } catch (e) {}
+    const spfRecords = extractTxtRecords(txt).filter(row => /^v=spf1\b/i.test(row));
+    const dmarcRecords = extractTxtRecords(
+      await dns.resolveTxt(`_dmarc.${domain}`).catch(() => [])
+    ).filter(row => /^v=dmarc1\b/i.test(row));
+    const dkim = await detectDkimSupport(domain);
     sendJSON(res, 200, {
       domain,
-      spf,
-      dmarc,
+      spf: spfRecords.length > 0,
+      spfPolicy: spfRecords[0] ? parseSpfPolicy(spfRecords[0]) : { valid: false, strict: false, policy: 'missing' },
+      dmarc: dmarcRecords.length > 0,
+      dmarcPolicy: dmarcRecords[0]
+        ? parseDmarcPolicy(dmarcRecords[0])
+        : { valid: false, strict: false, policy: 'missing' },
       dkim,
       mx: mx.map(r => ({ exchange: r.exchange, priority: r.priority }))
     });
@@ -1339,14 +1779,173 @@ async function handleScreenshot(domain, res) {
   sendJSON(res, 200, { domain, imageUrl });
 }
 
+async function handleWifiSpectrum(variantId, res) {
+  const cleanId = String(variantId || '').trim();
+  if (!cleanId) return sendJSON(res, 200, { error: 'Falta variantId' });
+  try {
+    const sourceUrl = `https://api.cert.wi-fi.org/api/certificate/download/public?variantId=${encodeURIComponent(cleanId)}`;
+    const text = await fetchText(sourceUrl, { timeout: 20000 });
+    const parsed = parseWifiSpectrumCertificate(text, sourceUrl);
+    sendJSON(res, 200, {
+      variantId: cleanId,
+      available: Boolean(text && text.length),
+      ...parsed
+    });
+  } catch (e) {
+    sendJSON(res, 200, {
+      variantId: cleanId,
+      available: false,
+      error: errorMessage(e),
+      sourceUrl: `https://api.cert.wi-fi.org/api/certificate/download/public?variantId=${encodeURIComponent(cleanId)}`
+    });
+  }
+}
+
+async function handleDnsviz(domain, res, format = '') {
+  domain = normalizeDomain(domain);
+  try {
+    const meta = await resolveDnsvizMeta(domain);
+    const chain = await dnssecChain(domain);
+    if (format === 'svg') {
+      const graph = await fetchText(meta.svgUrl, { timeout: 20000 });
+      if (graph && /<svg[\s>]/i.test(graph)) {
+        return sendSVG(res, 200, graph);
+      }
+      if (meta.pageUrl) {
+        return sendSVG(
+          res,
+          200,
+          placeholderSvg(
+            'DNSViz no disponible',
+            'No se pudo recuperar el gráfico SVG de DNSViz, pero la cadena y las observaciones siguen disponibles.'
+          )
+        );
+      }
+      return sendSVG(
+        res,
+        200,
+        placeholderSvg('DNSViz no disponible', 'No se pudo recuperar el gráfico SVG de DNSViz.')
+      );
+    }
+    sendJSON(res, 200, { ...meta, chain });
+  } catch (e) {
+    if (format === 'svg') {
+      return sendSVG(
+        res,
+        200,
+        placeholderSvg('DNSViz no disponible', 'La consulta DNSSEC o el gráfico no respondieron a tiempo.')
+      );
+    }
+    sendJSON(res, 200, {
+      domain,
+      available: false,
+      error: errorMessage(e),
+      pageUrl: `https://dnsviz.net/d/${domain}/dnssec/`,
+      svgUrl: `https://dnsviz.net/d/${domain}/dnssec/auth_graph.svg?download=1`,
+      pngUrl: `https://dnsviz.net/d/${domain}/dnssec/auth_graph.png?download=1`,
+      chain: []
+    });
+  }
+}
+
+const STARTUP_SELF_TEST_DOMAIN = 'practicallyunhackable.com';
+const STARTUP_SELF_TEST_ROUTES = [
+  ['headers', d => `/headers/${d}`],
+  ['tlsinfo', d => `/tlsinfo/${d}`],
+  ['sslchain', d => `/sslchain/${d}`],
+  ['caa', d => `/caa/${d}`],
+  ['ipv4', d => `/ipv4/${d}`],
+  ['ipv6', d => `/ipv6/${d}`],
+  ['dnssec', d => `/dnssec/${d}`],
+  ['dnsviz', d => `/dnsviz/${d}`],
+  ['dnsrecords', d => `/dnsrecords/${d}`],
+  ['txtrecords', d => `/txtrecords/${d}`],
+  ['mx', d => `/mx/${d}`],
+  ['mailipv6', d => `/mailipv6/${d}`],
+  ['maildnssec', d => `/maildnssec/${d}`],
+  ['spf', d => `/spf/${d}`],
+  ['dmarc', d => `/dmarc/${d}`],
+  ['dkim', d => `/dkim/${d}`],
+  ['starttls', d => `/starttls/${d}`],
+  ['smtputf8', d => `/smtputf8/${d}`],
+  ['rpki', d => `/rpki/${d}`],
+  ['routing', d => `/routing/${d}`],
+  ['serverinfo', d => `/serverinfo/${d}`],
+  ['serverstatus', d => `/serverstatus/${d}`],
+  ['redirectchain', d => `/redirectchain/${d}`],
+  ['openports', d => `/openports/${d}`],
+  ['traceroute', d => `/traceroute/${d}`],
+  ['sitefeatures', d => `/sitefeatures/${d}`],
+  ['cookies', d => `/cookies/${d}`],
+  ['listedpages', d => `/listedpages/${d}`],
+  ['linkedpages', d => `/linkedpages/${d}`],
+  ['socialtags', d => `/socialtags/${d}`],
+  ['quality', d => `/quality/${d}`],
+  ['archive', d => `/archive/${d}`],
+  ['ranking', d => `/ranking/${d}`]
+];
+
+async function runStartupSelfTest(baseUrl) {
+  const domain = encodeURIComponent(STARTUP_SELF_TEST_DOMAIN);
+  console.log(`[selftest] starting domain=${STARTUP_SELF_TEST_DOMAIN}`);
+  const results = [];
+  for (const [name, pathFn] of STARTUP_SELF_TEST_ROUTES) {
+    try {
+      const response = await fetch(`${baseUrl}${pathFn(domain)}`, {
+        headers: { accept: 'application/json' }
+      });
+      const data = await response.json();
+      const state = data?.error ? 'error' : 'ok';
+      const note = data?.error || data?.status || data?.policyStatus || data?.available || '';
+      results.push({ name, state, note });
+      console.log(`[selftest] ${name}: ${state}${note ? ` - ${note}` : ''}`);
+    } catch (e) {
+      results.push({ name, state: 'error', note: errorMessage(e) });
+      console.log(`[selftest] ${name}: error - ${errorMessage(e)}`);
+    }
+  }
+  try {
+    const wifi = await fetch(`${baseUrl}/wifispectrum/WFA115006`);
+    const wifiData = await wifi.json();
+    console.log(
+      `[selftest] wifispectrum: ${wifiData?.error ? 'error' : 'ok'}${wifiData?.certId ? ` - ${wifiData.certId}` : ''}`
+    );
+  } catch (e) {
+    console.log(`[selftest] wifispectrum: error - ${errorMessage(e)}`);
+  }
+  const ok = results.filter(item => item.state === 'ok').length;
+  const error = results.filter(item => item.state === 'error').length;
+  const compliance = results.length ? Math.round((ok / results.length) * 100) : 0;
+  console.log(`[selftest] summary ok=${ok} error=${error} compliance=${compliance}%`);
+}
+
 const server = http.createServer(async (req, res) => {
   const parsed = new URL(req.url, 'http://localhost');
   const segments = parsed.pathname.split('/').filter(Boolean);
+  if (segments.length === 0 || (segments.length === 1 && segments[0] === 'index.html')) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
+  if (segments[0] === 'dnsviz' && segments[1]) {
+    return handleDnsviz(segments[1], res, parsed.searchParams.get('format') || '');
+  }
   if (segments[0] === 'mx' && segments[1]) return handleMx(segments[1], res);
   if (segments[0] === 'smtputf8' && segments[1]) return handleSmtpUtf8(segments[1], res);
+  if (segments[0] === 'starttls' && segments[1]) return handleStarttls(segments[1], res);
+  if (segments[0] === 'spf' && segments[1]) return handleSpf(segments[1], res);
+  if (segments[0] === 'dmarc' && segments[1]) return handleDmarc(segments[1], res);
   if (segments[0] === 'dnssec' && segments[1]) return handleDnssec(segments[1], res);
-  if (segments[0] === 'dkim' && segments[1]) return handleDkim(segments[1], parsed.searchParams.get('selector') || 'default', res);
+  if (segments[0] === 'dkim' && segments[1]) return handleDkim(segments[1], parsed.searchParams.get('selector') || 'support', res);
+  if (segments[0] === 'ipv4' && segments[1]) return handleIpv4(segments[1], res);
+  if (segments[0] === 'ipv6' && segments[1]) return handleIpv6(segments[1], res);
+  if (segments[0] === 'maildnssec' && segments[1]) return handleMailDnssec(segments[1], res);
+  if (segments[0] === 'mailipv6' && segments[1]) return handleMailIpv6(segments[1], res);
   if (segments[0] === 'rpki' && segments[1]) return handleRpki(segments[1], res);
+  if (segments[0] === 'routing' && segments[1]) return handleRouting(segments[1], res);
   if (segments[0] === 'whois' && segments[1]) return handleWhois(segments[1], res);
   if (segments[0] === 'w3c' && segments[1]) return handleW3C(segments[1], res);
   if (segments[0] === 'headers' && segments[1]) return handleHeaders(segments[1], res);
@@ -1401,9 +2000,21 @@ const server = http.createServer(async (req, res) => {
     return handleTlsSimulation(segments[1], res);
   if (segments[0] === 'screenshot' && segments[1])
     return handleScreenshot(segments[1], res);
+  if (segments[0] === 'wifispectrum' && segments[1])
+    return handleWifiSpectrum(segments[1], res);
   sendJSON(res, 404, { error: 'Not found' });
 });
 
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const HOST = process.env.HOST || '127.0.0.1';
+server.listen(PORT, HOST, () =>
+  console.log(`Server running on ${HOST}:${PORT}`)
+);
 
+if (process.env.STARTUP_SELF_TEST !== '0') {
+  setTimeout(() => {
+    runStartupSelfTest(`http://${HOST}:${PORT}`).catch(e =>
+      console.log(`[selftest] fatal - ${errorMessage(e)}`)
+    );
+  }, 1200);
+}
