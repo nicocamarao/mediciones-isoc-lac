@@ -2257,9 +2257,12 @@
       const card = document.createElement('details');
       const dnsvizWarningCount = Number(item.dnsviz?.warningCount || 0);
       const dnsvizErrorCount = Number(item.dnsviz?.errorCount || 0);
-      const cardStatus = item.dnssec?.valid
-        ? (dnsvizWarningCount || dnsvizErrorCount ? 'warning' : 'ok')
-        : 'fail';
+      const dnssecAssessmentStatus = item.dnssec?.assessment?.status || (item.dnssec?.valid ? 'ok' : 'fail');
+      const cardStatus = dnssecAssessmentStatus === 'warning'
+        ? 'warning'
+        : (dnssecAssessmentStatus === 'ok'
+          ? (dnsvizWarningCount || dnsvizErrorCount ? 'warning' : 'ok')
+          : 'fail');
       card.className = `cctld-card ${statusClass(cardStatus)}`;
       const summary = document.createElement('summary');
       const left = document.createElement('div');
@@ -2279,8 +2282,13 @@
       const dnsvizNotices = item.dnsviz?.notices?.notices || item.dnsviz?.notices || {};
       const dnsvizWarnings = Array.isArray(dnsvizNotices.warnings) ? dnsvizNotices.warnings.length : 0;
       const dnsvizErrors = Array.isArray(dnsvizNotices.errors) ? dnsvizNotices.errors.length : 0;
+      const dnssecStatusLabel = dnssecAssessmentStatus === 'ok'
+        ? 'Cumple'
+        : dnssecAssessmentStatus === 'warning'
+          ? 'Revisar'
+          : 'No cumple';
       const dnssecLines = [
-        `DNSSEC: ${item.dnssec.valid ? 'válido' : 'parcial o ausente'}`,
+        `DNSSEC: ${item.dnssec.valid ? 'válido' : 'parcial o ausente'} · ${dnssecStatusLabel}`,
         item.dnssec.parent ? 'DS visible en el padre.' : 'No se detectó DS en el padre.',
         item.dnssec.child ? 'DNSKEY visible en el hijo.' : 'No se detectó DNSKEY en el hijo.',
         item.dnssec.nsec3?.present

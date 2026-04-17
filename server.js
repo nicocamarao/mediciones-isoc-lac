@@ -791,6 +791,7 @@ async function summarizeCctld(tld, mode = 'local') {
   const ipv4NsCount = nsDetails.filter(item => item.reachableV4).length;
   const ipv6NsCount = nsDetails.filter(item => item.reachableV6).length;
   const validDnssec = Boolean(dnssec.parent && dnssec.child);
+  const dnssecAssessmentStatus = dnssecAssessment.status || (validDnssec ? 'ok' : 'fail');
   const wifi = await summarizeWifiCountry(domain).catch(() => ({
     status: 'pending',
     label: 'Próximamente',
@@ -829,7 +830,7 @@ async function summarizeCctld(tld, mode = 'local') {
     nsDetails,
     wifi,
     pulse,
-    status: validDnssec ? 'ok' : 'fail',
+    status: dnssecAssessmentStatus === 'warning' ? 'warning' : (validDnssec ? 'ok' : 'fail'),
     dnssecValid: validDnssec,
     refreshedAt: new Date().toISOString()
   };
@@ -1551,8 +1552,13 @@ function buildDnssecAssessment(google = {}) {
     summaryLines.push(...nsec3.notes);
   }
 
+  const hasLegacySignals = Boolean(dsLegacy || dnskeyLegacy || nsec3Legacy);
+  const dnssecStatus = !valid
+    ? 'fail'
+    : (hasLegacySignals ? 'warning' : 'ok');
+
   return {
-    status: chainStatus,
+    status: dnssecStatus,
     valid,
     parentStatus: parent ? 'ok' : 'fail',
     childStatus: child ? 'ok' : 'fail',
