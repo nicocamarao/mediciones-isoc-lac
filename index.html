@@ -26,6 +26,7 @@
       margin:0;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color:var(--text);
+      overflow-x:hidden;
       background:
         radial-gradient(circle at top left, rgba(13,104,82,.10), transparent 28%),
         radial-gradient(circle at top right, rgba(36,88,166,.10), transparent 24%),
@@ -75,6 +76,96 @@
     }
     .layout{display:grid;gap:18px;margin-top:18px}
     .panel{padding:20px}
+    .axis-grid,.cctld-grid{
+      display:grid;
+      gap:12px;
+      grid-template-columns:repeat(auto-fit, minmax(290px, 1fr));
+    }
+    .section-nav{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .section-nav a{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:#eef4ff;
+      color:#1d4ed8;
+      border:1px solid rgba(29,78,216,.18);
+      text-decoration:none;
+      font-size:.84rem;
+      font-weight:700;
+    }
+    .section-nav a:hover{background:#dbe8ff}
+    .axis-card,.cctld-card{
+      border:1px solid var(--border);
+      border-radius:20px;
+      background:var(--surface);
+      padding:14px;
+      box-shadow:0 10px 28px rgba(18,33,27,.04);
+      min-width:0;
+    }
+    .cctld-card{
+      padding:0;
+    }
+    .cctld-card > summary{
+      padding:14px 16px;
+    }
+    .cctld-card > div{
+      padding:0 16px 16px;
+    }
+    .cctld-dnssec{
+      margin-top:10px;
+      display:grid;
+      gap:8px;
+    }
+    .axis-card h3,.cctld-card h3{margin:0 0 6px;font-size:.98rem}
+    .axis-card p,.cctld-card p{margin:0;color:var(--muted);line-height:1.45;font-size:.86rem}
+    .axis-card ul,.cctld-card ul{margin:8px 0 0;padding-left:18px;color:var(--text);line-height:1.45;font-size:.83rem}
+    .axis-card,.cctld-card,.axis-sheet,.axis-sheet-body,.tab-panel,.result-card,.result-row,.result-inline,.graph-box,.tech-panel,.dnsviz-chain-item{
+      min-width:0;
+    }
+    .section-title{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .section-title h2{margin:0;font-size:1.3rem;letter-spacing:-.02em}
+    .section-title p{margin:0;color:var(--muted)}
+    .section-pill{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      color:var(--muted);
+      font-size:.85rem;
+      font-weight:700;
+    }
+    .section-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .mini-toggle{
+      appearance:none;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:7px 10px;
+      background:var(--surface);
+      color:var(--text);
+      font:inherit;
+      font-size:.8rem;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .mini-toggle.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:transparent;
+    }
     .panel-head{
       display:flex;
       align-items:flex-end;
@@ -110,6 +201,8 @@
       gap:10px;
       align-items:center;
     }
+    #catalogTabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .tab-panel{display:block}
     .button{
       appearance:none;
       border:1px solid var(--border);
@@ -125,6 +218,11 @@
     .button:hover{transform:translateY(-1px);border-color:#b8c6bd}
     .button.primary{
       background:linear-gradient(180deg, #0e745a 0%, #0a5e49 100%);
+      color:#fff;
+      border-color:transparent;
+    }
+    .button.secondary{
+      background:linear-gradient(180deg, #203a52 0%, #173042 100%);
       color:#fff;
       border-color:transparent;
     }
@@ -157,11 +255,12 @@
       border:1px solid var(--border);
       background:var(--surface-2);
       color:var(--text);
-      padding:9px 13px;
+      padding:8px 12px;
       border-radius:999px;
       cursor:pointer;
       font:inherit;
       font-weight:700;
+      font-size:.82rem;
     }
     .tab-button.active{
       background:var(--accent);
@@ -210,13 +309,50 @@
       transform:translateX(-50%) translateY(0);
     }
     .tab-panel{
-      display:none;
+      display:block;
       border:1px solid var(--border);
       border-radius:20px;
       background:var(--surface);
       overflow:hidden;
+      scroll-margin-top:110px;
     }
-    .tab-panel.active{display:block}
+    .tab-panel.active{box-shadow:0 0 0 2px rgba(13,104,82,.08)}
+    .axis-results{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+      align-items:start;
+    }
+    .axis-sheet{
+      display:grid;
+      gap:10px;
+      min-width:0;
+    }
+    .axis-sheet-head{
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, #f8fbf9, #eef5f1);
+    }
+    .axis-sheet-head h3{
+      margin:0;
+      font-size:1rem;
+      letter-spacing:-.02em;
+    }
+    .axis-sheet-head p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:.84rem;
+      line-height:1.4;
+    }
+    .axis-sheet-body{
+      display:grid;
+      gap:10px;
+      min-width:0;
+    }
+    .axis-sheet-body > *{
+      min-width:0;
+    }
     details{
       border:1px solid var(--border);
       border-radius:20px;
@@ -233,6 +369,13 @@
       gap:16px;
     }
     summary::-webkit-details-marker{display:none}
+    summary .chevron{
+      transition:transform .15s ease;
+      color:var(--muted);
+      font-weight:900;
+      margin-left:8px;
+    }
+    details[open] > summary .chevron{transform:rotate(180deg)}
     .cat-title{margin:0;font-size:1.05rem;line-height:1.2}
     .cat-sub{margin:6px 0 0;color:var(--muted);font-size:.95rem;line-height:1.45}
     .cat-count{
@@ -246,12 +389,12 @@
       border:1px solid var(--border);
       white-space:nowrap;
     }
-    .check-list{display:grid;gap:10px;padding:0 16px 16px}
+    .check-list{display:grid;gap:8px;padding:0 12px 12px}
     .check-item{
       display:grid;
       gap:10px;
-      padding:12px;
-      border-radius:16px;
+      padding:10px;
+      border-radius:14px;
       border:1px solid var(--border);
       background:var(--surface-2);
     }
@@ -266,27 +409,28 @@
       align-items:start;
     }
     .check-head input{margin-top:3px}
-    .check-title{font-weight:750}
-    .check-desc{margin-top:6px;color:var(--muted);font-size:.9rem;line-height:1.45}
+    .check-title{font-weight:750;font-size:.93rem}
+    .check-desc{margin-top:6px;color:var(--muted);font-size:.82rem;line-height:1.4}
     .summary-strip{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      align-items:center;
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:8px;
+      align-items:stretch;
+      width:100%;
     }
     .summary-chip{
       display:inline-flex;
       align-items:center;
       gap:8px;
-      padding:10px 12px;
+      padding:9px 11px;
       border-radius:999px;
       border:1px solid var(--border);
       background:var(--surface);
-      font-size:.88rem;
+      font-size:.82rem;
       font-weight:700;
       white-space:nowrap;
     }
-    .summary-chip strong{font-size:1rem}
+    .summary-chip strong{font-size:.92rem}
     .results-wrap{display:grid;gap:16px}
     .result-shell{display:grid;gap:12px}
     .result-nav{
@@ -380,7 +524,7 @@
     .status.pending{background:#eef1f0;color:#53615b;border-color:var(--border)}
     .result-list{padding:14px;display:grid;gap:10px}
     .result-row{
-      padding:14px;
+      padding:12px;
       border-radius:16px;
       border:1px solid var(--border);
       background:var(--surface-2);
@@ -392,7 +536,7 @@
     .result-row.fail{border-color:rgba(170,46,37,.30);background:rgba(170,46,37,.05)}
     .result-row.error{border-color:rgba(95,106,100,.30);background:rgba(95,106,100,.05)}
     .result-inline{
-      padding:12px;
+      padding:10px;
       border-radius:14px;
       border:1px dashed rgba(213,222,215,.9);
       background:rgba(255,255,255,.82);
@@ -400,12 +544,86 @@
       gap:10px;
     }
     .row-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-    .row-title{font-weight:750;line-height:1.35}
-    .row-body{line-height:1.55;color:var(--text)}
+    .row-title{font-weight:750;line-height:1.3;font-size:.92rem}
+    .row-body{line-height:1.5;color:var(--text);font-size:.86rem}
     .row-body ul{margin:0;padding-left:18px}
     .row-body li{margin:.2rem 0}
+    .result-state{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      color:var(--text);
+      font-size:.77rem;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    .result-sections{display:grid;gap:10px}
+    .subcheck-card{
+      padding:10px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      display:grid;
+      gap:8px;
+    }
+    .subcheck-card.ok{border-color:rgba(11,122,75,.22);background:rgba(11,122,75,.035)}
+    .subcheck-card.warning{border-color:rgba(154,106,0,.22);background:rgba(154,106,0,.04)}
+    .subcheck-card.fail{border-color:rgba(170,46,37,.24);background:rgba(170,46,37,.04)}
+    .subcheck-card.info{border-color:rgba(36,88,166,.18);background:rgba(36,88,166,.03)}
+    .subcheck-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .subcheck-title{font-weight:800;font-size:.9rem;line-height:1.25}
+    .subcheck-note{color:var(--muted);font-size:.8rem;line-height:1.45}
+    .subcheck-items{display:grid;gap:8px}
+    .subcheck-item{
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      display:grid;
+      gap:6px;
+    }
+    .subcheck-item.ok{border-color:rgba(11,122,75,.20)}
+    .subcheck-item.warning{border-color:rgba(154,106,0,.20)}
+    .subcheck-item.fail{border-color:rgba(170,46,37,.22)}
+    .subcheck-item.info{border-color:rgba(36,88,166,.16)}
+    .subcheck-item-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .subcheck-item-text{font-size:.84rem;line-height:1.4;font-weight:650}
+    .subcheck-item-note{color:var(--muted);font-size:.78rem;line-height:1.45}
+    .result-tag{
+      display:inline-flex;
+      align-items:center;
+      padding:5px 8px;
+      border-radius:999px;
+      font-size:.7rem;
+      font-weight:800;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .result-tag.ok{background:rgba(11,122,75,.12);color:var(--ok);border-color:rgba(11,122,75,.18)}
+    .result-tag.warning{background:rgba(154,106,0,.12);color:var(--warn);border-color:rgba(154,106,0,.18)}
+    .result-tag.fail{background:rgba(170,46,37,.12);color:var(--fail);border-color:rgba(170,46,37,.18)}
+    .result-tag.info{background:rgba(36,88,166,.12);color:var(--info);border-color:rgba(36,88,166,.18)}
     .graph-box{
       margin-top:10px;
+      max-width:920px;
+      margin-left:auto;
+      margin-right:auto;
       padding:12px;
       border-radius:18px;
       background:linear-gradient(180deg, #f8fbf9, #eef5f1);
@@ -421,24 +639,100 @@
     }
     .graph-top h4{margin:0;font-size:1rem}
     .graph-top p{margin:4px 0 0;color:var(--muted);font-size:.9rem;line-height:1.45}
-    .graph-top a{color:var(--accent);font-weight:750;text-decoration:none}
-    .graph-top a:hover{text-decoration:underline}
+    .graph-top a{
+      color:#1d4ed8;
+      font-weight:750;
+      text-decoration:underline;
+      text-decoration-thickness:1.5px;
+      text-underline-offset:2px;
+    }
+    .graph-top a:hover{color:#1e40af}
     .graph-box img{
       width:100%;
+      max-width:860px;
       display:block;
+      margin:0 auto;
       border-radius:14px;
       border:1px solid var(--border);
       background:#fff;
+    }
+    .tech-toggle{
+      appearance:none;
+      border:1px solid var(--border);
+      background:#eef4ff;
+      color:#1d4ed8;
+      padding:8px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font:inherit;
+      font-weight:700;
+    }
+    .tech-panel{
+      display:none;
+      margin-top:10px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#f9fbfa;
+      padding:10px;
+      gap:10px;
+    }
+    .tech-panel.open{display:grid}
+    .tech-line{
+      margin:0;
+      font-size:.9rem;
+      line-height:1.55;
+    }
+    .tech-label{
+      display:block;
+      color:var(--muted);
+      font-size:.8rem;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      margin-bottom:4px;
+    }
+    .tech-pre{
+      margin:0;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;
+      overflow:auto;
+      max-height:220px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      overflow-wrap:anywhere;
+      font-size:.78rem;
+      line-height:1.45;
     }
     .dnsviz-graph{
       max-height:320px;
       height:320px;
       object-fit:contain;
+      width:100%;
+    }
+    .cctld-card .dnsviz-graph{
+      max-height:180px;
+      height:180px;
+      margin-top:8px;
     }
     .dnsviz-chain{
       margin-top:12px;
       display:grid;
       gap:8px;
+      max-width:920px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    .cctld-card .dnsviz-chain{
+      margin-top:8px;
+    }
+    .cctld-card .dnsviz-chain-meta,
+    .cctld-card .row-body,
+    .cctld-card .cctld-dnssec,
+    .cctld-card ul{
+      overflow-wrap:anywhere;
+      word-break:break-word;
     }
     .dnsviz-chain-item{
       padding:10px 12px;
@@ -561,6 +855,7 @@
     @media (max-width: 720px){
       .page{padding:14px}
       .hero,.panel{border-radius:18px}
+      .axis-grid,.axis-results,.cctld-grid,.summary-strip{grid-template-columns:1fr}
       summary,.check-item,.result-head,.result-list{padding-left:14px;padding-right:14px}
       .summary-chip{white-space:normal}
       .check-head{grid-template-columns:auto 1fr}
@@ -575,50 +870,68 @@
     <header class="hero">
       <div class="hero-grid">
         <div>
-          <p class="kicker">Internet standards / padrões modernos</p>
-          <h1>Herramienta de Mediciones ISOC-LAC 2026</h1>
+          <p class="kicker">Estándares de Internet / medición regional</p>
+          <h1>Herramienta de Mediciones ISOC-LAC</h1>
         </div>
         <p class="lead">
-          Medimos dominios, correo, DNS, TLS y cumplimiento web con una base inspirada en Internet.nl, pero ejecutada en Node.js para reutilizar nuestras rutas y mantener el flujo estable.
+          Medimos dominios, correo, DNS, TLS, universalidad y accesibilidad con una base inspirada en Internet.nl, pero ejecutada en Node.js para reutilizar nuestras rutas y mantener el flujo estable.
           <br>
-          <span class="muted">ES:</span> las pruebas se ejecutan una por una para reducir timeouts y rate limits.
-          <br>
-          <span class="muted">PT:</span> os testes rodam um por um para reduzir timeouts e rate limits.
+          La primera pantalla carga un reporte precalculado de los ccTLDs de LACNIC y se refresca automáticamente cada 15 minutos.
         </p>
         <div class="inline-note">
-          <span class="pill">DNSViz gráfico DNSSEC integrado</span>
-          <span class="pill">Mediciones en servidor</span>
-          <span class="pill">ES / PT</span>
+          <span class="pill">DNSViz centrado</span>
+          <span class="pill">Reporte ccTLD precalculado</span>
+          <span class="pill">Logs claros en español</span>
         </div>
+        <nav class="section-nav" aria-label="Navegación por secciones">
+          <a href="#mapa-general">Seguridad</a>
+          <a href="#reporte-cctld">ccTLD LACNIC</a>
+          <a href="#explorador">Explorador</a>
+          <a href="#resultados">Resultados</a>
+          <a href="#registro">Registro</a>
+        </nav>
       </div>
     </header>
 
     <main class="layout">
       <section class="panel">
+        <div class="section-title" id="mapa-general">
+          <div>
+            <h2>Mapa general</h2>
+            <p>Organizado en tres ejes: seguridad, universalidad y accesibilidad.</p>
+          </div>
+          <span class="section-pill">Más de 202 mediciones integradas</span>
+        </div>
+        <div class="axis-grid">
+          <div id="axis-security"></div>
+          <div id="axis-universalidad"></div>
+          <div id="axis-accesibilidad"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="reporte-cctld">
+        <div class="section-title">
+          <div>
+            <h2>Reporte ccTLD LACNIC</h2>
+            <p>Vista precalculada de todos los ccTLDs de la región, lista al abrir la herramienta.</p>
+          </div>
+          <div class="section-actions">
+            <span class="mini-toggle active">Dig local</span>
+            <span id="cctldRefresh" class="section-pill">Cargando...</span>
+          </div>
+        </div>
+        <div id="cctldGrid" class="cctld-grid"></div>
+      </section>
+
+      <section class="panel" id="explorador">
         <div class="panel-head">
           <div>
-            <h2>Dominios</h2>
-            <p class="muted">Separados por coma. También acepta saltos de línea.</p>
+            <h2>Explorador de mediciones</h2>
+            <p class="muted">Separá dominios por coma o salto de línea.</p>
           </div>
-          <div id="selectionCount" class="counter">0 mediciones seleccionadas</div>
         </div>
         <div class="form-grid">
           <textarea id="domains" placeholder="ejemplo.com, nic.uy, internet.org"></textarea>
-          <div class="toolbar">
-            <button id="runButton" class="button primary" type="button">Analizar</button>
-            <button data-preset="core" class="button ghost" type="button">Core</button>
-            <button data-preset="all" class="button ghost" type="button">Todas</button>
-            <button data-preset="https" class="button ghost" type="button">HTTPS</button>
-            <button data-preset="tls" class="button ghost" type="button">TLS</button>
-            <button data-preset="ip" class="button ghost" type="button">IP</button>
-            <button data-preset="dnssec" class="button ghost" type="button">DNSSEC</button>
-            <button data-preset="mailauth" class="button ghost" type="button">Correo auth</button>
-            <button data-preset="mailtransport" class="button ghost" type="button">Transporte</button>
-            <button data-preset="ua" class="button ghost" type="button">UA</button>
-            <button data-preset="route" class="button ghost" type="button">Ruta</button>
-            <button data-preset="lab" class="button ghost" type="button">Laboratorio</button>
-            <button id="clearButton" class="button ghost" type="button">Limpiar</button>
-          </div>
           <div id="loading" class="loading">
             <span class="spinner"></span>
             <span>Analizando uno por uno para evitar saturación.</span>
@@ -626,11 +939,17 @@
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel" id="resultados">
         <div class="panel-head">
           <div>
             <h2>Mediciones y resultados</h2>
-            <p class="muted">Cada bloque explica qué mide y por qué importa. Las categorías siguen la idea de Internet.nl. El gráfico DNSViz se carga desde nuestro servidor para evitar CORS y mantener la experiencia estable.</p>
+            <p class="muted">Cada bloque explica qué mide, qué request hace y qué respondió el servicio. El gráfico DNSViz se carga desde nuestro servidor y queda centrado.</p>
+          </div>
+          <div class="section-actions">
+            <button id="runButton" class="button primary" type="button">Analizar</button>
+            <button id="exportJsonButton" class="button secondary" type="button" disabled>Exportar JSON</button>
+            <button id="exportCsvButton" class="button secondary" type="button" disabled>Exportar CSV</button>
+            <button id="clearButton" class="button ghost" type="button">Limpiar</button>
           </div>
         </div>
         <div class="result-nav">
@@ -642,17 +961,37 @@
         </div>
         <div class="panel-head" style="margin-top:4px">
           <div>
-            <h3 style="margin:0;font-size:1rem;letter-spacing:-.02em">Resumen activo</h3>
-            <p class="results-note">Los resultados se pintan dentro de cada fila del panel de checks.</p>
+            <h3 style="margin:0;font-size:.95rem;letter-spacing:-.02em">Resumen por eje</h3>
           </div>
           <div id="summary" class="summary-strip"></div>
           <div id="resultCounter" class="result-counter">0 / 0</div>
         </div>
-        <div id="catalogTabs" class="tabs"></div>
-        <div id="catalog" class="categories"></div>
+        <div class="axis-results">
+          <section class="axis-sheet">
+            <div class="axis-sheet-head">
+              <h3>Seguridad</h3>
+              <p>HTTPS, TLS, DNSSEC, correo y ruta.</p>
+            </div>
+            <div id="axis-results-security" class="axis-sheet-body"></div>
+          </section>
+          <section class="axis-sheet">
+            <div class="axis-sheet-head">
+              <h3>Universalidad</h3>
+              <p>IPv6 y UA/EAI.</p>
+            </div>
+            <div id="axis-results-universalidad" class="axis-sheet-body"></div>
+          </section>
+          <section class="axis-sheet">
+            <div class="axis-sheet-head">
+              <h3>Accesibilidad</h3>
+              <p>W3C, calidad y herramientas de apoyo.</p>
+            </div>
+            <div id="axis-results-accesibilidad" class="axis-sheet-body"></div>
+          </section>
+        </div>
       </section>
 
-      <section class="panel">
+      <section class="panel" id="registro">
         <details class="aux-panel">
           <summary>
             <div>
@@ -696,6 +1035,16 @@
           DNSViz, RIPE, DNS y SMTP se consultan desde el servidor para no depender del navegador.
         </p>
       </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Registro de ejecución</h2>
+            <p class="muted">Mensajes claros con el avance de la medición, errores y exportación.</p>
+          </div>
+        </div>
+        <div id="runLog" class="chat-log" style="min-height:140px;max-height:280px"></div>
+      </section>
     </main>
   </div>
 
@@ -726,12 +1075,17 @@
     const API_BASE = location.protocol === 'file:' ? 'http://localhost:4000' : '';
     const domainsInput = document.getElementById('domains');
     const runButton = document.getElementById('runButton');
+    const exportJsonButton = document.getElementById('exportJsonButton');
+    const exportCsvButton = document.getElementById('exportCsvButton');
     const clearButton = document.getElementById('clearButton');
     const loading = document.getElementById('loading');
-    const catalogEl = document.getElementById('catalog');
     const summaryEl = document.getElementById('summary');
+    const cctldGrid = document.getElementById('cctldGrid');
+    const cctldRefresh = document.getElementById('cctldRefresh');
+    const axisResultsSecurity = document.getElementById('axis-results-security');
+    const axisResultsUniversalidad = document.getElementById('axis-results-universalidad');
+    const axisResultsAccesibilidad = document.getElementById('axis-results-accesibilidad');
     const selectionCount = document.getElementById('selectionCount');
-    const catalogTabs = document.getElementById('catalogTabs');
     const resultTabs = document.getElementById('resultTabs');
     const wifiVariant = document.getElementById('wifiVariant');
     const wifiProbe = document.getElementById('wifiProbe');
@@ -739,21 +1093,24 @@
     const prevResult = document.getElementById('prevResult');
     const nextResult = document.getElementById('nextResult');
     const resultCounter = document.getElementById('resultCounter');
+    const runLog = document.getElementById('runLog');
 
     const apiCache = new Map();
     const apiFailureCache = new Map();
     const analyzedDomains = [];
     const resultTabButtons = [];
-    const catalogPanels = new Map();
     const catalogResultSlots = new Map();
     const domainResultsStore = new Map();
+    const measurementRequestMap = new Map();
     const helpChat = document.getElementById('helpChat');
     const chatToggle = document.getElementById('chatToggle');
     const chatLog = document.getElementById('chatLog');
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
     let currentResultIndex = 0;
-    let activeCatalog = 'https';
+    const cctldResolverMode = 'local';
+    let lastRun = null;
+    let cctldRetryTimer = null;
 
     const make = (tag, className, text) => {
       const node = document.createElement(tag);
@@ -781,22 +1138,32 @@
         title: 'HTTPS / Web',
         descEs: 'Activación, redirección y cabeceras defensivas para publicación web.',
         descPt: 'Ativação, redireção e cabeçalhos defensivos para publicação web.',
-        infoEs: 'Mide HTTPS, redirección, HSTS, CSP, cabeceras defensivas, `security.txt` y CAA.',
-        infoPt: 'Mede HTTPS, redireção, HSTS, CSP, cabeçalhos defensivos, `security.txt` e CAA.',
+        infoEs: 'Mide HTTPS, redirección, HSTS, banner y compresión HTTP.',
+        infoPt: 'Mede HTTPS, redireção, HSTS, banner e compressão HTTP.',
         open: true,
         checks: [
           check('https', 'HTTPS activo', 'HTTPS ativo', 'Comprueba si el sitio responde por HTTPS.', 'Verifica se o site responde por HTTPS.'),
           check('redirect', 'Redirección a HTTPS', 'Redireção para HTTPS', 'Comprueba si HTTP redirige hacia HTTPS.', 'Verifica se HTTP redireciona para HTTPS.'),
           check('hsts', 'HSTS', 'HSTS', 'Comprueba la política HSTS y su vigencia.', 'Verifica a política HSTS e sua validade.'),
+          check('serverbanner', 'Server banner', 'Banner Server', 'Mira si el servidor expone su versión.', 'Verifica se o servidor expõe sua versão.'),
+          check('compression', 'Compresión HTTP', 'Compressão HTTP', 'Detecta si la respuesta usa compresión.', 'Detecta se a resposta usa compressão.')
+        ]
+      },
+      {
+        id: 'appsecpriv',
+        title: 'Cabeceras defensivas / AppSecPriv',
+        descEs: 'Cabeceras HTTP y archivo de contacto de seguridad.',
+        descPt: 'Cabeçalhos HTTP e arquivo de contato de segurança.',
+        infoEs: 'Mide CSP, XFO, XCTO, Referrer-Policy, Permissions-Policy y security.txt.',
+        infoPt: 'Mede CSP, XFO, XCTO, Referrer-Policy, Permissions-Policy e security.txt.',
+        open: true,
+        checks: [
           check('csp', 'Content Security Policy', 'Content Security Policy', 'Comprueba si la política CSP está publicada.', 'Verifica se a política CSP está publicada.'),
           check('xfo', 'X-Frame-Options', 'X-Frame-Options', 'Protege contra incrustación no deseada.', 'Protege contra incorporação não desejada.'),
           check('xcto', 'X-Content-Type-Options', 'X-Content-Type-Options', 'Evita la interpretación MIME ambigua.', 'Evita interpretação MIME ambígua.'),
           check('referrer', 'Referrer-Policy', 'Referrer-Policy', 'Controla qué información sale en el Referer.', 'Controla que informação sai no Referer.'),
           check('permissions', 'Permissions-Policy', 'Permissions-Policy', 'Restringe capacidades sensibles del navegador.', 'Restringe capacidades sensíveis do navegador.'),
-          check('serverbanner', 'Server banner', 'Banner Server', 'Mira si el servidor expone su versión.', 'Verifica se o servidor expõe sua versão.'),
-          check('compression', 'Compresión HTTP', 'Compressão HTTP', 'Detecta si la respuesta usa compresión.', 'Detecta se a resposta usa compressão.'),
-          check('securitytxt', 'security.txt', 'security.txt', 'Busca el archivo RFC 9116 de contacto de seguridad.', 'Procura o arquivo RFC 9116 de contato de segurança.'),
-          check('caa', 'CAA', 'CAA', 'Indica qué CA puede emitir certificados.', 'Indica qual CA pode emitir certificados.')
+          check('securitytxt', 'security.txt', 'security.txt', 'Busca el archivo RFC 9116 de contacto de seguridad.', 'Procura o arquivo RFC 9116 de contato de segurança.')
         ]
       },
       {
@@ -804,13 +1171,15 @@
         title: 'TLS / Criptografia',
         descEs: 'Versión, cifrado y certificado de la conexión.',
         descPt: 'Versão, cifra e certificado da conexão.',
-        infoEs: 'Mide la versión TLS, la cadena de certificados y OCSP stapling.',
-        infoPt: 'Mede a versão TLS, a cadeia de certificados e OCSP stapling.',
+        infoEs: 'Mide la versión TLS, la cadena de certificados, OCSP y DANE/TLSA.',
+        infoPt: 'Mede a versão TLS, a cadeia de certificados, OCSP e DANE/TLSA.',
         open: true,
         checks: [
           check('tls', 'TLS', 'TLS', 'Mide la versión TLS negociada y la cifra.', 'Mede a versão TLS negociada e a cifra.'),
           check('sslchain', 'Cadena SSL', 'Cadeia SSL', 'Revisa la cadena de certificados presentada.', 'Revisa a cadeia de certificados apresentada.'),
-          check('ocsp', 'OCSP stapling', 'OCSP stapling', 'Comprueba si el servidor entrega respuesta OCSP.', 'Verifica se o servidor entrega resposta OCSP.')
+          check('ocsp', 'OCSP stapling', 'OCSP stapling', 'Comprueba si el servidor entrega respuesta OCSP.', 'Verifica se o servidor entrega resposta OCSP.'),
+          check('tlsa', 'DANE / TLSA', 'DANE / TLSA', 'Comprueba si el dominio publica TLSA para DANE.', 'Verifica se o domínio publica TLSA para DANE.'),
+          check('caa', 'CAA', 'CAA', 'Indica qué CA puede emitir certificados.', 'Indica qual CA pode emitir certificados.')
         ]
       },
       {
@@ -829,10 +1198,10 @@
       {
         id: 'dnssec',
         title: 'DNSSEC / DNS',
-        descEs: 'Firma DNS, registros principales y la cadena DNSViz.',
-        descPt: 'Assinatura DNS, registros principais e a cadeia DNSViz.',
-        infoEs: 'Mide DNSSEC, DNSViz, registros DNS y TXT.',
-        infoPt: 'Mede DNSSEC, DNSViz, registros DNS e TXT.',
+        descEs: 'Firma DNS, NSEC3 y la cadena DNSViz.',
+        descPt: 'Assinatura DNS, NSEC3 e a cadeia DNSViz.',
+        infoEs: 'Mide DNSSEC, DNSViz, registros DNS, TXT y detalles NSEC3.',
+        infoPt: 'Mede DNSSEC, DNSViz, registros DNS, TXT e detalhes NSEC3.',
         open: true,
         checks: [
           check('dnssec', 'DNSSEC', 'DNSSEC', 'Verifica DS y DNSKEY en la cadena del dominio.', 'Verifica DS e DNSKEY na cadeia do domínio.'),
@@ -873,8 +1242,8 @@
       {
         id: 'ua',
         title: 'Universal Acceptance / Aceitação universal',
-        descEs: 'SMTPUTF8 en los servidores MX.',
-        descPt: 'SMTPUTF8 nos servidores MX.',
+        descEs: 'SMTPUTF8 y compatibilidad con direcciones internacionales.',
+        descPt: 'SMTPUTF8 e compatibilidade com endereços internacionais.',
         infoEs: 'Mide si los MX anuncian SMTPUTF8 y aceptan direcciones internacionales.',
         infoPt: 'Mede se os MX anunciam SMTPUTF8 e aceitam endereços internacionais.',
         open: true,
@@ -897,6 +1266,19 @@
         ]
       },
       {
+        id: 'accessibility',
+        title: 'Accesibilidad / Acessibilidade',
+        descEs: 'Validación W3C y señales de calidad web.',
+        descPt: 'Validação W3C e sinais de qualidade web.',
+        infoEs: 'Mide HTML W3C y señales de calidad útiles para usabilidad.',
+        infoPt: 'Mede HTML W3C e sinais de qualidade úteis para usabilidade.',
+        open: true,
+        checks: [
+          check('w3c', 'W3C', 'W3C', 'Valida HTML y señales de accesibilidad.', 'Valida HTML e sinais de acessibilidade.'),
+          check('quality', 'Calidad web', 'Qualidade web', 'Consulta métricas Lighthouse/PageSpeed.', 'Consulta métricas Lighthouse/PageSpeed.')
+        ]
+      },
+      {
         id: 'future',
         title: 'Próximamente / Aproximadamente',
         descEs: 'Mediciones en preparación para integrar con una fuente estable.',
@@ -905,8 +1287,9 @@
         infoPt: 'Mostramos o plano de integração sem ativar ainda as rotas instáveis.',
         open: false,
         checks: [
-          checkSoon('w3c', 'W3C', 'W3C', 'Próximamente: validación de HTML y accesibilidad.', 'Em breve: validação de HTML e acessibilidade.'),
-          checkSoon('ofds', 'OFDS', 'OFDS', 'Aproximadamente: integración de la fuente OFDS cuando se estabilice.', 'Aproximadamente: integração da fonte OFDS quando estabilizar.')
+          checkSoon('ofds', 'OFDS', 'OFDS', 'Aproximadamente: integración de la fuente OFDS cuando se estabilice.', 'Aproximadamente: integração da fonte OFDS quando estabilizar.'),
+          checkSoon('aspa', 'ASPA', 'ASPA', 'Próximamente: validación de ASPA cuando tengamos fuente estable.', 'Em breve: validação de ASPA quando tivermos fonte estável.'),
+          checkSoon('quantum', 'Preparación cuántica', 'Preparação quântica', 'Próximamente: medición de preparación criptográfica post-cuántica.', 'Em breve: medição de preparação criptográfica pós-quântica.')
         ]
       },
       {
@@ -921,6 +1304,8 @@
           check('serverstatus', 'Estado HTTP', 'Estado HTTP', 'Revisa el código de respuesta inicial.', 'Revisa o código de resposta inicial.'),
           check('redirectchain', 'Cadena de redirección', 'Cadeia de redireção', 'Sigue la secuencia completa de redirecciones.', 'Segue a sequência completa de redireções.'),
           check('openports', 'Puertos abiertos', 'Portas abertas', 'Busca puertos comunes expuestos.', 'Procura portas comuns expostas.'),
+          check('ping', 'Ping IPv4', 'Ping IPv4', 'Mide respuesta ICMP sobre IPv4 con ping local.', 'Mede resposta ICMP sobre IPv4 com ping local.'),
+          check('pingv6', 'Ping IPv6', 'Ping IPv6', 'Mide respuesta ICMP sobre IPv6 con ping6 local.', 'Mede resposta ICMP sobre IPv6 com ping6 local.'),
           check('traceroute', 'Traceroute', 'Traceroute', 'Intenta obtener un trazo básico hacia el dominio.', 'Tenta obter um traçado básico até o domínio.'),
           check('sitefeatures', 'Features del sitio', 'Recursos do site', 'Detecta formularios, login, búsqueda y otros patrones.', 'Detecta formulários, login, busca e outros padrões.'),
           check('cookies', 'Cookies', 'Cookies', 'Revisa si el sitio deja cookies en la respuesta.', 'Verifica se o site deixa cookies na resposta.'),
@@ -966,6 +1351,12 @@
         pt: 'Mostramos a rota ASN/prefix observada para cada IP e a validação RPKI. O objetivo é saber se a rota anunciada é válida, inválida ou não encontrada.'
       },
       {
+        terms: ['csp', 'xfo', 'xcto', 'referrer', 'permissions', 'security.txt'],
+        title: 'Cabeceras defensivas',
+        es: 'Agrupa cabeceras defensivas del navegador y security.txt para medir exposición y canales de contacto.',
+        pt: 'Agrupa cabeçalhos defensivos do navegador e security.txt para medir exposição e canais de contato.'
+      },
+      {
         terms: ['spf'],
         title: 'SPF',
         es: 'Revisa si el dominio publica SPF y si la política es estricta o débil. Un SPF estricto reduce la suplantación de correo.',
@@ -996,10 +1387,16 @@
         pt: 'Verifica se os MX anunciam SMTPUTF8, útil para aceitação universal de endereços com caracteres não ASCII.'
       },
       {
+        terms: ['tlsa', 'dane'],
+        title: 'DANE / TLSA',
+        es: 'Comprueba si el dominio publica TLSA para validar certificados con DNSSEC.',
+        pt: 'Verifica se o domínio publica TLSA para validar certificados com DNSSEC.'
+      },
+      {
         terms: ['w3c', 'accesibilidad'],
         title: 'W3C',
-        es: 'Próximamente: validación HTML y accesibilidad desde una fuente estable. Por ahora no la activamos porque la integración aún está en preparación.',
-        pt: 'Em breve: validação HTML e acessibilidade a partir de uma fonte estável. Por enquanto não ativamos porque a integração ainda está em preparação.'
+        es: 'Valida HTML y devuelve conteos de errores y avisos para ayudar a detectar problemas de accesibilidad y estructura.',
+        pt: 'Valida HTML e retorna contagens de erros e avisos para ajudar a detectar problemas de acessibilidade e estrutura.'
       },
       {
         terms: ['ofds'],
@@ -1050,6 +1447,12 @@
         pt: 'Tenta obter um rastro básico até o domínio para inspecionar a rota de rede.'
       },
       {
+        terms: ['ping', 'ping6', 'latencia'],
+        title: 'Ping',
+        es: 'Mide respuesta ICMP local sobre IPv4 o IPv6, con resumen de pérdida y RTT.',
+        pt: 'Mede resposta ICMP local sobre IPv4 ou IPv6, com resumo de perda e RTT.'
+      },
+      {
         terms: ['wifi', 'spectrum'],
         title: 'Espectro Wi-Fi',
         es: 'Lee un `variantId` público de Wi-Fi Alliance y extrae bandas, capacidades y clases si la fuente responde.',
@@ -1073,13 +1476,63 @@
       });
     });
 
+    const requestTemplates = {
+      https: domain => `/headers/${encodeURIComponent(domain)}`,
+      redirect: domain => `/headers/${encodeURIComponent(domain)}`,
+      hsts: domain => `/headers/${encodeURIComponent(domain)}`,
+      csp: domain => `/headers/${encodeURIComponent(domain)}`,
+      xfo: domain => `/headers/${encodeURIComponent(domain)}`,
+      xcto: domain => `/headers/${encodeURIComponent(domain)}`,
+      referrer: domain => `/headers/${encodeURIComponent(domain)}`,
+      permissions: domain => `/headers/${encodeURIComponent(domain)}`,
+      serverbanner: domain => `/headers/${encodeURIComponent(domain)}`,
+      compression: domain => `/headers/${encodeURIComponent(domain)}`,
+      tls: domain => `/tlsinfo/${encodeURIComponent(domain)}`,
+      sslchain: domain => `/sslchain/${encodeURIComponent(domain)}`,
+      ocsp: domain => `/tlsinfo/${encodeURIComponent(domain)}`,
+      tlsa: domain => `/tlsa/${encodeURIComponent(domain)}`,
+      securitytxt: domain => `/securitytxt/${encodeURIComponent(domain)}`,
+      caa: domain => `/caa/${encodeURIComponent(domain)}`,
+      ipv4: domain => `/ipv4/${encodeURIComponent(domain)}`,
+      ipv6: domain => `/ipv6/${encodeURIComponent(domain)}`,
+      dnssec: domain => `/dnssec/${encodeURIComponent(domain)}`,
+      dnsviz: domain => `/dnsviz/${encodeURIComponent(domain)}?resolver=local`,
+      dnsrecords: domain => `/dnsrecords/${encodeURIComponent(domain)}`,
+      txtrecords: domain => `/txtrecords/${encodeURIComponent(domain)}`,
+      maildnssec: domain => `/maildnssec/${encodeURIComponent(domain)}`,
+      spf: domain => `/spf/${encodeURIComponent(domain)}`,
+      dmarc: domain => `/dmarc/${encodeURIComponent(domain)}`,
+      dkim: domain => `/dkim/${encodeURIComponent(domain)}?selector=support`,
+      mx: domain => `/mx/${encodeURIComponent(domain)}`,
+      mailipv6: domain => `/mailipv6/${encodeURIComponent(domain)}`,
+      starttls: domain => `/starttls/${encodeURIComponent(domain)}`,
+      smtputf8: domain => `/smtputf8/${encodeURIComponent(domain)}`,
+      rpki: domain => `/rpki/${encodeURIComponent(domain)}`,
+      routing: domain => `/routing/${encodeURIComponent(domain)}`,
+      serverinfo: domain => `/serverinfo/${encodeURIComponent(domain)}`,
+      serverstatus: domain => `/serverstatus/${encodeURIComponent(domain)}`,
+      redirectchain: domain => `/redirectchain/${encodeURIComponent(domain)}`,
+      openports: domain => `/openports/${encodeURIComponent(domain)}`,
+      ping: domain => `/ping/${encodeURIComponent(domain)}`,
+      pingv6: domain => `/pingv6/${encodeURIComponent(domain)}`,
+      traceroute: domain => `/traceroute/${encodeURIComponent(domain)}`,
+      sitefeatures: domain => `/sitefeatures/${encodeURIComponent(domain)}`,
+      cookies: domain => `/cookies/${encodeURIComponent(domain)}`,
+      listedpages: domain => `/listedpages/${encodeURIComponent(domain)}`,
+      linkedpages: domain => `/linkedpages/${encodeURIComponent(domain)}`,
+      socialtags: domain => `/socialtags/${encodeURIComponent(domain)}`,
+      quality: domain => `/quality/${encodeURIComponent(domain)}`,
+      archive: domain => `/archive/${encodeURIComponent(domain)}`,
+      ranking: domain => `/ranking/${encodeURIComponent(domain)}`
+    };
+
     const statusLabels = {
-      ok: 'Correcto',
-      warning: 'Aviso',
-      fail: 'Fallo',
-      info: 'Info',
+      ok: 'Cumple',
+      warning: 'Revisar',
+      fail: 'No cumple',
+      info: 'Informativa',
       error: 'Error',
-      pending: 'En curso'
+      pending: 'Pendiente'
     };
 
     const statusOrder = { ok: 4, warning: 3, info: 2, fail: 1, error: 0, pending: -1 };
@@ -1124,120 +1577,309 @@
       container.appendChild(list);
     }
 
+    function makeResultTag(label, tone = 'info') {
+      return make('span', `result-tag ${tone}`, label);
+    }
+
+    function renderSubcheckSections(container, sections) {
+      const wrap = make('div', 'result-sections');
+      sections.forEach(section => {
+        const card = make('div', `subcheck-card ${statusClass(section.status || 'info')}`);
+        const head = make('div', 'subcheck-head');
+        const left = document.createElement('div');
+        left.appendChild(make('div', 'subcheck-title', section.label || 'Detalle'));
+        if (section.note) {
+          left.appendChild(make('div', 'subcheck-note', section.note));
+        }
+        const badges = document.createElement('div');
+        badges.style.display = 'flex';
+        badges.style.gap = '6px';
+        badges.style.flexWrap = 'wrap';
+        badges.appendChild(createStatusBadge(section.status || 'info'));
+        if (Array.isArray(section.tags)) {
+          section.tags.forEach(tag => {
+            if (!tag) return;
+            if (typeof tag === 'string') {
+              badges.appendChild(makeResultTag(tag, 'info'));
+              return;
+            }
+            badges.appendChild(makeResultTag(tag.label || tag.text || 'tag', tag.tone || 'info'));
+          });
+        }
+        head.append(left, badges);
+        card.appendChild(head);
+
+        if (Array.isArray(section.items) && section.items.length) {
+          const itemsWrap = make('div', 'subcheck-items');
+          section.items.forEach(item => {
+            const itemCard = make('div', `subcheck-item ${statusClass(item.status || 'info')}`);
+            const itemHead = make('div', 'subcheck-item-head');
+            const itemLeft = document.createElement('div');
+            itemLeft.appendChild(make('div', 'subcheck-item-text', item.text || 'Sin detalle'));
+            if (item.note) {
+              itemLeft.appendChild(make('div', 'subcheck-item-note', item.note));
+            }
+            const itemBadges = document.createElement('div');
+            itemBadges.style.display = 'flex';
+            itemBadges.style.gap = '6px';
+            itemBadges.style.flexWrap = 'wrap';
+            itemBadges.appendChild(createStatusBadge(item.status || 'info'));
+            if (item.tag) {
+              if (typeof item.tag === 'string') {
+                itemBadges.appendChild(makeResultTag(item.tag, 'info'));
+              } else {
+                itemBadges.appendChild(makeResultTag(item.tag.label || item.tag.text || 'tag', item.tag.tone || 'info'));
+              }
+            }
+            itemHead.append(itemLeft, itemBadges);
+            itemCard.appendChild(itemHead);
+            itemsWrap.appendChild(itemCard);
+          });
+          card.appendChild(itemsWrap);
+        }
+        wrap.appendChild(card);
+      });
+      container.appendChild(wrap);
+    }
+
+    function renderResultBody(container, result) {
+      clearNode(container);
+      const stateText = result.status === 'ok'
+        ? 'Estado: pasó la prueba'
+        : result.status === 'warning'
+          ? 'Estado: cumple con observaciones'
+          : result.status === 'fail'
+            ? 'Estado: no pasó la prueba'
+            : result.status === 'error'
+              ? 'Estado: error de medición'
+              : 'Estado: informativa';
+      container.appendChild(make('div', 'result-state', stateText));
+      if (Array.isArray(result.sections) && result.sections.length) {
+        renderSubcheckSections(container, result.sections);
+      }
+      if (Array.isArray(result.lines) && result.lines.length) {
+        const block = document.createElement('div');
+        block.style.marginTop = result.sections?.length ? '10px' : '0';
+        appendLines(block, result.lines, 'Sin detalles');
+        container.appendChild(block);
+      }
+      if (!Array.isArray(result.sections) && (!Array.isArray(result.lines) || !result.lines.length)) {
+        appendLines(container, [], 'Sin detalles');
+      }
+    }
+
     function setSummary(counts, totalChecks) {
       clearNode(summaryEl);
-      const items = [
-        ['total', totalChecks, 'Total'],
-        ['ok', counts.ok, 'Correctas'],
-        ['warning', counts.warning, 'Avisos'],
-        ['info', counts.info, 'Info'],
-        ['fail', counts.fail, 'Fallos'],
-        ['error', counts.error, 'Errores']
-      ];
-      items.forEach(([status, value, label]) => {
-        const chip = make('span', 'summary-chip');
-        const dot = make('span');
-        dot.className = `status ${status}`;
-        dot.style.padding = '0';
-        dot.style.width = '10px';
-        dot.style.height = '10px';
-        dot.style.borderRadius = '999px';
-        dot.style.display = 'inline-block';
-        const strong = make('strong', '', String(value));
-        chip.append(dot, document.createTextNode(` ${label} `), strong);
-        summaryEl.appendChild(chip);
-      });
+      const chip = make('span', 'summary-chip');
+      chip.append(make('span', 'status info', 'Listo'), document.createTextNode(' para analizar'));
+      summaryEl.appendChild(chip);
     }
 
     function updateSelectionCount() {
       const selected = getSelectedIds();
-      selectionCount.textContent = `${selected.length} mediciones activas`;
+      if (selectionCount) selectionCount.textContent = `${selected.length} mediciones activas`;
     }
 
-    function setCatalogTab(id) {
-      activeCatalog = id;
-      catalogTabs.querySelectorAll('[data-catalog-tab]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.catalogTab === id);
+    function formatTimestamp(date = new Date()) {
+      return date.toLocaleTimeString('es-UY', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
       });
-      catalogPanels.forEach((panel, key) => {
-        panel.classList.toggle('active', key === id);
+    }
+
+    function logRun(message, kind = 'info') {
+      if (!runLog) return;
+      const entry = document.createElement('div');
+      entry.className = 'chat-msg';
+      entry.innerHTML = `<strong>[${formatTimestamp()}] ${kind.toUpperCase()}</strong><div>${message}</div>`;
+      runLog.prepend(entry);
+      while (runLog.childElementCount > 120) {
+        runLog.removeChild(runLog.lastElementChild);
+      }
+    }
+
+    function prettyResponse(value) {
+      if (value === undefined) return 'Sin respuesta.';
+      if (value === null) return 'null';
+      if (typeof value === 'string') return value;
+      try {
+        const sanitize = input => {
+          if (Array.isArray(input)) {
+            const slice = input.slice(0, 8).map(sanitize);
+            if (input.length > 8) slice.push(`… (${input.length - 8} más)`);
+            return slice;
+          }
+          if (input && typeof input === 'object') {
+            const output = {};
+            Object.entries(input).forEach(([key, val]) => {
+              if (key === 'raw' && typeof val === 'string') {
+                output[key] = val.length > 180 ? `${val.slice(0, 180)}…` : val;
+                return;
+              }
+              if (key === 'records' && Array.isArray(val)) {
+                output[key] = val.slice(0, 5).map(sanitize);
+                if (val.length > 5) output[key].push(`… (${val.length - 5} más)`);
+                return;
+              }
+              output[key] = sanitize(val);
+            });
+            return output;
+          }
+          if (typeof input === 'string' && input.length > 180) {
+            return `${input.slice(0, 180)}…`;
+          }
+          return input;
+        };
+        return JSON.stringify(sanitize(value), null, 2);
+      } catch (e) {
+        return String(value);
+      }
+    }
+
+    function requestForMeasurement(id, domain) {
+      const template = requestTemplates[id];
+      return template ? template(domain) : null;
+    }
+
+    function setTechPanel(slot, content) {
+      clearNode(slot.tech);
+      slot.tech.classList.toggle('open', Boolean(content));
+      if (!content) return;
+      const title = make('div', 'tech-line');
+      const label = make('span', 'tech-label', 'Qué se verifica');
+      title.append(label, document.createTextNode(content.explanation || ''));
+      slot.tech.appendChild(title);
+
+      const requestLine = make('div', 'tech-line');
+      requestLine.append(make('span', 'tech-label', 'Solicitud técnica'));
+      requestLine.appendChild(make('div', 'tech-pre', content.request || 'No hay solicitud técnica directa.'));
+      slot.tech.appendChild(requestLine);
+
+      const responseLine = make('div', 'tech-line');
+      responseLine.append(make('span', 'tech-label', 'Respuesta del servicio'));
+      responseLine.appendChild(make('div', 'tech-pre', prettyResponse(content.response)));
+      slot.tech.appendChild(responseLine);
+    }
+
+    async function loadMeasurementInfo(slot, id, domain) {
+      const request = requestForMeasurement(id, domain);
+      if (!request) {
+        setTechPanel(slot, {
+          explanation: checkMap.get(id)?.descEs || 'Sin descripción disponible.',
+          request: 'Esta medición no tiene una solicitud técnica directa.',
+          response: 'Se trata de una medición informativa o futura.'
+        });
+        return;
+      }
+
+      setTechPanel(slot, {
+        explanation: checkMap.get(id)?.descEs || 'Sin descripción disponible.',
+        request,
+        response: 'Cargando respuesta...'
       });
+      slot.infoButton.disabled = true;
+      try {
+        const response = await apiJson(request, 20000);
+        setTechPanel(slot, {
+          explanation: checkMap.get(id)?.descEs || 'Sin descripción disponible.',
+          request,
+          response
+        });
+      } catch (error) {
+        setTechPanel(slot, {
+          explanation: checkMap.get(id)?.descEs || 'Sin descripción disponible.',
+          request,
+          response: { error: error.message || 'Servicio no disponible' }
+        });
+      } finally {
+        slot.infoButton.disabled = false;
+      }
+    }
+
+    function axisForGroup(groupId) {
+      if (['https', 'appsecpriv', 'tls', 'dnssec', 'mailauth', 'mailtransport', 'route', 'lab', 'future'].includes(groupId)) {
+        return 'security';
+      }
+      if (['ip', 'ua'].includes(groupId)) {
+        return 'universalidad';
+      }
+      return 'accesibilidad';
+    }
+
+    function axisContainer(axis) {
+      return axis === 'security'
+        ? axisResultsSecurity
+        : axis === 'universalidad'
+          ? axisResultsUniversalidad
+          : axisResultsAccesibilidad;
+    }
+
+    function createGroupCard(group) {
+      const details = document.createElement('details');
+      details.className = 'tab-panel';
+      details.dataset.catalogPanel = group.id;
+      details.id = `catalog-${group.id}`;
+
+      const summary = document.createElement('summary');
+      const left = document.createElement('div');
+      const title = make('h3', 'cat-title', group.title);
+      const sub = make('p', 'cat-sub', `${group.descEs} / ${group.descPt}`);
+      left.append(title, sub);
+      const right = document.createElement('div');
+      right.style.display = 'flex';
+      right.style.alignItems = 'center';
+      right.style.gap = '8px';
+      right.append(make('span', 'cat-count', `${group.checks.length} mediciones`), make('span', 'chevron', '⌄'));
+      summary.append(left, right);
+      details.appendChild(summary);
+
+      const list = make('div', 'check-list');
+      group.checks.forEach(item => {
+        const label = document.createElement('label');
+        label.className = 'check-item';
+        if (item.comingSoon) label.classList.add('coming-soon');
+
+        const head = make('div', 'check-head');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.dataset.check = item.id;
+        checkbox.checked = !item.comingSoon;
+        checkbox.disabled = Boolean(item.comingSoon);
+
+        const text = document.createElement('div');
+        const itemTitle = make('div', 'check-title', item.label);
+        const desc = document.createElement('div');
+        desc.className = 'check-desc';
+        desc.innerHTML = `<strong>ES:</strong> ${item.descEs}<br><strong>PT:</strong> ${item.descPt}`;
+        text.append(itemTitle, desc);
+
+        const badge = item.comingSoon ? make('span', 'status info', 'Próximamente') : null;
+        if (badge) badge.style.alignSelf = 'start';
+
+        head.append(checkbox, text);
+        if (badge) head.appendChild(badge);
+        label.appendChild(head);
+        const inline = buildInlineResultSlot(item);
+        label.appendChild(inline.row);
+        catalogResultSlots.set(item.id, inline);
+        list.appendChild(label);
+      });
+
+      details.appendChild(list);
+      return details;
     }
 
     function renderCatalog() {
-      clearNode(catalogEl);
-      clearNode(catalogTabs);
-      catalogPanels.clear();
+      clearNode(axisResultsSecurity);
+      clearNode(axisResultsUniversalidad);
+      clearNode(axisResultsAccesibilidad);
 
       groups.forEach(group => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'tab-button';
-        button.dataset.catalogTab = group.id;
-        const label = make('span', 'tab-label');
-        const info = make('span', 'tab-info', 'i');
-        info.tabIndex = 0;
-        info.dataset.tip = `${group.infoEs || group.descEs} / ${group.infoPt || group.descPt}`;
-        label.append(document.createTextNode(group.title.split(' / ')[0]), info);
-        button.appendChild(label);
-        button.title = info.dataset.tip;
-        button.addEventListener('click', () => setCatalogTab(group.id));
-        catalogTabs.appendChild(button);
-      });
-
-      groups.forEach(group => {
-        const details = document.createElement('section');
-        details.className = 'tab-panel';
-        details.dataset.catalogPanel = group.id;
-        details.open = Boolean(group.open);
-
-        const summary = document.createElement('div');
-        summary.className = 'panel-head';
-        const left = document.createElement('div');
-        const title = make('h3', 'cat-title', group.title);
-        const sub = make('p', 'cat-sub', `${group.descEs} / ${group.descPt}`);
-        left.append(title, sub);
-        summary.append(left, make('span', 'cat-count', `${group.checks.length} mediciones`));
-        details.appendChild(summary);
-
-        const list = make('div', 'check-list');
-        group.checks.forEach(item => {
-          const label = document.createElement('label');
-          label.className = 'check-item';
-          if (item.comingSoon) label.classList.add('coming-soon');
-
-          const head = make('div', 'check-head');
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.dataset.check = item.id;
-          checkbox.checked = !item.comingSoon;
-          checkbox.disabled = Boolean(item.comingSoon);
-
-          const text = document.createElement('div');
-          const title = make('div', 'check-title', item.label);
-          const desc = document.createElement('div');
-          desc.className = 'check-desc';
-          desc.innerHTML = `<strong>ES:</strong> ${item.descEs}<br><strong>PT:</strong> ${item.descPt}`;
-          text.append(title, desc);
-
-          const badge = make('span', `status ${item.comingSoon ? 'info' : 'pending'}`);
-          badge.style.alignSelf = 'start';
-          badge.textContent = item.comingSoon ? 'Próximamente' : (group.id === 'lab' ? 'Laboratorio' : 'Core');
-
-          head.append(checkbox, text, badge);
-          label.appendChild(head);
-          const inline = buildInlineResultSlot(item);
-          label.appendChild(inline.row);
-          catalogResultSlots.set(item.id, inline);
-          list.appendChild(label);
-        });
-
-        details.appendChild(list);
-        catalogEl.appendChild(details);
-        catalogPanels.set(group.id, details);
+        const card = createGroupCard(group);
+        axisContainer(axisForGroup(group.id)).appendChild(card);
       });
       updateSelectionCount();
-      setCatalogTab(activeCatalog);
     }
 
     function getSelectedIds() {
@@ -1289,21 +1931,35 @@
       if (failure && Date.now() - failure.timestamp < 10 * 60 * 1000) {
         throw new Error(failure.message);
       }
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeout);
-      const promise = fetch(url, { signal: controller.signal, cache: 'no-store' })
-        .then(async response => {
-          clearTimeout(timer);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          return data;
-        })
-        .catch(error => {
-          clearTimeout(timer);
-          const message = error.name === 'AbortError' ? 'Timeout' : 'Servicio no disponible';
-          apiFailureCache.set(url, { timestamp: Date.now(), message });
-          throw new Error(message);
-        });
+
+      const attemptFetch = async attempts => {
+        let lastError = null;
+        for (let attempt = 1; attempt <= attempts; attempt += 1) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), timeout);
+          try {
+            const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+            clearTimeout(timer);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
+          } catch (error) {
+            clearTimeout(timer);
+            const message = error.name === 'AbortError' ? 'Timeout' : 'Servicio no disponible';
+            lastError = new Error(message);
+            if (attempt < attempts && (message === 'Timeout' || message === 'Servicio no disponible')) {
+              await new Promise(resolve => setTimeout(resolve, attempt * 500));
+              continue;
+            }
+            break;
+          }
+        }
+        throw lastError || new Error('Servicio no disponible');
+      };
+
+      const promise = attemptFetch(2).catch(error => {
+        apiFailureCache.set(url, { timestamp: Date.now(), message: error.message || 'Servicio no disponible' });
+        throw error;
+      });
       apiCache.set(url, promise);
       try {
         return await promise;
@@ -1316,8 +1972,9 @@
     async function getHeaders(domain) { return apiJson(`/headers/${encodeURIComponent(domain)}`); }
     async function getTlsInfo(domain) { return apiJson(`/tlsinfo/${encodeURIComponent(domain)}`); }
     async function getSslChain(domain) { return apiJson(`/sslchain/${encodeURIComponent(domain)}`); }
+    async function getTlsa(domain) { return apiJson(`/tlsa/${encodeURIComponent(domain)}`); }
     async function getDnssec(domain) { return apiJson(`/dnssec/${encodeURIComponent(domain)}`); }
-    async function getDnsviz(domain) { return apiJson(`/dnsviz/${encodeURIComponent(domain)}`); }
+    async function getDnsviz(domain) { return apiJson(`/dnsviz/${encodeURIComponent(domain)}?resolver=local`); }
     async function getMx(domain) { return apiJson(`/mx/${encodeURIComponent(domain)}`); }
     async function getMailIpv6(domain) { return apiJson(`/mailipv6/${encodeURIComponent(domain)}`); }
     async function getMailDnssec(domain) { return apiJson(`/maildnssec/${encodeURIComponent(domain)}`); }
@@ -1338,6 +1995,8 @@
     async function getServerStatus(domain) { return apiJson(`/serverstatus/${encodeURIComponent(domain)}`); }
     async function getRedirectChain(domain) { return apiJson(`/redirectchain/${encodeURIComponent(domain)}`); }
     async function getOpenPorts(domain) { return apiJson(`/openports/${encodeURIComponent(domain)}`); }
+    async function getPing(domain) { return apiJson(`/ping/${encodeURIComponent(domain)}`); }
+    async function getPingV6(domain) { return apiJson(`/pingv6/${encodeURIComponent(domain)}`); }
     async function getTraceroute(domain) { return apiJson(`/traceroute/${encodeURIComponent(domain)}`); }
     async function getSiteFeatures(domain) { return apiJson(`/sitefeatures/${encodeURIComponent(domain)}`); }
     async function getCookies(domain) { return apiJson(`/cookies/${encodeURIComponent(domain)}`); }
@@ -1348,6 +2007,7 @@
     async function getArchive(domain) { return apiJson(`/archive/${encodeURIComponent(domain)}`); }
     async function getRanking(domain) { return apiJson(`/ranking/${encodeURIComponent(domain)}`); }
     async function getWifiSpectrum(variantId) { return apiJson(`/wifispectrum/${encodeURIComponent(variantId)}`); }
+    async function getCctldReport(mode = 'local') { return apiJson(`/cctlds?resolver=${encodeURIComponent(mode)}`); }
 
     function buildRow(title, badgeStatus) {
       const row = make('section', 'result-row pending');
@@ -1367,12 +2027,44 @@
       const head = make('div', 'row-head');
       const left = document.createElement('div');
       left.appendChild(make('div', 'row-title', 'Pendiente'));
+      const actions = document.createElement('div');
+      actions.style.display = 'flex';
+      actions.style.gap = '8px';
+      actions.style.alignItems = 'center';
+      const infoButton = document.createElement('button');
+      infoButton.type = 'button';
+      infoButton.className = 'tech-toggle';
+      infoButton.textContent = 'Info';
+      infoButton.title = 'Ver la solicitud y la respuesta técnica';
+      if (item.comingSoon) infoButton.disabled = true;
       const badge = createStatusBadge('pending');
-      head.append(left, badge);
+      actions.append(infoButton, badge);
+      head.append(left, actions);
       const body = make('div', 'row-body');
       body.appendChild(make('p', 'muted', 'La medición aparecerá aquí al analizar el dominio.'));
-      row.append(head, body);
-      return { row, badge, body, item };
+      const tech = document.createElement('div');
+      tech.className = 'tech-panel';
+      row.append(head, body, tech);
+      const slot = { row, badge, body, item, tech, infoButton, currentDomain: null, currentResult: null };
+      infoButton.addEventListener('click', () => {
+        if (!slot.currentDomain) {
+          setTechPanel(slot, {
+            explanation: checkMap.get(item.id)?.descEs || item.descEs,
+            request: 'Ejecuta una medición primero para ver la respuesta técnica.',
+            response: 'Sin dominio analizado todavía.'
+          });
+          return;
+        }
+        if (tech.classList.contains('open')) {
+          tech.classList.remove('open');
+          infoButton.textContent = 'Info';
+          return;
+        }
+        infoButton.textContent = 'Cerrar';
+        tech.classList.add('open');
+        loadMeasurementInfo(slot, item.id, slot.currentDomain);
+      });
+      return slot;
     }
 
     function renderGraphBox(domain, meta) {
@@ -1439,31 +2131,356 @@
         obs.appendChild(make('div', 'dnsviz-chain-item', meta.observations.join(' · ')));
         box.appendChild(obs);
       }
+      const notices = meta.notices?.notices || meta.notices || null;
+      const warnCount = Array.isArray(notices?.warnings) ? notices.warnings.length : 0;
+      const errorCount = Array.isArray(notices?.errors) ? notices.errors.length : 0;
+      const targetValid = Boolean(Array.isArray(meta.chain) && meta.chain.some(level => level.level === 'target' && level.valid));
+      if (warnCount || errorCount) {
+        const noticeBox = make('div', 'dnsviz-chain');
+        const item = make('div', 'dnsviz-chain-item');
+        const head = make('div', 'dnsviz-chain-top');
+        head.append(
+          make('div', 'dnsviz-chain-name', 'Recomendaciones DNSViz'),
+          createStatusBadge(!targetValid ? 'fail' : (errorCount ? 'fail' : 'warning'))
+        );
+        const details = make('div', 'dnsviz-chain-meta');
+        details.textContent = [
+          errorCount ? `${errorCount} error(es)` : null,
+          warnCount ? `${warnCount} warning(s)` : null
+        ].filter(Boolean).join(' · ');
+        item.append(head, details);
+        if (warnCount) {
+          const list = document.createElement('ul');
+          list.style.margin = '6px 0 0';
+          list.style.paddingLeft = '18px';
+          notices.warnings.forEach(text => {
+            const li = document.createElement('li');
+            li.textContent = text;
+            list.appendChild(li);
+          });
+          item.appendChild(list);
+        }
+        if (errorCount) {
+          const list = document.createElement('ul');
+          list.style.margin = '6px 0 0';
+          list.style.paddingLeft = '18px';
+          notices.errors.forEach(text => {
+            const li = document.createElement('li');
+            li.textContent = text;
+            list.appendChild(li);
+          });
+          item.appendChild(list);
+        }
+        noticeBox.appendChild(item);
+        box.appendChild(noticeBox);
+      }
       return box;
+    }
+
+    function renderNetworkBox(domain, meta) {
+      const box = make('div', 'graph-box');
+      const top = make('div', 'graph-top');
+      const left = document.createElement('div');
+      const title = meta.type === 'pingv6'
+        ? 'Ping IPv6'
+        : meta.type === 'ping'
+          ? 'Ping IPv4'
+          : 'Traceroute';
+      left.appendChild(make('h4', '', `${title} / ${domain}`));
+      const subtitle = make('p');
+      if (meta.type === 'traceroute') {
+        subtitle.textContent = 'Ruta simple en una línea por salto, con respuesta local del sistema.';
+      } else {
+        subtitle.textContent = 'Resumen de pérdida y latencia con comando local.';
+      }
+      left.appendChild(subtitle);
+      const right = document.createElement('div');
+      const link = document.createElement('a');
+      link.href = `#catalog-lab`;
+      link.textContent = 'Ver laboratorio';
+      right.appendChild(link);
+      top.append(left, right);
+
+      if (meta.type === 'traceroute') {
+        const diagram = document.createElement('div');
+        diagram.className = 'dnsviz-chain';
+        const hops = Array.isArray(meta.hops) ? meta.hops : [];
+        if (!hops.length) {
+          diagram.appendChild(make('div', 'dnsviz-chain-item', 'Sin saltos visibles.'));
+        } else {
+          hops.forEach(hop => {
+            const item = make('div', 'dnsviz-chain-item');
+            const head = make('div', 'dnsviz-chain-top');
+            head.append(
+              make('div', 'dnsviz-chain-name', `Salto ${hop.hop}`),
+              createStatusBadge(hop.unresolved ? 'warning' : 'ok')
+            );
+            const details = make('div', 'dnsviz-chain-meta');
+            const bits = [
+              hop.host ? `Nodo: ${hop.host}` : null,
+              Array.isArray(hop.rtts) && hop.rtts.length ? `RTT: ${hop.rtts.join(', ')} ms` : null,
+              hop.line ? hop.line : null
+            ].filter(Boolean);
+            details.textContent = bits.join(' · ');
+            item.append(head, details);
+            diagram.appendChild(item);
+          });
+        }
+        box.append(top, diagram);
+        return box;
+      }
+
+      const summary = meta.summary || {};
+      const strip = make('div', 'dnsviz-chain');
+      const item = make('div', 'dnsviz-chain-item');
+      const head = make('div', 'dnsviz-chain-top');
+      head.append(
+        make('div', 'dnsviz-chain-name', 'Resumen ICMP'),
+        createStatusBadge(typeof summary.loss === 'number' && summary.loss < 100 ? 'ok' : 'warning')
+      );
+      const details = make('div', 'dnsviz-chain-meta');
+      const bits = [
+        summary.transmitted !== null && summary.transmitted !== undefined ? `Enviados: ${summary.transmitted}` : null,
+        summary.received !== null && summary.received !== undefined ? `Recibidos: ${summary.received}` : null,
+        typeof summary.loss === 'number' ? `Pérdida: ${summary.loss}%` : null,
+        summary.avg !== null && summary.avg !== undefined ? `RTT medio: ${summary.avg} ms` : null,
+        Array.isArray(meta.lines) && meta.lines.length ? meta.lines.slice(0, 5).join(' · ') : null
+      ].filter(Boolean);
+      details.textContent = bits.join(' · ');
+      item.append(head, details);
+      strip.appendChild(item);
+      box.append(top, strip);
+      return box;
+    }
+
+    function renderCctldCard(item) {
+      const card = document.createElement('details');
+      const dnsvizWarningCount = Number(item.dnsviz?.warningCount || 0);
+      const dnsvizErrorCount = Number(item.dnsviz?.errorCount || 0);
+      const cardStatus = item.dnssec?.valid
+        ? (dnsvizWarningCount || dnsvizErrorCount ? 'warning' : 'ok')
+        : 'fail';
+      card.className = `cctld-card ${statusClass(cardStatus)}`;
+      const summary = document.createElement('summary');
+      const left = document.createElement('div');
+      left.appendChild(make('h3', '', `.${item.tld}`));
+      left.appendChild(make('p', '', `${item.nsCount} NS, ${item.ipv4NsCount} con IPv4, ${item.ipv6NsCount} con IPv6`));
+      const right = document.createElement('div');
+      right.style.display = 'flex';
+      right.style.alignItems = 'center';
+      right.style.gap = '8px';
+      right.append(createStatusBadge(cardStatus), make('span', 'chevron', '⌄'));
+      summary.append(left, right);
+
+      const details = document.createElement('div');
+      const assessment = item.dnssec?.assessment || {};
+      const dnssecSummary = Array.isArray(assessment.summaryLines) ? assessment.summaryLines : [];
+      const dnssecSections = Array.isArray(assessment.sections) ? assessment.sections : [];
+      const dnsvizNotices = item.dnsviz?.notices?.notices || item.dnsviz?.notices || {};
+      const dnsvizWarnings = Array.isArray(dnsvizNotices.warnings) ? dnsvizNotices.warnings.length : 0;
+      const dnsvizErrors = Array.isArray(dnsvizNotices.errors) ? dnsvizNotices.errors.length : 0;
+      const dnssecLines = [
+        `DNSSEC: ${item.dnssec.valid ? 'válido' : 'parcial o ausente'}`,
+        item.dnssec.parent ? 'DS visible en el padre.' : 'No se detectó DS en el padre.',
+        item.dnssec.child ? 'DNSKEY visible en el hijo.' : 'No se detectó DNSKEY en el hijo.',
+        item.dnssec.nsec3?.present
+          ? `NSEC3: ${item.dnssec.nsec3.configured ? 'configurado' : 'parcial o ausente'}${item.dnssec.nsec3.hashAlgorithmName ? ` · hash ${item.dnssec.nsec3.hashAlgorithmName}` : ''}`
+          : 'NSEC3: no detectado',
+        Number.isFinite(item.dnssec.nsec3?.iterations) ? `Iteraciones NSEC3: ${item.dnssec.nsec3.iterations}` : null,
+        item.dnssec.nsec3?.salt ? `Salt NSEC3: ${item.dnssec.nsec3.salt}` : null,
+        item.dnssec.nsec3?.hasSha1 ? 'NSEC3 usa SHA-1.' : null,
+        Array.isArray(item.dnssec.nsec3?.records) && item.dnssec.nsec3.records.length ? `NSEC3PARAM crudo: ${item.dnssec.nsec3.records.join(' | ')}` : null,
+        item.dnssec.algorithms?.length ? `Algoritmos: ${item.dnssec.algorithms.join(', ')}` : null,
+        item.dnssec.digests?.length ? `Digests: ${item.dnssec.digests.join(', ')}` : null,
+        Array.isArray(item.dnssec.nsec3?.notes) && item.dnssec.nsec3.notes.length ? item.dnssec.nsec3.notes.join(' · ') : null,
+        ...(dnssecSummary.length ? dnssecSummary : []),
+        (dnsvizWarnings || dnsvizErrors) ? `DNSViz: ${dnsvizWarnings} warning(s), ${dnsvizErrors} error(es)` : null
+      ].filter(Boolean);
+      const dnssecBox = make('div', 'cctld-dnssec');
+      appendLines(dnssecBox, dnssecLines, 'Sin DNSSEC');
+      details.appendChild(dnssecBox);
+
+      if (dnssecSections.length) {
+        const sectionWrap = make('div', 'cctld-dnssec');
+        renderSubcheckSections(sectionWrap, dnssecSections);
+        details.appendChild(sectionWrap);
+      }
+
+      const detailsList = document.createElement('ul');
+      item.nsDetails.forEach(ns => {
+        const li = document.createElement('li');
+        li.textContent = `${ns.host}: ${ns.ipv4Count} IPv4, ${ns.ipv6Count} IPv6`;
+        detailsList.appendChild(li);
+      });
+      details.appendChild(detailsList);
+
+      if (item.wifi) {
+        const wifiBox = make('div', 'cctld-dnssec');
+        const wifiLines = [
+          `Wi‑Fi 6 GHz: ${item.wifi.label || 'Próximamente'}`,
+          Array.isArray(item.wifi.territories) && item.wifi.territories.length ? `Territorios: ${item.wifi.territories.join(', ')}` : null,
+          item.wifi.notes?.length ? item.wifi.notes.join(' · ') : null
+        ].filter(Boolean);
+        appendLines(wifiBox, wifiLines, 'Próximamente');
+        details.appendChild(wifiBox);
+      }
+
+      if (item.pulse) {
+        const pulseBox = make('div', 'cctld-dnssec');
+        const roaLines = Array.isArray(item.pulse.roaItems) ? item.pulse.roaItems : [];
+        const pulseLines = [
+          item.pulse.dnssecCoverage?.value ? `Pulse DNSSEC coverage: ${item.pulse.dnssecCoverage.value}${item.pulse.dnssecCoverage.average ? ` · Promedio Américas: ${item.pulse.dnssecCoverage.average}` : ''}` : null,
+          item.pulse.dnssecAdoption?.value ? `Pulse DNSSEC adoption: ${item.pulse.dnssecAdoption.value}${item.pulse.dnssecAdoption.average ? ` · Promedio Américas: ${item.pulse.dnssecAdoption.average}` : ''}` : null,
+          item.pulse.ipv6Adoption?.value ? `IPv6 adoption: ${item.pulse.ipv6Adoption.value}${item.pulse.ipv6Adoption.average ? ` · Promedio Américas: ${item.pulse.ipv6Adoption.average}` : ''}` : null,
+          roaLines.length ? `ROA: ${roaLines.map(row => row.label ? `${row.label} ${row.value}` : row.value).filter(Boolean).join(' | ')}` : null,
+          item.pulse.rov?.value ? `ROV: ${item.pulse.rov.value}${item.pulse.rov.label ? ` · ${item.pulse.rov.label}` : ''}` : null,
+          item.pulse.resilienceScore?.value ? `Internet Resilience Score: ${item.pulse.resilienceScore.value}` : null,
+          item.pulse.domainUse?.value ? `Country-level domain use: ${item.pulse.domainUse.value}` : null,
+          item.pulse.notes?.length ? item.pulse.notes.join(' · ') : null
+        ].filter(Boolean);
+        appendLines(pulseBox, pulseLines, 'Sin datos de Pulse.');
+        details.appendChild(pulseBox);
+      }
+
+      if (item.dnsviz?.svgUrl) {
+        const img = document.createElement('img');
+        img.className = 'dnsviz-graph';
+        img.loading = 'lazy';
+        img.alt = `DNSViz ${item.tld}`;
+        img.src = `${API_BASE}/dnsviz/${encodeURIComponent(item.tld)}?format=svg&resolver=${encodeURIComponent(cctldResolverMode)}`;
+        img.onerror = () => {
+          if (img.dataset.fallbackDone === '1') return;
+          img.dataset.fallbackDone = '1';
+          img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320">
+              <rect width="960" height="320" rx="20" fill="#f7faf8"/>
+              <text x="40" y="120" font-size="28" fill="#17211b" font-family="Arial, sans-serif">DNSViz no disponible</text>
+              <text x="40" y="168" font-size="18" fill="#5d6a64" font-family="Arial, sans-serif">Se muestran los detalles DNSViz y las observaciones debajo.</text>
+            </svg>`
+          )}`;
+        };
+        details.appendChild(img);
+      }
+      if (item.dnsviz?.observations?.length || dnsvizWarnings || dnsvizErrors || !item.dnssec?.valid) {
+        const dnsvizPanel = document.createElement('details');
+        dnsvizPanel.className = 'aux-panel';
+        const dnsvizSummary = document.createElement('summary');
+        const dnsvizLeft = document.createElement('div');
+        dnsvizLeft.appendChild(make('h3', '', `DNSViz ${item.tld}`));
+        dnsvizLeft.appendChild(make('p', '', 'Errores, warnings y observaciones completas extraídas del grafo DNSViz.'));
+        const dnsvizRight = document.createElement('div');
+        dnsvizRight.style.display = 'flex';
+        dnsvizRight.style.alignItems = 'center';
+        dnsvizRight.style.gap = '8px';
+        dnsvizRight.append(
+          createStatusBadge(!item.dnssec?.valid ? 'fail' : (dnsvizErrors ? 'fail' : (dnsvizWarnings ? 'warning' : 'ok'))),
+          make('span', 'chevron', '⌄')
+        );
+        dnsvizSummary.append(dnsvizLeft, dnsvizRight);
+        const dnsvizBody = document.createElement('div');
+        dnsvizBody.className = 'aux-body';
+        if (Array.isArray(item.dnsviz?.observations) && item.dnsviz.observations.length) {
+          const obs = make('div', 'cctld-dnssec');
+          appendLines(obs, item.dnsviz.observations, 'Sin observaciones DNSViz.');
+          dnsvizBody.appendChild(obs);
+        }
+        if (Array.isArray(dnsvizNotices.warnings) && dnsvizNotices.warnings.length) {
+          const warnBox = make('div', 'cctld-dnssec');
+          warnBox.appendChild(make('h3', '', 'Warnings DNSViz'));
+          appendLines(warnBox, dnsvizNotices.warnings, 'Sin warnings.');
+          dnsvizBody.appendChild(warnBox);
+        }
+        if (Array.isArray(dnsvizNotices.errors) && dnsvizNotices.errors.length) {
+          const errBox = make('div', 'cctld-dnssec');
+          errBox.appendChild(make('h3', '', 'Errors DNSViz'));
+          appendLines(errBox, dnsvizNotices.errors, 'Sin errors.');
+          dnsvizBody.appendChild(errBox);
+        }
+        if (dnsvizNotices?.['DNSKEY/DS/NSEC status'] || dnsvizNotices?.['delegation status']) {
+          const rawBox = make('div', 'cctld-dnssec');
+          rawBox.appendChild(make('h3', '', 'Detalles DNSViz'));
+          const rawLines = [];
+          const dnsStatus = dnsvizNotices?.['DNSKEY/DS/NSEC status'] || {};
+          const delegationStatus = dnsvizNotices?.['delegation status'] || {};
+          if (dnsStatus.SECURE?.length) rawLines.push(`Seguros: ${dnsStatus.SECURE.length}`);
+          if (dnsStatus.INSECURE?.length) rawLines.push(`Inseguros: ${dnsStatus.INSECURE.length}`);
+          if (dnsStatus.ERROR?.length) rawLines.push(`Errores DNSViz en cadena: ${dnsStatus.ERROR.length}`);
+          if (dnsStatus.WARNING?.length) rawLines.push(`Warnings DNSViz en cadena: ${dnsStatus.WARNING.length}`);
+          if (delegationStatus.SECURE?.length) rawLines.push(`Delegaciones seguras: ${delegationStatus.SECURE.length}`);
+          if (delegationStatus.INSECURE?.length) rawLines.push(`Delegaciones inseguras: ${delegationStatus.INSECURE.length}`);
+          appendLines(rawBox, rawLines, 'Sin detalles DNSViz adicionales.');
+          dnsvizBody.appendChild(rawBox);
+        }
+        dnsvizPanel.append(dnsvizSummary, dnsvizBody);
+        details.appendChild(dnsvizPanel);
+      }
+      card.append(summary, details);
+      return card;
+    }
+
+    async function loadCctldReport() {
+      if (!cctldGrid) return;
+      if (!cctldGrid.childElementCount) {
+        cctldGrid.innerHTML = '<div class="empty-state">Cargando reporte precalculado de ccTLDs...</div>';
+      }
+      try {
+        const reportUrl = apiPath(`/cctlds?resolver=${encodeURIComponent(cctldResolverMode)}`);
+        apiCache.delete(reportUrl);
+        apiFailureCache.delete(reportUrl);
+        const data = await getCctldReport(cctldResolverMode);
+        const items = Array.isArray(data.items) ? data.items : [];
+        if (items.length) {
+          clearNode(cctldGrid);
+          items.forEach(item => cctldGrid.appendChild(renderCctldCard(item)));
+        }
+        if (cctldRefresh) {
+          cctldRefresh.textContent = data.generatedAt
+            ? `Actualizado ${new Date(data.generatedAt).toLocaleString('es-UY')} · Dig local`
+            : (data.generating ? 'Generando...' : 'Actualizado');
+        }
+        if ((!items.length || data.generating) && !cctldRetryTimer) {
+          cctldRetryTimer = setTimeout(() => {
+            cctldRetryTimer = null;
+            loadCctldReport();
+          }, 5000);
+        }
+        if (items.length) logRun(`Reporte ccTLD cargado con ${items.length} elementos.`, 'ok');
+      } catch (error) {
+        cctldGrid.innerHTML = `<div class="empty-state">No se pudo cargar el reporte ccTLD: ${error.message || 'Servicio no disponible'}.</div>`;
+        if (cctldRefresh) cctldRefresh.textContent = 'Error';
+      }
     }
 
     function paintCatalogResults(domain, results) {
       const byId = new Map(results.map(item => [item.id, item]));
       catalogResultSlots.forEach((slot, id) => {
+        slot.currentDomain = domain || null;
         const result = byId.get(id);
         if (!result) {
           slot.row.className = 'result-inline';
           slot.badge.replaceWith(createStatusBadge('pending'));
           slot.badge = slot.row.querySelector('.status');
           slot.row.querySelector('.row-title').textContent = 'Pendiente';
+          slot.infoButton.textContent = 'Info';
+          slot.tech.classList.remove('open');
           clearNode(slot.body);
           slot.body.appendChild(make('p', 'muted', 'La medición aparecerá aquí al analizar el dominio.'));
+          clearNode(slot.tech);
           return;
         }
         slot.row.className = `result-inline ${statusClass(result.status)}`;
         slot.badge.replaceWith(createStatusBadge(result.status));
         slot.badge = slot.row.querySelector('.status');
         slot.row.querySelector('.row-title').textContent = checkMap.get(id)?.label || id;
-        clearNode(slot.body);
-        appendLines(slot.body, result.lines || [], 'Sin detalles');
+        renderResultBody(slot.body, result);
         if (result.graphMeta) {
-          slot.body.appendChild(renderGraphBox(domain, result.graphMeta));
+          if (result.graphMeta.type === 'traceroute' || result.graphMeta.type === 'ping' || result.graphMeta.type === 'pingv6') {
+            slot.body.appendChild(renderNetworkBox(domain, result.graphMeta));
+          } else {
+            slot.body.appendChild(renderGraphBox(domain, result.graphMeta));
+          }
         }
+        slot.currentResult = result;
       });
     }
 
@@ -1517,32 +2534,103 @@
       return Math.round(((counts.ok || 0) / relevant) * 100);
     }
 
+    function countChecksInGroups(selectedIds, groupIds) {
+      const wanted = new Set(groupIds);
+      return selectedIds.filter(id => wanted.has(checkMap.get(id)?.group)).length;
+    }
+
     function renderResultsHeader(total, counts) {
       clearNode(summaryEl);
       const compliance = calculateComplianceFromCounts(counts);
-      const items = [
-        ['total', total, 'Total'],
-        ['ok', counts.ok, 'Correctas'],
-        ['warning', counts.warning, 'Avisos'],
-        ['info', counts.info, 'Info'],
-        ['fail', counts.fail, 'Fallos'],
-        ['error', counts.error, 'Errores']
-      ];
-      items.forEach(([status, value, label]) => {
-        const chip = make('span', 'summary-chip');
-        const dot = make('span');
-        dot.className = `status ${status}`;
-        dot.style.padding = '0';
-        dot.style.width = '10px';
-        dot.style.height = '10px';
-        dot.style.borderRadius = '999px';
-        dot.style.display = 'inline-block';
-        chip.append(dot, document.createTextNode(` ${label} `), make('strong', '', String(value)));
-        summaryEl.appendChild(chip);
-      });
+      const selectedIds = (lastRun?.selectedIds && lastRun.selectedIds.length) ? lastRun.selectedIds : getSelectedIds();
       const complianceChip = make('span', 'summary-chip');
       complianceChip.append(make('span', 'compliance', `${compliance}%`), document.createTextNode(' Cumplimiento'));
       summaryEl.appendChild(complianceChip);
+
+      const axisDefinitions = [
+        { label: 'Seguridad', groups: ['https', 'appsecpriv', 'tls', 'dnssec', 'mailauth', 'mailtransport', 'route', 'lab', 'future'], hint: 'HTTPS, cabeceras, TLS, DNSSEC, correo, RPKI y laboratorio' },
+        { label: 'Universalidad', groups: ['ip', 'ua'], hint: 'IPv6 y UA/EAI' },
+        { label: 'Accesibilidad', groups: ['accessibility'], hint: 'W3C y calidad web' }
+      ];
+      axisDefinitions.forEach((axis, index) => {
+        const axisChip = make('span', 'summary-chip');
+        const active = countChecksInGroups(selectedIds, axis.groups);
+        const totalAxis = axis.groups.reduce((sum, groupId) => sum + (categoryMap.get(groupId)?.checks.length || 0), 0);
+        axisChip.title = axis.hint;
+        const status = index === 0 ? 'ok' : (index === 1 ? 'info' : 'warning');
+        axisChip.append(make('span', `status ${status}`, axis.label), document.createTextNode(` ${active}/${totalAxis}`));
+        summaryEl.appendChild(axisChip);
+      });
+    }
+
+    function updateExportButtons(enabled) {
+      exportJsonButton.disabled = !enabled;
+      exportCsvButton.disabled = !enabled;
+    }
+
+    function buildRunExport() {
+      const domains = analyzedDomains.map(domain => ({
+        domain,
+        results: domainResultsStore.get(domain) || [],
+        counts: summarizeDomain(domainResultsStore.get(domain) || [])
+      }));
+      return {
+        generatedAt: new Date().toISOString(),
+        domains: (lastRun?.domains || []).slice(),
+        selectedMeasurements: (lastRun?.selectedIds || []).slice(),
+        summary: lastRun?.summary || null,
+        details: domains
+      };
+    }
+
+    function downloadText(filename, text, mimeType) {
+      const blob = new Blob([text], { type: mimeType });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
+    function exportAsJson() {
+      const payload = buildRunExport();
+      downloadText(
+        `medicion-${new Date().toISOString().replace(/[:.]/g, '-')}.json`,
+        JSON.stringify(payload, null, 2),
+        'application/json'
+      );
+      logRun('Se generó la exportación JSON.', 'ok');
+    }
+
+    function exportAsCsv() {
+      const payload = buildRunExport();
+      const rows = [
+        ['dominio', 'medicion', 'estado', 'resumen', 'request']
+      ];
+      payload.details.forEach(domainBlock => {
+        domainBlock.results.forEach(result => {
+          const item = checkMap.get(result.id);
+          const request = requestForMeasurement(result.id, domainBlock.domain) || '';
+          rows.push([
+            domainBlock.domain,
+            item?.label || result.id,
+            result.status || '',
+            (result.lines || []).join(' | '),
+            request
+          ]);
+        });
+      });
+      const csv = rows
+        .map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+      downloadText(
+        `medicion-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`,
+        csv,
+        'text/csv;charset=utf-8'
+      );
+      logRun('Se generó la exportación CSV.', 'ok');
     }
 
     function appendChatMessage(title, es, pt, note = '') {
@@ -1588,6 +2676,19 @@
       chatToggle.textContent = open ? 'Cerrar' : 'Abrir';
     }
 
+    async function loadFragment(targetId, url) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      try {
+        const resolved = API_BASE ? `${API_BASE}/${String(url).replace(/^\/+/, '')}` : url;
+        const response = await fetch(resolved, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        target.innerHTML = await response.text();
+      } catch (e) {
+        target.innerHTML = '<article class="axis-card"><h3>Contenido no disponible</h3><p>No se pudo cargar esta macrosección.</p></article>';
+      }
+    }
+
     async function runCheck(id, domain) {
       try {
         switch (id) {
@@ -1630,29 +2731,29 @@
             const data = await getHeaders(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
             return {
-              status: data.csp ? 'ok' : 'warning',
-              lines: [data.csp ? 'Content-Security-Policy presente.' : 'No se encontró CSP.']
+              status: data.csp ? 'ok' : 'fail',
+              lines: [data.csp ? 'Cabecera Content-Security-Policy presente.' : 'Cabecera Content-Security-Policy ausente.']
             };
           }
           case 'xfo': {
             const data = await getHeaders(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
-            return { status: data.xfo ? 'ok' : 'warning', lines: [data.xfo ? 'X-Frame-Options presente.' : 'No se encontró X-Frame-Options.'] };
+            return { status: data.xfo ? 'ok' : 'fail', lines: [data.xfo ? 'Cabecera X-Frame-Options presente.' : 'Cabecera X-Frame-Options ausente.'] };
           }
           case 'xcto': {
             const data = await getHeaders(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
-            return { status: data.xcto ? 'ok' : 'warning', lines: [data.xcto ? 'X-Content-Type-Options presente.' : 'No se encontró X-Content-Type-Options.'] };
+            return { status: data.xcto ? 'ok' : 'fail', lines: [data.xcto ? 'Cabecera X-Content-Type-Options presente.' : 'Cabecera X-Content-Type-Options ausente.'] };
           }
           case 'referrer': {
             const data = await getHeaders(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
-            return { status: data.referrer ? 'ok' : 'warning', lines: [data.referrer ? 'Referrer-Policy presente.' : 'No se encontró Referrer-Policy.'] };
+            return { status: data.referrer ? 'ok' : 'fail', lines: [data.referrer ? 'Cabecera Referrer-Policy presente.' : 'Cabecera Referrer-Policy ausente.'] };
           }
           case 'permissions': {
             const data = await getHeaders(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
-            return { status: data.permissions ? 'ok' : 'warning', lines: [data.permissions ? 'Permissions-Policy presente.' : 'No se encontró Permissions-Policy.'] };
+            return { status: data.permissions ? 'ok' : 'fail', lines: [data.permissions ? 'Cabecera Permissions-Policy presente.' : 'Cabecera Permissions-Policy ausente.'] };
           }
           case 'serverbanner': {
             const data = await getHeaders(domain);
@@ -1698,15 +2799,35 @@
             if (data.error) return { status: 'error', lines: [data.error] };
             return { status: data.ocsp ? 'ok' : 'info', lines: [data.ocsp ? 'OCSP stapling disponible.' : 'No se detectó OCSP stapling.'] };
           }
+          case 'tlsa': {
+            const data = await getTlsa(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const records = Array.isArray(data.records) ? data.records : [];
+            return {
+              status: records.length ? 'ok' : 'info',
+              lines: records.length ? records.map(String) : ['No se detectaron registros TLSA.']
+            };
+          }
           case 'securitytxt': {
             const data = await apiJson(`/securitytxt/${encodeURIComponent(domain)}`);
             if (data.error) return { status: 'error', lines: [data.error] };
             return { status: data.found ? 'ok' : 'fail', lines: [data.found ? 'Encontrado en /.well-known/security.txt' : 'No se encontró security.txt.'] };
           }
           case 'w3c': {
+            const data = await apiJson(`/w3c/${encodeURIComponent(domain)}`);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            if (data.unavailable) {
+              return {
+                status: 'info',
+                lines: ['El validador W3C no respondió en este entorno.', data.note ? `Detalle: ${data.note}` : null].filter(Boolean)
+              };
+            }
             return {
-              status: 'info',
-              lines: ['Próximamente: validación HTML y accesibilidad.', 'La fuente estable aún está en preparación.']
+              status: typeof data.errors === 'number' && data.errors === 0 ? 'ok' : (typeof data.errors === 'number' ? 'warning' : 'info'),
+              lines: [
+                typeof data.errors === 'number' ? `Errores: ${data.errors}` : null,
+                typeof data.warnings === 'number' ? `Avisos: ${data.warnings}` : null
+              ].filter(Boolean)
             };
           }
           case 'ofds': {
@@ -1738,26 +2859,32 @@
           case 'dnssec': {
             const data = await getDnssec(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
+            const assessment = data.assessment || {};
             return {
-              status: data.valid ? 'ok' : 'fail',
-              lines: [
-                data.valid ? 'DNSSEC válido.' : 'DNSSEC no está validado.',
-                data.methods?.google?.parent ? 'DS presente en el padre.' : 'No se detectó DS en el padre.',
-                data.methods?.google?.child ? 'DNSKEY presente en el hijo.' : 'No se detectó DNSKEY en el hijo.',
-                Array.isArray(data.algorithms) && data.algorithms.length ? `Algoritmos: ${data.algorithms.join(', ')}` : null
-              ].filter(Boolean),
+              status: assessment.status || (data.valid ? 'ok' : 'fail'),
+              lines: assessment.summaryLines || [
+                data.valid ? 'DNSSEC válido.' : 'DNSSEC no está validado.'
+              ],
+              sections: Array.isArray(assessment.sections) ? assessment.sections : []
             };
           }
           case 'dnsviz': {
             const data = await getDnsviz(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
             const chainNames = Array.isArray(data.chain) ? data.chain.map(level => level.name).filter(Boolean) : [];
+            const notices = data.notices?.notices || data.notices || {};
+            const warnings = Array.isArray(notices.warnings) ? notices.warnings : [];
+            const errors = Array.isArray(notices.errors) ? notices.errors : [];
+            const targetValid = Boolean(Array.isArray(data.chain) && data.chain.some(level => level.level === 'target' && level.valid));
             return {
-              status: data.available ? 'ok' : 'warning',
+              status: !targetValid ? 'fail' : (errors.length ? 'fail' : (warnings.length ? 'warning' : (data.available ? 'ok' : 'warning'))),
               lines: [
+                targetValid ? 'DNSSEC del dominio válido.' : 'DNSSEC del dominio no válido.',
                 data.available ? 'DNSViz disponible.' : 'DNSViz no respondió por completo.',
                 data.updated ? `Actualizado: ${data.updated}` : null,
-                chainNames.length ? `Cadena: ${chainNames.join(' → ')}` : null
+                chainNames.length ? `Cadena: ${chainNames.join(' → ')}` : null,
+                warnings.length ? `Avisos DNSViz: ${warnings.length}` : null,
+                errors.length ? `Errores DNSViz: ${errors.length}` : null
               ].filter(Boolean),
               graphMeta: data
             };
@@ -1782,7 +2909,11 @@
             return {
               status: records.length ? 'ok' : 'fail',
               lines: records.length
-                ? records.map(row => `${row.exchange} (p${row.priority})`)
+                ? records.map(row => {
+                    if (typeof row === 'string') return row;
+                    if (row && typeof row === 'object') return `${row.exchange || row.host || row.name || 'MX'}${row.priority !== undefined ? ` (p${row.priority})` : ''}`;
+                    return String(row);
+                  })
                 : ['No hay servidores MX.']
             };
           }
@@ -1796,7 +2927,17 @@
               status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
               lines: results.length
                 ? results.map(item => `${item.exchange}: ${item.present ? `AAAA ${item.ipv6.join(', ')}` : 'sin IPv6'}`)
-                : ['No hay MX para evaluar.']
+                : ['No hay MX para evaluar.'],
+              sections: results.length ? [{
+                label: 'MX y IPv6',
+                status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
+                note: 'Cada MX se comprueba por separado para ver si anuncia AAAA.',
+                items: results.map(item => ({
+                  text: item.exchange,
+                  status: item.present ? 'ok' : 'fail',
+                  note: item.present ? `AAAA: ${item.ipv6.join(', ')}` : 'Sin IPv6 en el MX.'
+                }))
+              }] : []
             };
           }
           case 'maildnssec': {
@@ -1805,12 +2946,38 @@
             const mx = Array.isArray(data.mx) ? data.mx : [];
             const allSecure = mx.length && mx.every(item => item.secure);
             const someSecure = mx.some(item => item.secure);
+            const domainSecure = Boolean(data.domainDnssec?.secure);
             return {
-              status: !mx.length ? 'info' : (allSecure && data.domainDnssec?.secure ? 'ok' : (someSecure || data.domainDnssec?.secure ? 'warning' : 'fail')),
+              status: !mx.length ? 'info' : (allSecure && domainSecure ? 'ok' : ((someSecure || domainSecure) ? 'warning' : 'fail')),
               lines: [
-                data.domainDnssec?.secure ? 'DNSSEC del dominio: válido.' : 'DNSSEC del dominio: no válido.',
+                domainSecure ? 'DNSSEC del dominio: válido.' : 'DNSSEC del dominio: no válido.',
                 ...mx.map(item => `${item.exchange}: ${item.secure ? 'seguro' : 'no seguro'}`)
               ].filter(Boolean)
+              ,
+              sections: [
+                {
+                  label: 'Dominio',
+                  status: domainSecure ? 'ok' : 'fail',
+                  note: 'Se valida DNSSEC en el dominio base.',
+                  items: [
+                    {
+                      text: domain,
+                      status: domainSecure ? 'ok' : 'fail',
+                      note: domainSecure ? 'DNSSEC visible en el dominio.' : 'DNSSEC no visible en el dominio.'
+                    }
+                  ]
+                },
+                {
+                  label: 'MX',
+                  status: !mx.length ? 'info' : (allSecure ? 'ok' : (someSecure ? 'warning' : 'fail')),
+                  note: 'Se comprueba DNSSEC en cada servidor MX.',
+                  items: mx.map(item => ({
+                    text: item.exchange,
+                    status: item.secure ? 'ok' : 'fail',
+                    note: item.secure ? 'DNSSEC visible en el MX.' : 'No se pudo validar el MX.'
+                  }))
+                }
+              ]
             };
           }
           case 'spf': {
@@ -1840,9 +3007,15 @@
           case 'dkim': {
             const data = await getDkim(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
+            const matches = Array.isArray(data.matches) ? data.matches : [];
+            const selectors = matches.map(item => item.selector || '_domainkey').filter(Boolean);
             return {
               status: data.supported ? 'ok' : 'fail',
-              lines: [data.supported ? 'El dominio soporta DKIM.' : 'No se detectó soporte DKIM.']
+              lines: [
+                data.supported ? 'El dominio soporta DKIM.' : 'No se detectó soporte DKIM.',
+                selectors.length ? `Selectores: ${selectors.join(', ')}` : null,
+                matches.length ? matches.map(item => item.records).flat().join(' | ') : null
+              ].filter(Boolean)
             };
           }
           case 'starttls': {
@@ -1855,7 +3028,17 @@
               status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
               lines: results.length
                 ? results.map(item => `${item.server}: ${item.status === 'supports' ? 'STARTTLS sí' : 'STARTTLS no'}`)
-                : ['No hay MX para evaluar STARTTLS.']
+                : ['No hay MX para evaluar STARTTLS.'],
+              sections: results.length ? [{
+                label: 'MX y STARTTLS',
+                status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
+                note: 'Se hace EHLO y se revisa si el servidor anuncia STARTTLS.',
+                items: results.map(item => ({
+                  text: `${item.server}${item.port ? `:${item.port}` : ''}`,
+                  status: item.status === 'supports' ? 'ok' : 'fail',
+                  note: Array.isArray(item.capabilities) && item.capabilities.length ? item.capabilities.join(' | ') : 'Sin capacidades EHLO visibles.'
+                }))
+              }] : []
             };
           }
           case 'smtputf8': {
@@ -1867,8 +3050,37 @@
             return {
               status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
               lines: results.length
-                ? results.map(item => `${item.server}: ${item.status === 'supports' ? 'SMTPUTF8 sí' : 'SMTPUTF8 no'}`)
-                : ['No hay MX para evaluar SMTPUTF8.']
+                ? results.flatMap(item => {
+                    const statusText = item.status === 'supports'
+                      ? 'SMTPUTF8 sí'
+                      : item.status === 'no'
+                        ? 'SMTPUTF8 no'
+                        : item.status === 'timeout'
+                          ? 'Timeout'
+                          : 'Error de conexión';
+                    const parts = [
+                      `${item.server}${item.port ? `:${item.port}` : ''}: ${statusText}`,
+                      item.banner ? `Banner: ${item.banner}` : null,
+                      Array.isArray(item.capabilities) && item.capabilities.length ? `EHLO: ${item.capabilities.join(' | ')}` : null,
+                      Array.isArray(item.transcript) && item.transcript.length ? `SMTP: ${item.transcript.slice(0, 4).join(' | ')}` : null
+                    ].filter(Boolean);
+                    return parts;
+                  })
+                : ['No hay MX para evaluar SMTPUTF8.'],
+              sections: results.length ? [{
+                label: 'MX y SMTPUTF8',
+                status: !results.length ? 'info' : (all ? 'ok' : (some ? 'warning' : 'fail')),
+                note: 'Se conecta al MX, envía EHLO y se revisa si el servidor anuncia SMTPUTF8.',
+                items: results.map(item => ({
+                  text: `${item.server}${item.port ? `:${item.port}` : ''}`,
+                  status: item.status === 'supports' ? 'ok' : (item.status === 'no' ? 'fail' : 'warning'),
+                  note: [
+                    item.banner ? `Banner: ${item.banner}` : null,
+                    Array.isArray(item.capabilities) && item.capabilities.length ? `EHLO: ${item.capabilities.join(' | ')}` : null,
+                    Array.isArray(item.transcript) && item.transcript.length ? `SMTP: ${item.transcript.slice(0, 4).join(' | ')}` : null
+                  ].filter(Boolean).join(' · ')
+                }))
+              }] : []
             };
           }
           case 'rpki': {
@@ -1882,7 +3094,17 @@
               status: anyInvalid ? 'fail' : (anyValid && !anyUnknown ? 'ok' : 'info'),
               lines: results.length
                 ? results.map(item => `${item.ip}: ${item.state}${item.asn ? ` (AS${item.asn})` : ''}${item.prefix ? ` ${item.prefix}` : ''}`)
-                : ['Sin direcciones para validar.']
+                : ['Sin direcciones para validar.'],
+              sections: results.length ? [{
+                label: 'RPKI',
+                status: anyInvalid ? 'fail' : (anyValid && !anyUnknown ? 'ok' : 'info'),
+                note: 'Valida que las rutas observadas tengan cobertura RPKI.',
+                items: results.map(item => ({
+                  text: item.ip,
+                  status: String(item.state || '').startsWith('invalid') ? 'fail' : (item.state === 'valid' ? 'ok' : 'info'),
+                  note: `${item.state}${item.asn ? ` · AS${item.asn}` : ''}${item.prefix ? ` · ${item.prefix}` : ''}`
+                }))
+              }] : []
             };
           }
           case 'routing': {
@@ -1898,7 +3120,22 @@
                       ? `Rutas: ${item.routes.map(route => `AS${route.asn} ${route.prefix}`).join(' | ')}`
                       : null
                   ].filter(Boolean))
-                : ['Sin rutas visibles.']
+                : ['Sin rutas visibles.'],
+              sections: rows.length ? [{
+                label: 'Routing',
+                status: rows.length ? 'info' : 'warning',
+                note: 'Se muestran las rutas observadas y su estado de validación.',
+                items: rows.map(item => ({
+                  text: item.ip,
+                  status: String(item.state || '').startsWith('invalid') ? 'fail' : (item.state === 'valid' ? 'ok' : 'info'),
+                  note: [
+                    item.state ? `Estado: ${item.state}` : null,
+                    item.asn ? `AS${item.asn}` : null,
+                    item.prefix || null,
+                    Array.isArray(item.routes) && item.routes.length ? `Rutas: ${item.routes.map(route => `AS${route.asn} ${route.prefix}`).join(' | ')}` : null
+                  ].filter(Boolean).join(' · ')
+                }))
+              }] : []
             };
           }
           case 'serverinfo': {
@@ -1978,11 +3215,55 @@
                 : ['No se detectaron puertos comunes abiertos.']
             };
           }
+          case 'ping': {
+            const data = await getPing(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const summary = data.summary || {};
+            return {
+              status: typeof summary.loss === 'number' && summary.loss < 100 ? 'ok' : 'fail',
+              lines: [
+                `Paquetes: ${summary.received || 0}/${summary.transmitted || 0}`,
+                typeof summary.loss === 'number' ? `Pérdida: ${summary.loss}%` : null,
+                summary.avg !== null && summary.avg !== undefined ? `RTT medio: ${summary.avg} ms` : null
+              ].filter(Boolean),
+              graphMeta: {
+                type: 'ping',
+                summary,
+                lines: Array.isArray(data.lines) ? data.lines : []
+              }
+            };
+          }
+          case 'pingv6': {
+            const data = await getPingV6(domain);
+            if (data.error) return { status: 'error', lines: [data.error] };
+            const summary = data.summary || {};
+            return {
+              status: typeof summary.loss === 'number' && summary.loss < 100 ? 'ok' : 'fail',
+              lines: [
+                `Paquetes: ${summary.received || 0}/${summary.transmitted || 0}`,
+                typeof summary.loss === 'number' ? `Pérdida: ${summary.loss}%` : null,
+                summary.avg !== null && summary.avg !== undefined ? `RTT medio: ${summary.avg} ms` : null
+              ].filter(Boolean),
+              graphMeta: {
+                type: 'pingv6',
+                summary,
+                lines: Array.isArray(data.lines) ? data.lines : []
+              }
+            };
+          }
           case 'traceroute': {
             const data = await getTraceroute(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
             const hops = Array.isArray(data.hops) ? data.hops : [];
-            return { status: hops.length ? 'info' : 'warning', lines: hops.length ? hops : ['Sin saltos visibles.'] };
+            return {
+              status: hops.length ? 'info' : 'warning',
+              lines: hops.length ? hops.map(hop => `${hop.hop}. ${hop.line}`) : ['Sin saltos visibles.'],
+              graphMeta: {
+                type: 'traceroute',
+                hops,
+                lines: Array.isArray(data.lines) ? data.lines : []
+              }
+            };
           }
           case 'sitefeatures': {
             const data = await getSiteFeatures(domain);
@@ -2056,14 +3337,17 @@
 
     async function analyzeDomain(domain, selectedIds, counts) {
       const results = [];
+      logRun(`Iniciando dominio ${domain} con ${selectedIds.length} mediciones.`, 'info');
 
       for (const id of selectedIds) {
+        logRun(`Consultando ${domain} · ${checkMap.get(id)?.label || id}`, 'info');
         const result = await runCheck(id, domain);
         results.push({ id, ...result });
         countStatus(counts, result.status);
         domainResultsStore.set(domain, results.slice());
         paintCatalogResults(domain, results);
         renderResultsHeader(counts.totalChecks, counts);
+        logRun(`Resultado ${domain} · ${checkMap.get(id)?.label || id}: ${result.status}`, result.status);
       }
 
       domainResultsStore.set(domain, results.slice());
@@ -2071,6 +3355,7 @@
       if (!analyzedDomains.includes(domain)) analyzedDomains.push(domain);
       currentResultIndex = analyzedDomains.indexOf(domain);
       renderResultPager();
+      logRun(`Dominio ${domain} finalizado.`, 'ok');
       return { domain, results };
     }
 
@@ -2078,10 +3363,13 @@
       analyzedDomains.length = 0;
       domainResultsStore.clear();
       currentResultIndex = 0;
+      lastRun = null;
       setSummary({ ok: 0, warning: 0, info: 0, fail: 0, error: 0 }, 0);
       paintCatalogResults('', []);
       resultCounter.textContent = '0 / 0';
       clearNode(resultTabs);
+      updateExportButtons(false);
+      clearNode(runLog);
     }
 
     function renderWifiSpectrumResult(data) {
@@ -2145,8 +3433,16 @@
       domainResultsStore.clear();
       analyzedDomains.length = 0;
       currentResultIndex = 0;
+      lastRun = {
+        startedAt: new Date().toISOString(),
+        domains: domains.slice(),
+        selectedIds: selectedIds.slice(),
+        summary: null
+      };
       loading.style.display = 'flex';
       runButton.disabled = true;
+      updateExportButtons(false);
+      logRun(`Se inició la medición de ${domains.length} dominio(s) con ${selectedIds.length} mediciones seleccionadas.`, 'info');
 
       const totals = { ok: 0, warning: 0, info: 0, fail: 0, error: 0, totalChecks: domains.length * selectedIds.length };
       renderResultsHeader(totals.totalChecks, totals);
@@ -2158,8 +3454,11 @@
       } finally {
         loading.style.display = 'none';
         runButton.disabled = false;
+        lastRun.summary = { ...totals };
         renderResultsHeader(totals.totalChecks, totals);
         renderResultPager();
+        updateExportButtons(analyzedDomains.length > 0);
+        logRun(`Medición finalizada. Cumplimiento general: ${calculateComplianceFromCounts(totals)}%.`, 'ok');
       }
     }
 
@@ -2171,6 +3470,8 @@
     }
 
     runButton.addEventListener('click', handleRun);
+    exportJsonButton.addEventListener('click', exportAsJson);
+    exportCsvButton.addEventListener('click', exportAsCsv);
     wifiProbe.addEventListener('click', handleWifiProbe);
     prevResult.addEventListener('click', () => {
       currentResultIndex = Math.max(0, currentResultIndex - 1);
@@ -2184,10 +3485,6 @@
       domainsInput.value = '';
       resetSelection();
       resetState();
-    });
-
-    document.querySelectorAll('[data-preset]').forEach(button => {
-      button.addEventListener('click', () => setPreset(button.dataset.preset));
     });
 
     document.addEventListener('change', event => {
@@ -2216,6 +3513,11 @@
     resetState();
     setSummary({ ok: 0, warning: 0, info: 0, fail: 0, error: 0 }, 0);
     renderResultPager();
+    loadFragment('axis-security', 'partials/seguridad.html');
+    loadFragment('axis-universalidad', 'partials/universalidad.html');
+    loadFragment('axis-accesibilidad', 'partials/accesibilidad.html');
+    loadCctldReport();
+    setInterval(() => loadCctldReport(), 15 * 60 * 1000);
     wifiVariant.value = 'WFA115006';
     renderWifiSpectrumResult({ bands: [], sourceUrl: 'Pega un variantId y pulsa Probar.' });
     appendChatMessage(
@@ -2224,6 +3526,7 @@
       'Escreva uma medição para ver o que o sistema valida.'
     );
     setChatOpen(false);
+    logRun('Sistema listo. Ingresa dominios y pulsa Analizar.', 'info');
   </script>
 </body>
 </html>
