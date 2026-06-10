@@ -262,6 +262,33 @@ function sendText(res, status, text, contentType = 'text/plain; charset=utf-8') 
   res.end(text);
 }
 
+function sendAsset(res, filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  const contentTypes = {
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.svg': 'image/svg+xml; charset=utf-8',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
+    '.ttf': 'font/ttf',
+    '.eot': 'application/vnd.ms-fontobject'
+  };
+  return fs.readFile(filePath).then(buffer => {
+    res.writeHead(200, {
+      'Content-Type': contentTypes[ext] || 'application/octet-stream',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'public, max-age=86400'
+    });
+    res.end(buffer);
+  });
+}
+
 function sendSVG(res, status, svg) {
   res.writeHead(status, {
     'Content-Type': 'image/svg+xml; charset=utf-8',
@@ -4307,6 +4334,17 @@ const server = http.createServer(async (req, res) => {
       return sendText(res, 200, text);
     } catch (e) {
       return sendJSON(res, 404, { error: 'Archivo de idioma no encontrado' });
+    }
+  }
+  if (segments[0] === 'assets' && segments[1]) {
+    try {
+      const filePath = path.resolve(__dirname, 'assets', ...segments.slice(1));
+      if (!filePath.startsWith(path.join(__dirname, 'assets') + path.sep)) {
+        return sendJSON(res, 400, { error: 'Ruta inválida' });
+      }
+      return await sendAsset(res, filePath);
+    } catch (e) {
+      return sendJSON(res, 404, { error: 'Asset no encontrado' });
     }
   }
   if (segments.length === 0 || (segments.length === 1 && segments[0] === 'index.html')) {
