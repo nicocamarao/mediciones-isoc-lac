@@ -32,8 +32,21 @@ const dnsvizMetaCache = new Map();
 const dnsvizSvgCache = new Map();
 const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 10000);
 const SELFTEST_TIMEOUT_MS = Number(process.env.SELFTEST_TIMEOUT_MS || 12000);
+const INTERNETNL_BATCH_BASE_URL = String(process.env.INTERNETNL_BATCH_BASE_URL || 'http://localhost:8080/api/batch/v2').replace(/\/+$/, '');
+const INTERNETNL_BATCH_AUTH = String(process.env.INTERNETNL_BATCH_AUTH || '').trim();
+const INTERNETNL_BATCH_USER = String(process.env.INTERNETNL_BATCH_USER || '').trim();
+const INTERNETNL_BATCH_PASSWORD = String(process.env.INTERNETNL_BATCH_PASSWORD || '').trim();
+const INTERNETNL_BATCH_MAX_WAIT_MS = Number(process.env.INTERNETNL_BATCH_MAX_WAIT_MS || 120000);
+const INTERNETNL_BATCH_POLL_MS = Number(process.env.INTERNETNL_BATCH_POLL_MS || 2000);
+const INTERNETNL_BATCH_TLS_SERVERNAME = String(process.env.INTERNETNL_BATCH_TLS_SERVERNAME || '').trim();
+const INTERNETNL_BATCH_INSECURE_TLS = ['1', 'true', 'yes'].includes(String(process.env.INTERNETNL_BATCH_INSECURE_TLS || '').trim().toLowerCase());
+const LOCAL_APP_BASE_URL = String(
+  process.env.LOCAL_APP_BASE_URL ||
+    `http://${process.env.HOST || '127.0.0.1'}:${process.env.PORT || 4000}`
+).replace(/\/+$/, '');
 const INDEX_PATH = path.join(__dirname, 'index.html');
 const PARTIALS_DIR = path.join(__dirname, 'partials');
+const LOCALES_DIR = path.join(__dirname, 'locales');
 const LACNIC_CCTLDS = [
   'ar','bo','br','cl','co','ec','fk','gf','gy','pe','py','sr','uy','ve',
   'bz','cr','gt','hn','ni','pa','sv',
@@ -223,12 +236,30 @@ function normalizeDomain(domain) {
   }
 }
 
+function detectCcTld(domain) {
+  const labels = String(normalizeDomain(domain) || '')
+    .toLowerCase()
+    .split('.')
+    .filter(Boolean);
+  const tld = labels[labels.length - 1] || '';
+  return /^[a-z]{2}$/.test(tld) ? tld : null;
+}
+
 function sendHTML(res, status, html) {
   res.writeHead(status, {
     'Content-Type': 'text/html; charset=utf-8',
     'Access-Control-Allow-Origin': '*'
   });
   res.end(html);
+}
+
+function sendText(res, status, text, contentType = 'text/plain; charset=utf-8') {
+  res.writeHead(status, {
+    'Content-Type': contentType,
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'no-store'
+  });
+  res.end(text);
 }
 
 function sendSVG(res, status, svg) {
@@ -286,6 +317,669 @@ function sendJSON(res, status, data) {
     'Cache-Control': 'no-store'
   });
   res.end(JSON.stringify(data));
+}
+
+function internetNlBatchConfigError() {
+  return 'Configura INTERNETNL_BATCH_BASE_URL y las credenciales de Basic Auth en INTERNETNL_BATCH_AUTH o INTERNETNL_BATCH_USER/INTERNETNL_BATCH_PASSWORD.';
+}
+
+function getInternetNlBatchAuthHeader() {
+  if (INTERNETNL_BATCH_AUTH) {
+    return `Basic ${Buffer.from(INTERNETNL_BATCH_AUTH, 'utf8').toString('base64')}`;
+  }
+  if (INTERNETNL_BATCH_USER || INTERNETNL_BATCH_PASSWORD) {
+    return `Basic ${Buffer.from(`${INTERNETNL_BATCH_USER}:${INTERNETNL_BATCH_PASSWORD}`, 'utf8').toString('base64')}`;
+  }
+  return '';
+}
+
+function getInternetNlBatchHeaders() {
+  const authorization = getInternetNlBatchAuthHeader();
+  if (!authorization) return null;
+  return {
+    Authorization: authorization,
+    Accept: 'application/json',
+    'Content-Type': 'application/json'
+  };
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function fetchJsonResponse(target, options = {}) {
+  return new Promise((resolve, reject) => {
+    const url = typeof target === 'string' ? new URL(target) : target;
+    const lib = pickLib(url);
+    const requestOptions = {
+      method: options.method || 'GET',
+      headers: options.headers || {}
+    };
+    if (url.protocol === 'https:') {
+      if (INTERNETNL_BATCH_TLS_SERVERNAME) {
+        requestOptions.servername = INTERNETNL_BATCH_TLS_SERVERNAME;
+        if (!requestOptions.headers.Host && !requestOptions.headers.host) {
+          requestOptions.headers.Host = INTERNETNL_BATCH_TLS_SERVERNAME;
+        }
+      }
+      if (INTERNETNL_BATCH_INSECURE_TLS) requestOptions.rejectUnauthorized = false;
+    }
+    const req = lib.request(
+      url,
+      requestOptions,
+      r => {
+        let data = '';
+        r.on('data', chunk => (data += chunk));
+        r.on('end', () => {
+          let json = null;
+          if (data) {
+            try {
+              json = JSON.parse(data);
+            } catch (error) {
+              return resolve({
+                statusCode: r.statusCode,
+                headers: r.headers,
+                body: data,
+                json: null
+              });
+            }
+          }
+          resolve({
+            statusCode: r.statusCode,
+            headers: r.headers,
+            body: data,
+            json
+          });
+        });
+      }
+    );
+    req.on('error', reject);
+    req.setTimeout(options.timeout || REQUEST_TIMEOUT_MS, () => {
+      req.destroy(new Error('Timeout'));
+    });
+    if (options.body) req.write(options.body);
+    req.end();
+  });
+}
+
+function normalizeBatchStatus(status) {
+  const value = String(status || '').toLowerCase();
+  if (value === 'passed' || value === 'ok') return 'ok';
+  if (value === 'warning' || value === 'info') return value;
+  if (value === 'failed') return 'fail';
+  if (value === 'error') return 'error';
+  return 'info';
+}
+
+function prettifyBatchKey(value) {
+  return String(value || '')
+    .replace(/_/g, ' ')
+    .replace(/\b([a-z])/g, letter => letter.toUpperCase())
+    .trim();
+}
+
+function buildInternetNlDomains(domain, type = 'web') {
+  const normalized = normalizeDomain(domain);
+  const domains = new Set();
+  if (normalized) domains.add(normalized);
+  if (type === 'web' && normalized) {
+    if (normalized.startsWith('www.')) {
+      domains.add(normalized.replace(/^www\./, ''));
+    } else {
+      domains.add(`www.${normalized}`);
+    }
+  }
+  return [...domains];
+}
+
+function summarizeInternetNlDomain(domainName, domainData) {
+  const score = Number.isFinite(domainData?.scoring?.percentage)
+    ? domainData.scoring.percentage
+    : null;
+  const reportUrl = domainData?.report?.url || null;
+  const categories = Object.entries(domainData?.results?.categories || {}).map(([name, category]) => ({
+    text: prettifyBatchKey(name),
+    status: normalizeBatchStatus(category?.status),
+    note: category?.verdict || ''
+  }));
+  const tests = Object.entries(domainData?.results?.tests || {}).map(([name, test]) => ({
+    text: prettifyBatchKey(name),
+    status: normalizeBatchStatus(test?.status),
+    note: test?.verdict || ''
+  }));
+  const lines = [
+    score !== null ? `Puntaje: ${score}/100` : null,
+    reportUrl ? `Informe: ${reportUrl}` : null,
+    domainData?.status ? `Estado: ${domainData.status}` : null
+  ].filter(Boolean);
+  const sectionItems = categories.length ? categories : tests;
+  const status = (() => {
+    if (domainData?.status === 'error') return 'error';
+    if (domainData?.status === 'cancelled') return 'fail';
+    const categoryStatuses = Object.values(domainData?.results?.categories || {}).map(cat => normalizeBatchStatus(cat?.status));
+    if (categoryStatuses.includes('fail')) return 'fail';
+    if (categoryStatuses.includes('warning')) return 'warning';
+    if (categoryStatuses.includes('error')) return 'error';
+    if (typeof score === 'number') {
+      if (score >= 90) return 'ok';
+      if (score >= 70) return 'warning';
+      return 'fail';
+    }
+    if (domainData?.status === 'done') return 'ok';
+    return 'info';
+  })();
+  return {
+    domain: domainName,
+    status,
+    score,
+    reportUrl,
+    lines,
+    sections: [
+      {
+        label: `Resultados · ${domainName}`,
+        status,
+        note: reportUrl ? 'El informe web de Internet.nl abre sin autenticación.' : 'Batch completó la evaluación del dominio.',
+        items: sectionItems
+      }
+    ]
+  };
+}
+
+async function registerInternetNlBatch(type, domains, name) {
+  const headers = getInternetNlBatchHeaders();
+  if (!headers) throw new Error(internetNlBatchConfigError());
+  const url = new URL('requests', `${INTERNETNL_BATCH_BASE_URL}/`);
+  const response = await fetchJsonResponse(url, {
+    method: 'POST',
+    headers,
+    timeout: REQUEST_TIMEOUT_MS * 2,
+    body: JSON.stringify({ type, domains, name })
+  });
+  if (response.statusCode && response.statusCode >= 400) {
+    const message = response.json?.error?.msg || response.body || 'Internet.nl Batch rechazó la solicitud.';
+    throw new Error(message);
+  }
+  const request = response.json?.request || response.json;
+  if (!request?.request_id) {
+    throw new Error('Internet.nl no devolvió request_id.');
+  }
+  return request;
+}
+
+async function fetchInternetNlRequest(requestId) {
+  const headers = getInternetNlBatchHeaders();
+  if (!headers) throw new Error(internetNlBatchConfigError());
+  const url = new URL(`requests/${requestId}`, `${INTERNETNL_BATCH_BASE_URL}/`);
+  const response = await fetchJsonResponse(url, { headers, timeout: REQUEST_TIMEOUT_MS * 2 });
+  if (response.statusCode === 404) return { pending: true };
+  if (response.statusCode && response.statusCode >= 400) {
+    const message = response.json?.error?.msg || response.body || 'No se pudo consultar el estado del lote.';
+    throw new Error(message);
+  }
+  return response.json?.request || response.json;
+}
+
+async function fetchInternetNlResults(requestId, technical = false) {
+  const headers = getInternetNlBatchHeaders();
+  if (!headers) throw new Error(internetNlBatchConfigError());
+  const suffix = technical ? 'results_technical' : 'results';
+  const url = new URL(`requests/${requestId}/${suffix}`, `${INTERNETNL_BATCH_BASE_URL}/`);
+  const response = await fetchJsonResponse(url, { headers, timeout: REQUEST_TIMEOUT_MS * 2 });
+  if (response.statusCode === 200) return response.json;
+  if (
+    response.statusCode === 400 &&
+    /(being generated|not yet `done`)/i.test(response.json?.error?.msg || response.body || '')
+  ) {
+    return { pending: true };
+  }
+  if (response.statusCode === 404) {
+    return { pending: true };
+  }
+  const message = response.json?.error?.msg || response.body || 'No se pudo obtener el resultado de Internet.nl.';
+  throw new Error(message);
+}
+
+async function waitForInternetNlResults(requestId) {
+  const deadline = Date.now() + INTERNETNL_BATCH_MAX_WAIT_MS;
+  let request = null;
+  while (Date.now() <= deadline) {
+    request = await fetchInternetNlRequest(requestId);
+    if (request?.pending) {
+      await sleep(INTERNETNL_BATCH_POLL_MS);
+      continue;
+    }
+    const status = String(request?.status || '').toLowerCase();
+    if (['done', 'cancelled', 'error'].includes(status)) {
+      if (status === 'done') {
+        const results = await fetchInternetNlResults(requestId);
+        if (results?.pending) {
+          await sleep(INTERNETNL_BATCH_POLL_MS);
+          continue;
+        }
+        return { request, results };
+      }
+      return { request, results: null };
+    }
+    await sleep(INTERNETNL_BATCH_POLL_MS);
+  }
+  return { request, results: null, timedOut: true };
+}
+
+async function handleInternetNl(domain, res, type = 'web') {
+  const normalizedType = type === 'mail' ? 'mail' : 'web';
+  const domains = buildInternetNlDomains(domain, normalizedType);
+  const requestName = `mediciones-isoc-lac: ${normalizedType} ${domains[0] || domain}`;
+  try {
+    const request = await registerInternetNlBatch(normalizedType, domains, requestName);
+    const { request: currentRequest, results, timedOut } = await waitForInternetNlResults(request.request_id);
+    const requestState = currentRequest || request;
+    if (!results) {
+      return sendJSON(res, 200, {
+        domain: normalizeDomain(domain),
+        type: normalizedType,
+        status: timedOut ? 'pending' : normalizeBatchStatus(requestState.status),
+        lines: [
+          `Solicitud registrada: ${request.request_id}`,
+          `Estado actual: ${requestState.status}`,
+          timedOut ? 'El resultado todavía no está listo. Puedes volver a intentar más tarde.' : null
+        ].filter(Boolean),
+        request: requestState,
+        domains,
+        pending: true
+      });
+    }
+
+    const perDomain = Object.entries(results.domains || {}).map(([domainName, domainData]) =>
+      summarizeInternetNlDomain(domainName, domainData)
+    );
+    const overallStatus = perDomain.some(item => item.status === 'fail')
+      ? 'fail'
+      : perDomain.some(item => item.status === 'warning')
+        ? 'warning'
+        : perDomain.some(item => item.status === 'error')
+          ? 'error'
+          : perDomain.some(item => item.status === 'ok')
+            ? 'ok'
+            : 'info';
+    const scores = perDomain.map(item => item.score).filter(value => Number.isFinite(value));
+    const score = scores.length ? Math.round(scores.reduce((acc, value) => acc + value, 0) / scores.length) : null;
+
+    sendJSON(res, 200, {
+      domain: normalizeDomain(domain),
+      type: normalizedType,
+      status: overallStatus,
+      lines: [
+        `Solicitud ${request.request_id}`,
+        `Estado: ${requestState.status}`,
+        score !== null ? `Puntaje medio: ${score}/100` : null,
+        perDomain.length ? `Dominios: ${perDomain.map(item => `${item.domain} (${item.status})`).join(' · ')}` : null
+      ].filter(Boolean),
+      sections: perDomain.map(item => ({
+        label: item.domain,
+        status: item.status,
+        note: item.reportUrl ? `Informe: ${item.reportUrl}` : `Puntaje: ${item.score ?? 'n/a'}/100`,
+        items: item.sections[0]?.items || []
+      })),
+      request: requestState,
+      domains,
+      results,
+      technical: await fetchInternetNlResults(request.request_id, true).catch(() => null)
+    });
+  } catch (e) {
+    sendJSON(res, 200, {
+      domain: normalizeDomain(domain),
+      type: normalizedType,
+      status: 'error',
+      error: e.message || errorMessage(e),
+      message: e.message || 'No se pudo consultar Internet.nl Batch.'
+    });
+  }
+}
+
+async function fetchLocalJson(pathname, options = {}) {
+  const url = new URL(pathname, `${LOCAL_APP_BASE_URL}/`);
+  const response = await fetchJsonResponse(url, {
+    ...options,
+    headers: {
+      Accept: 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  if (response.statusCode && response.statusCode >= 400) {
+    const message = response.json?.error || response.body || `HTTP ${response.statusCode}`;
+    throw new Error(message);
+  }
+  return response.json || {};
+}
+
+function normalizeCompatStatus(status) {
+  const value = String(status || '').toLowerCase();
+  if (['ok', 'passed', 'secure', 'valid', 'supports', 'enabled'].includes(value)) return 'ok';
+  if (['warning', 'info', 'partial', 'partial_ok'].includes(value)) return 'warning';
+  if (['fail', 'failed', 'invalid', 'insecure', 'bogus', 'error', 'no'].includes(value)) return 'fail';
+  return 'info';
+}
+
+function statusScore(status) {
+  const value = normalizeCompatStatus(status);
+  if (value === 'ok') return 2;
+  if (value === 'warning' || value === 'info') return 1;
+  return 0;
+}
+
+function verdictFromStatus(status) {
+  const value = normalizeCompatStatus(status);
+  if (value === 'ok') return 'passed';
+  if (value === 'warning') return 'warning';
+  if (value === 'info') return 'info';
+  return 'failed';
+}
+
+async function buildLocalCompatBundle(domain, type = 'web') {
+  const normalizedType = type === 'mail' ? 'mail' : 'web';
+  const cleanDomain = normalizeDomain(domain);
+  const isWeb = normalizedType === 'web';
+  const source = {};
+
+  if (isWeb) {
+    const [headers, ipv6, dnssec, dnsviz, tls, sslchain, tlsa, caa, rpki, routing, securitytxt] = await Promise.all([
+      fetchLocalJson(`/headers/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/ipv6/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/dnssec/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/dnsviz/${encodeURIComponent(cleanDomain)}?resolver=local`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/tlsinfo/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/sslchain/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/tlsa/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/caa/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/rpki/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/routing/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+      fetchLocalJson(`/securitytxt/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message }))
+    ]);
+
+    source.headers = headers;
+    source.ipv6 = ipv6;
+    source.dnssec = dnssec;
+    source.dnsviz = dnsviz;
+    source.tls = tls;
+    source.sslchain = sslchain;
+    source.tlsa = tlsa;
+    source.caa = caa;
+    source.rpki = rpki;
+    source.routing = routing;
+    source.securitytxt = securitytxt;
+
+    const webIpv6Ok = Boolean(ipv6?.present);
+    const dnssecOk = Boolean(dnssec?.valid || dnssec?.assessment?.valid);
+    const httpsOk = Boolean(headers?.https);
+    const hstsOk = Boolean(headers?.hstsStrict);
+    const tlsOk = Boolean(tls?.protocol && ['TLSv1.2', 'TLSv1.3'].includes(tls.protocol));
+    const appsecprivOk = Boolean(headers?.csp || headers?.xfo || headers?.xcto || headers?.referrer || headers?.permissions);
+    const rpkiBad = Array.isArray(rpki?.results) && rpki.results.some(item => String(item.state || '').startsWith('invalid'));
+    const rpkiAny = Array.isArray(rpki?.results) && rpki.results.length > 0;
+    const rpkiOk = rpkiAny && !rpkiBad && rpki.results.every(item => item.state === 'valid');
+
+    const categories = {
+      web_ipv6: {
+        status: webIpv6Ok ? 'passed' : 'failed',
+        verdict: webIpv6Ok ? 'IPv6 visible' : 'No IPv6 visible'
+      },
+      web_dnssec: {
+        status: dnssecOk ? 'passed' : 'failed',
+        verdict: dnssecOk ? 'DNSSEC visible' : 'DNSSEC not validated'
+      },
+      web_https: {
+        status: httpsOk ? (hstsOk && tlsOk ? 'passed' : 'warning') : 'failed',
+        verdict: httpsOk ? 'HTTPS available' : 'HTTP only'
+      },
+      web_appsecpriv: {
+        status: appsecprivOk ? 'warning' : 'failed',
+        verdict: appsecprivOk ? 'Security headers present' : 'Security headers missing'
+      },
+      web_rpki: {
+        status: rpkiOk ? 'passed' : (rpkiBad ? 'failed' : 'info'),
+        verdict: rpkiOk ? 'RPKI valid' : (rpkiBad ? 'RPKI invalid' : 'RPKI inconclusive')
+      }
+    };
+
+    const tests = {
+      ipv6_present: {
+        status: verdictFromStatus(ipv6?.present ? 'ok' : 'fail'),
+        verdict: ipv6?.present ? 'AAAA records present' : 'No AAAA records'
+      },
+      dnssec_valid: {
+        status: verdictFromStatus(dnssecOk ? 'ok' : 'fail'),
+        verdict: dnssecOk ? 'DNSSEC chain validated' : 'DNSSEC chain incomplete'
+      },
+      tls_protocol: {
+        status: verdictFromStatus(tlsOk ? 'ok' : 'warning'),
+        verdict: tls?.protocol ? `Protocol ${tls.protocol}` : 'No TLS protocol reported'
+      },
+      hsts: {
+        status: verdictFromStatus(hstsOk ? 'ok' : 'fail'),
+        verdict: hstsOk ? 'HSTS strict' : 'HSTS absent or weak'
+      },
+      csp: {
+        status: verdictFromStatus(headers?.csp ? 'ok' : 'fail'),
+        verdict: headers?.csp ? 'CSP present' : 'CSP absent'
+      },
+      rpki_valid: {
+        status: verdictFromStatus(rpkiOk ? 'ok' : (rpkiBad ? 'fail' : 'info')),
+        verdict: rpkiOk ? 'Valid route origin' : (rpkiBad ? 'Invalid route origin' : 'No RPKI verdict')
+      }
+    };
+
+    const score = Math.round(
+      (Object.values(categories).filter(entry => normalizeCompatStatus(entry.status) === 'ok').length /
+        Object.keys(categories).length) *
+        100
+    );
+
+    return {
+      domain: cleanDomain,
+      type: normalizedType,
+      request: { status: 'done', type: normalizedType, bundle: 'local' },
+      status: Object.values(categories).some(entry => normalizeCompatStatus(entry.status) === 'fail')
+        ? 'fail'
+        : Object.values(categories).some(entry => normalizeCompatStatus(entry.status) === 'warning')
+          ? 'warning'
+          : 'ok',
+      scoring: { percentage: score },
+      results: { categories, tests, custom: {} },
+      lines: [
+        `Dominio: ${cleanDomain}`,
+        `IPv6: ${ipv6?.present ? 'sí' : 'no'}`,
+        `DNSSEC: ${dnssecOk ? 'sí' : 'no'}`,
+        `HTTPS: ${httpsOk ? 'sí' : 'no'}`,
+        `RPKI: ${rpkiOk ? 'válido' : (rpkiBad ? 'inválido' : 'sin dato')}`
+      ],
+      sections: [
+        {
+          label: isWeb ? 'Web local' : 'Correo local',
+          status: Object.values(categories).some(entry => normalizeCompatStatus(entry.status) === 'fail')
+            ? 'fail'
+            : Object.values(categories).some(entry => normalizeCompatStatus(entry.status) === 'warning')
+              ? 'warning'
+              : 'ok',
+          note: 'Resumen local inspirado en el desglose de Internet.nl.',
+          items: Object.entries(categories).map(([key, entry]) => ({
+            text: prettifyBatchKey(key),
+            status: normalizeCompatStatus(entry.status),
+            note: entry.verdict
+          }))
+        }
+      ],
+      technical: {
+        headers,
+        ipv6,
+        dnssec,
+        dnsviz,
+        tls,
+        sslchain,
+        tlsa,
+        caa,
+        rpki,
+        routing,
+        securitytxt
+      }
+    };
+  }
+
+  const [mailIpv6, mailDnssec, spf, dmarc, dkim, starttls, tls, rpki, routing, mx] = await Promise.all([
+    fetchLocalJson(`/mailipv6/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/maildnssec/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/spf/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/dmarc/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/dkim/${encodeURIComponent(cleanDomain)}?selector=support`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/starttls/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/tlsinfo/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/rpki/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/routing/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message })),
+    fetchLocalJson(`/mx/${encodeURIComponent(cleanDomain)}`).catch(error => ({ error: error.message }))
+  ]);
+
+  source.mailIpv6 = mailIpv6;
+  source.mailDnssec = mailDnssec;
+  source.spf = spf;
+  source.dmarc = dmarc;
+  source.dkim = dkim;
+  source.starttls = starttls;
+  source.tls = tls;
+  source.rpki = rpki;
+  source.routing = routing;
+  source.mx = mx;
+
+  const mailIpv6Ok = Boolean(mailIpv6?.present);
+  const domainDnssecOk = Boolean(mailDnssec?.domainDnssec?.secure);
+  const spfOk = spf?.policyStatus === 'strict' || spf?.policyStatus === 'weak';
+  const dmarcOk = dmarc?.policyStatus === 'strict' || dmarc?.policyStatus === 'weak';
+  const dkimOk = Boolean(dkim?.supported);
+  const starttlsOk = Array.isArray(starttls?.results) && starttls.results.some(item => item.status === 'supports');
+  const rpkiBad = Array.isArray(rpki?.results) && rpki.results.some(item => String(item.state || '').startsWith('invalid'));
+  const rpkiAny = Array.isArray(rpki?.results) && rpki.results.length > 0;
+  const rpkiOk = rpkiAny && !rpkiBad && rpki.results.every(item => item.state === 'valid');
+
+  const categories = {
+    mail_ipv6: {
+      status: mailIpv6Ok ? 'passed' : 'failed',
+      verdict: mailIpv6Ok ? 'MX IPv6 visible' : 'MX IPv6 missing'
+    },
+    mail_dnssec: {
+      status: domainDnssecOk ? 'passed' : 'failed',
+      verdict: domainDnssecOk ? 'DNSSEC on domain and MX' : 'DNSSEC missing'
+    },
+    mail_auth: {
+      status: spfOk && dmarcOk && dkimOk ? 'passed' : (spfOk || dmarcOk || dkimOk ? 'warning' : 'failed'),
+      verdict: 'SPF / DMARC / DKIM'
+    },
+    mail_starttls: {
+      status: starttlsOk ? 'passed' : 'failed',
+      verdict: starttlsOk ? 'STARTTLS visible' : 'STARTTLS missing'
+    },
+    mail_rpki: {
+      status: rpkiOk ? 'passed' : (rpkiBad ? 'failed' : 'info'),
+      verdict: rpkiOk ? 'RPKI valid' : (rpkiBad ? 'failed route origin' : 'RPKI inconclusive')
+    }
+  };
+
+  const tests = {
+    mail_ipv6_present: {
+      status: verdictFromStatus(mailIpv6Ok ? 'ok' : 'fail'),
+      verdict: mailIpv6Ok ? 'IPv6 on MX present' : 'No IPv6 on MX'
+    },
+    mail_dnssec_valid: {
+      status: verdictFromStatus(domainDnssecOk ? 'ok' : 'fail'),
+      verdict: domainDnssecOk ? 'DNSSEC visible' : 'DNSSEC absent'
+    },
+    spf_present: {
+      status: verdictFromStatus(spfOk ? 'ok' : 'fail'),
+      verdict: spf?.policyStatus ? `SPF ${spf.policyStatus}` : 'SPF absent'
+    },
+    dmarc_present: {
+      status: verdictFromStatus(dmarcOk ? 'ok' : 'fail'),
+      verdict: dmarc?.policyStatus ? `DMARC ${dmarc.policyStatus}` : 'DMARC absent'
+    },
+    dkim_present: {
+      status: verdictFromStatus(dkimOk ? 'ok' : 'fail'),
+      verdict: dkimOk ? 'DKIM supported' : 'DKIM not detected'
+    },
+    starttls_enabled: {
+      status: verdictFromStatus(starttlsOk ? 'ok' : 'fail'),
+      verdict: starttlsOk ? 'STARTTLS visible' : 'STARTTLS absent'
+    },
+    rpki_valid: {
+      status: verdictFromStatus(rpkiOk ? 'ok' : (rpkiBad ? 'fail' : 'info')),
+      verdict: rpkiOk ? 'Valid route origin' : (rpkiBad ? 'Invalid route origin' : 'No RPKI verdict')
+    }
+  };
+
+  const score = Math.round(
+    (Object.values(categories).filter(entry => normalizeCompatStatus(entry.status) === 'ok').length /
+      Object.keys(categories).length) *
+      100
+  );
+
+  return {
+    domain: cleanDomain,
+    type: normalizedType,
+    request: { status: 'done', type: normalizedType, bundle: 'local' },
+    status: Object.values(categories).some(entry => normalizeCompatStatus(entry.status) === 'fail')
+      ? 'fail'
+      : Object.values(categories).some(entry => normalizeCompatStatus(entry.status) === 'warning')
+        ? 'warning'
+        : 'ok',
+    scoring: { percentage: score },
+    results: { categories, tests, custom: {} },
+    lines: [
+      `Dominio: ${cleanDomain}`,
+      `IPv6: ${mailIpv6Ok ? 'sí' : 'no'}`,
+      `DNSSEC: ${domainDnssecOk ? 'sí' : 'no'}`,
+      `Auth: ${spfOk || dmarcOk || dkimOk ? 'parcial o sí' : 'no'}`,
+      `STARTTLS: ${starttlsOk ? 'sí' : 'no'}`
+    ],
+    sections: [
+      {
+        label: 'Correo local',
+        status: Object.values(categories).some(entry => normalizeCompatStatus(entry.status) === 'fail')
+          ? 'fail'
+          : Object.values(categories).some(entry => normalizeCompatStatus(entry.status) === 'warning')
+            ? 'warning'
+            : 'ok',
+        note: 'Resumen local inspirado en el desglose de Internet.nl.',
+        items: Object.entries(categories).map(([key, entry]) => ({
+          text: prettifyBatchKey(key),
+          status: normalizeCompatStatus(entry.status),
+          note: entry.verdict
+        }))
+      }
+    ],
+    technical: {
+      mx,
+      mailIpv6,
+      mailDnssec,
+      spf,
+      dmarc,
+      dkim,
+      starttls,
+      tls,
+      rpki,
+      routing
+    }
+  };
+}
+
+async function handleCompatBundle(domain, res, type = 'web') {
+  try {
+    const bundle = await buildLocalCompatBundle(domain, type);
+    sendJSON(res, 200, bundle);
+  } catch (e) {
+    sendJSON(res, 200, {
+      domain: normalizeDomain(domain),
+      type: type === 'mail' ? 'mail' : 'web',
+      status: 'error',
+      error: e.message || errorMessage(e),
+      message: e.message || 'No se pudo construir el bundle local.'
+    });
+  }
 }
 
 async function handleMx(domain, res) {
@@ -873,6 +1567,27 @@ async function summarizeCctld(tld, mode = 'local') {
   return value;
 }
 
+async function getCachedCctldPulse(tld, mode = 'local') {
+  const domain = normalizeDomain(tld);
+  if (!domain) return null;
+
+  const cached = cacheGet(cctldCache, `${mode}:${domain}`, 15 * 60 * 1000);
+  if (cached?.pulse) return cached.pulse;
+
+  const inMemoryReport = Array.isArray(cctldReportState.items)
+    ? cctldReportState.items.find(item => normalizeDomain(item?.tld) === domain)
+    : null;
+  if (inMemoryReport?.pulse) {
+    return inMemoryReport.pulse;
+  }
+
+  const refreshed = await summarizeCctld(domain, mode).catch(() => null);
+  if (refreshed?.pulse) return refreshed.pulse;
+
+  const afterRefresh = cacheGet(cctldCache, `${mode}:${domain}`, 15 * 60 * 1000);
+  return afterRefresh?.pulse || null;
+}
+
 async function refreshCctldReport(mode = 'local') {
   if (cctldRefreshPromises.has(mode)) return cctldRefreshPromises.get(mode);
   const promise = (async () => {
@@ -1422,15 +2137,15 @@ function formatDnssecRecordSummary(record, kind = 'record') {
   if (!record || typeof record !== 'object') return null;
   const pieces = [];
   if (kind === 'ds') {
+    if (record.algorithm !== null && record.algorithm !== undefined) pieces.push(`alg ${record.algorithm}`);
     if (record.keyTag !== null && record.keyTag !== undefined) pieces.push(`keytag ${record.keyTag}`);
     if (record.algorithmName) pieces.push(record.algorithmName);
-    else if (record.algorithm !== null && record.algorithm !== undefined) pieces.push(`alg ${record.algorithm}`);
     if (record.digestName) pieces.push(`digest ${record.digestName}`);
     else if (record.digestType !== null && record.digestType !== undefined) pieces.push(`digest ${record.digestType}`);
   } else if (kind === 'dnskey') {
+    if (record.algorithm !== null && record.algorithm !== undefined) pieces.push(`alg ${record.algorithm}`);
     if (record.flags !== null && record.flags !== undefined) pieces.push(`flags ${record.flags}`);
     if (record.algorithmName) pieces.push(record.algorithmName);
-    else if (record.algorithm !== null && record.algorithm !== undefined) pieces.push(`alg ${record.algorithm}`);
   } else {
     if (record.raw) pieces.push(record.raw);
   }
@@ -1445,6 +2160,20 @@ function buildDnssecAssessment(google = {}) {
   const nsec3 = google.nsec3 || {};
   const valid = parent && child;
   const chainStatus = valid ? 'ok' : (parent || child ? 'warning' : 'fail');
+  const algorithmRank = record => {
+    const algo = Number(record?.algorithm);
+    const name = String(record?.algorithmName || '').toUpperCase();
+    if (algo === 8 || algo === 13 || /ECDSA\/P256\/SHA-256|ECDSA\/P384\/SHA-384/i.test(name)) return 0;
+    if (/SHA-1|DSA|RSA\/SHA-1/i.test(name)) return 2;
+    return 1;
+  };
+  const sortByPriority = records => [...records].sort((left, right) => {
+    const diff = algorithmRank(left) - algorithmRank(right);
+    if (diff) return diff;
+    return String(left?.algorithm || left?.algorithmName || '').localeCompare(String(right?.algorithm || right?.algorithmName || ''));
+  });
+  const dsRecordsSorted = sortByPriority(dsRecords);
+  const dnskeyRecordsSorted = sortByPriority(dnskeyRecords);
   const dsLegacy = dsRecords.some(record => {
     const algo = String(record?.algorithmName || '').toUpperCase();
     return /SHA-1|DSA|RSA\/SHA-1/.test(algo) || record?.digestName === 'SHA-1';
@@ -1483,7 +2212,7 @@ function buildDnssecAssessment(google = {}) {
       note: dsRecords.length
         ? 'Se listan los DS del padre con comentario de resiliencia cuántica.'
         : 'Sin registros DS para listar.',
-      items: dsRecords.map(record => ({
+      items: dsRecordsSorted.map(record => ({
         text: formatDnssecRecordSummary(record, 'ds'),
         status: record.digestName === 'SHA-1' ? 'warning' : 'ok',
         tag: quantumResistanceTagForAlgorithm(record.algorithmName || record.algorithm)
@@ -1496,7 +2225,7 @@ function buildDnssecAssessment(google = {}) {
       note: dnskeyRecords.length
         ? 'Se listan las claves DNSKEY del hijo.'
         : 'Sin registros DNSKEY para listar.',
-      items: dnskeyRecords.map(record => ({
+      items: dnskeyRecordsSorted.map(record => ({
         text: formatDnssecRecordSummary(record, 'dnskey'),
         status: /SHA-1|DSA|RSA\/SHA-1/i.test(String(record?.algorithmName || '').toUpperCase()) ? 'warning' : 'ok',
         tag: quantumResistanceTagForAlgorithm(record.algorithmName || record.algorithm)
@@ -1532,10 +2261,12 @@ function buildDnssecAssessment(google = {}) {
   ];
 
   if (dsRecords.length) {
-    summaryLines.push(`DS: ${dsRecords.map(record => formatDnssecRecordSummary(record, 'ds')).filter(Boolean).join(' | ')}`);
+    const dsSummary = dsRecordsSorted.map(record => formatDnssecRecordSummary(record, 'ds')).filter(Boolean);
+    summaryLines.push(`DS: ${dsSummary.slice(0, 2).join(' | ')}${dsSummary.length > 2 ? ` · +${dsSummary.length - 2} más` : ''}`);
   }
   if (dnskeyRecords.length) {
-    summaryLines.push(`DNSKEY: ${dnskeyRecords.map(record => formatDnssecRecordSummary(record, 'dnskey')).filter(Boolean).join(' | ')}`);
+    const dnskeySummary = dnskeyRecordsSorted.map(record => formatDnssecRecordSummary(record, 'dnskey')).filter(Boolean);
+    summaryLines.push(`DNSKEY: ${dnskeySummary.slice(0, 2).join(' | ')}${dnskeySummary.length > 2 ? ` · +${dnskeySummary.length - 2} más` : ''}`);
   }
   if (Array.isArray(google.algorithms) && google.algorithms.length) {
     summaryLines.push(`Algoritmos: ${[...new Set(google.algorithms.filter(Boolean))].join(', ')}`);
@@ -1660,6 +2391,7 @@ async function resolveDnsvizMeta(domain) {
   if (/insecure/i.test(body)) observations.push('Zona no segura mencionada');
 
   let notices = null;
+  let noticeSections = [];
   if (jsUrl) {
     const jsBody = await fetchText(jsUrl, { timeout: 20000 }).catch(() => null);
     if (jsBody) {
@@ -1667,6 +2399,7 @@ async function resolveDnsvizMeta(domain) {
       if (noticesMatch) {
         try {
           notices = JSON.parse(noticesMatch[1]);
+          noticeSections = extractDnsvizNoticeSections(notices);
           const dnssecNotices = notices?.notices || {};
           const warningTexts = Array.isArray(dnssecNotices.warnings) ? dnssecNotices.warnings : [];
           const errorTexts = Array.isArray(dnssecNotices.errors) ? dnssecNotices.errors : [];
@@ -1696,6 +2429,7 @@ async function resolveDnsvizMeta(domain) {
     errorCount: Array.isArray(notices?.notices?.errors) ? notices.notices.errors.length : 0,
     warnings: Array.isArray(notices?.notices?.warnings) ? notices.notices.warnings.slice() : [],
     errors: Array.isArray(notices?.notices?.errors) ? notices.notices.errors.slice() : [],
+    noticeSections,
     notices,
     available: Boolean(page && page.statusCode >= 200 && page.statusCode < 400)
   };
@@ -1774,7 +2508,7 @@ function extractPulseListMetrics(html, title) {
 }
 
 async function summarizePulseCountry(countryCode) {
-  const code = String(countryCode || '').trim().toLowerCase();
+  const code = String(countryCode || '').trim().toUpperCase();
   if (!code) {
     return {
       available: false,
@@ -1796,6 +2530,7 @@ async function summarizePulseCountry(countryCode) {
     const rov = extractPulseListMetrics(html, 'ROV')[0] || null;
     const value = {
       available: Boolean(html),
+      country: code,
       sourceUrl: url,
       dnssecCoverage,
       dnssecAdoption,
@@ -1834,6 +2569,106 @@ async function fetchCachedDnsvizSvg(svgUrl, domain) {
     return graph;
   }
   return '';
+}
+
+function normalizeDnsvizSectionLabel(label) {
+  const value = String(label || '').trim();
+  const map = {
+    secure: 'Seguro',
+    insecure: 'Inseguro',
+    bogus: 'Inválido',
+    warning: 'Advertencia',
+    error: 'Error',
+    non_existent: 'No existente',
+    'non-existent': 'No existente',
+    nonexistent: 'No existente',
+    rrset: 'RRset',
+    delegation: 'Delegación'
+  };
+  return map[value.toLowerCase()] || value
+    .replace(/_/g, ' ')
+    .replace(/\b([a-z])/g, (_, letter) => letter.toUpperCase())
+    .trim();
+}
+
+function translateDnsvizSectionTitle(title) {
+  const value = String(title || '').trim();
+  const map = {
+    'rrset status': 'Estado de RRset',
+    'dnskey/ds/nsec status': 'Estado DNSKEY/DS/NSEC',
+    'delegation status': 'Estado de delegación',
+    notices: 'Avisos'
+  };
+  return map[value.toLowerCase()] || value;
+}
+
+function parseDnsvizNoticeEntry(entry) {
+  const raw = String(entry || '').trim();
+  if (!raw) {
+    return { raw: '', text: '', algorithm: null, id: null };
+  }
+  const algIdMatch = raw.match(/\(alg(?:orithm)?\s*=?\s*(\d+),\s*id\s*=?\s*(\d+)\)/i);
+  const algMatch = raw.match(/\balg(?:orithm)?\s*=?\s*(\d+)\b/i);
+  const idMatch = raw.match(/\bid\s*=?\s*(\d+)\b/i);
+  const text = raw
+    .replace(/\(\s*alg(?:orithm)?\s*=?\s*\d+\s*,\s*id\s*=?\s*\d+\s*\)/i, '')
+    .replace(/\(\s*alg(?:orithm)?\s*=?\s*\d+\s*\)/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return {
+    raw,
+    text: text || raw,
+    algorithm: algIdMatch ? Number(algIdMatch[1]) : (algMatch ? Number(algMatch[1]) : null),
+    id: algIdMatch ? Number(algIdMatch[2]) : (idMatch ? Number(idMatch[1]) : null)
+  };
+}
+
+function extractDnsvizNoticeSections(notices) {
+  const topLevel = notices && typeof notices === 'object' ? notices : {};
+  const sections = [];
+
+  Object.entries(topLevel).forEach(([sectionTitle, sectionValue]) => {
+    if (sectionTitle === 'notices' || !sectionValue || typeof sectionValue !== 'object') return;
+    const groups = Object.entries(sectionValue)
+      .map(([groupName, items]) => {
+        const list = Array.isArray(items) ? items : [];
+        if (!list.length) return null;
+        return {
+          label: normalizeDnsvizSectionLabel(groupName),
+          tone: String(groupName || '').toLowerCase().includes('warning')
+            ? 'warning'
+            : (String(groupName || '').toLowerCase().includes('error') ? 'error' : 'info'),
+          count: list.length,
+          items: list.map(parseDnsvizNoticeEntry)
+        };
+      })
+      .filter(Boolean);
+    if (groups.length) sections.push({ title: translateDnsvizSectionTitle(sectionTitle), groups });
+  });
+
+  const noticeBucket = topLevel.notices && typeof topLevel.notices === 'object' ? topLevel.notices : {};
+  const noticeGroups = [];
+  if (Array.isArray(noticeBucket.warnings) && noticeBucket.warnings.length) {
+    noticeGroups.push({
+      label: 'Advertencias',
+      tone: 'warning',
+      count: noticeBucket.warnings.length,
+      items: noticeBucket.warnings.map(parseDnsvizNoticeEntry)
+    });
+  }
+  if (Array.isArray(noticeBucket.errors) && noticeBucket.errors.length) {
+    noticeGroups.push({
+      label: 'Errores',
+      tone: 'error',
+      count: noticeBucket.errors.length,
+      items: noticeBucket.errors.map(parseDnsvizNoticeEntry)
+    });
+  }
+  if (noticeGroups.length) {
+    sections.push({ title: 'Avisos', groups: noticeGroups });
+  }
+
+  return sections;
 }
 
 async function fetchWebsite(domain) {
@@ -1894,17 +2729,395 @@ async function handleRpki(domain, res) {
   domain = normalizeDomain(domain);
   try {
     const { v4, v6 } = await resolveAddresses(domain);
-    const ips = [...v4, ...v6];
-    if (!ips.length) return sendJSON(res, 200, { domain, error: 'Sin direcciones IP' });
-    const results = [];
-    for (const ip of ips) {
-      const details = await rpkiValidity(ip);
-      results.push({ ip, ...details });
-    }
-    const overall = results.length && results.every(r => r.state === 'valid');
-    sendJSON(res, 200, { domain, results, valid: Boolean(overall) });
+    const summary = await summarizeRpkIps([...v4, ...v6]);
+    if (!summary.results.length) return sendJSON(res, 200, { domain, error: 'Sin direcciones IP' });
+    sendJSON(res, 200, { domain, results: summary.results, valid: Boolean(summary.valid) });
   } catch (e) {
     sendJSON(res, 200, { domain, error: errorMessage(e) });
+  }
+}
+
+async function summarizeRpkIps(ips) {
+  const cleanIps = [...new Set((ips || []).map(ip => String(ip || '').trim()).filter(Boolean))];
+  if (!cleanIps.length) {
+    return { status: 'info', valid: false, results: [] };
+  }
+  const results = await Promise.all(
+    cleanIps.map(async ip => {
+      const details = await rpkiValidity(ip);
+      return { ip, ...details };
+    })
+  );
+  const anyInvalid = results.some(r => String(r.state || '').startsWith('invalid'));
+  const anyValid = results.some(r => r.state === 'valid');
+  const allValid = results.length && results.every(r => r.state === 'valid');
+  return {
+    status: anyInvalid ? 'fail' : (allValid ? 'ok' : (anyValid ? 'warning' : 'info')),
+    valid: Boolean(allValid),
+    results
+  };
+}
+
+async function collectMxIps(domain) {
+  const mx = await resolveMxRecords(domain, 'local').catch(() => []);
+  const ips = (await Promise.all(
+    mx.map(async record => {
+      const { exchange } = normalizeMxRecord(record);
+      if (!exchange) return [];
+      const { v4, v6 } = await resolveAddresses(exchange).catch(() => ({ v4: [], v6: [] }));
+      return [...v4, ...v6];
+    })
+  )).flat();
+  return { mx, ips };
+}
+
+function writeSseEvent(res, event, data) {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${JSON.stringify(data)}\n\n`);
+}
+
+async function buildMiniData(domain, emitProgress = () => {}) {
+  domain = normalizeDomain(domain);
+  const pulseCountry = detectCcTld(domain);
+  const pulseCountryCode = pulseCountry ? pulseCountry.toUpperCase() : null;
+  const pulseEligible = Boolean(pulseCountry);
+  const emit = typeof emitProgress === 'function' ? emitProgress : () => {};
+  const progress = (stage, status, message, extra = {}) => {
+    emit({
+      stage,
+      status,
+      message,
+      ...extra
+    });
+  };
+
+  progress('start', 'info', `Iniciando mini para ${domain}.`);
+
+  const ipv4Promise = resolveDnsValue(domain, 'A', 'local')
+    .then(records => {
+      progress(
+        'ipv4',
+        records.length ? 'ok' : 'warning',
+        records.length ? `IPv4 listo: ${records.length} registro(s) A.` : 'IPv4 sin registros A.'
+      );
+      return records;
+    })
+    .catch(error => {
+      progress('ipv4', 'fail', `IPv4 sin respuesta: ${errorMessage(error)}`);
+      return [];
+    });
+
+  const dnssecPromise = dnssecGoogle(domain, 'local')
+    .then(raw => {
+      const assessment = buildDnssecAssessment(raw || {});
+      progress(
+        'dnssec',
+        assessment.valid ? 'ok' : 'warning',
+        assessment.valid ? 'DNSSEC validado.' : 'DNSSEC parcial o ausente.'
+      );
+      return raw || {};
+    })
+    .catch(error => {
+      progress('dnssec', 'fail', `DNSSEC sin respuesta: ${errorMessage(error)}`);
+      return {};
+    });
+
+  const domainRpkiPromise = resolveAddresses(domain)
+    .then(value => summarizeRpkIps([...(value.v4 || []), ...(value.v6 || [])]))
+    .then(summary => {
+      progress(
+        'rpki-domain',
+        summary.status || 'info',
+        summary.valid ? 'RPKI del dominio validado.' : 'RPKI del dominio parcial o sin cobertura.'
+      );
+      return summary;
+    })
+    .catch(error => {
+      progress('rpki-domain', 'fail', `RPKI del dominio sin respuesta: ${errorMessage(error)}`);
+      return { status: 'info', valid: false, results: [] };
+    });
+
+  const mxInfoPromise = collectMxIps(domain)
+    .then(info => {
+      progress(
+        'mx',
+        info.mx.length ? 'ok' : 'info',
+        info.mx.length ? `MX listos: ${info.mx.length} servidor(es).` : 'No se detectaron MX visibles.'
+      );
+      return info;
+    })
+    .catch(error => {
+      progress('mx', 'fail', `MX sin respuesta: ${errorMessage(error)}`);
+      return { mx: [], ips: [] };
+    });
+
+  const dnsvizPromise = resolveDnsvizMeta(domain)
+    .then(dnsviz => {
+      progress(
+        'dnsviz',
+        dnsviz.available ? 'ok' : 'info',
+        dnsviz.available ? 'DNSViz listo.' : 'DNSViz no disponible todavía.'
+      );
+      return dnsviz;
+    })
+    .catch(error => {
+      progress('dnsviz', 'info', `DNSViz sin respuesta: ${errorMessage(error)}`);
+      return {
+        domain,
+        pageUrl: `https://dnsviz.net/d/${domain}/dnssec/`,
+        svgUrl: '',
+        observations: [],
+        warningCount: 0,
+        errorCount: 0,
+        warnings: [],
+        errors: [],
+        available: false
+      };
+    });
+
+  const headersPromise = summarizeHttpHeaders(domain)
+    .then(headers => {
+      progress(
+        'headers',
+        headers.https ? 'ok' : 'warning',
+        headers.https ? 'Cabeceras HTTP listas.' : 'Cabeceras HTTP incompletas.'
+      );
+      return headers;
+    })
+    .catch(error => {
+      progress('headers', 'fail', `Cabeceras HTTP sin respuesta: ${errorMessage(error)}`);
+      return {
+        domain,
+        error: errorMessage(error),
+        https: false,
+        redirect: false,
+        hsts: false,
+        hstsMaxAge: null,
+        hstsStrict: false,
+        csp: false,
+        xfo: false,
+        xcto: false,
+        referrer: false,
+        permissions: false,
+        xxss: false,
+        compression: false,
+        server: '',
+        headers: {},
+        findings: []
+      };
+    });
+
+  const pulsePromise = pulseEligible
+    ? getCachedCctldPulse(pulseCountryCode, 'local')
+        .then(async pulse => {
+          if (pulse) {
+            progress(
+              'pulse',
+              pulse.available ? 'ok' : 'info',
+              pulse.available
+                ? `Pulse ${String(pulseCountryCode).toUpperCase()} reutilizado desde el reporte ccTLD.`
+                : `Pulse ${String(pulseCountryCode).toUpperCase()} no disponible en el reporte ccTLD.`
+            );
+            return pulse;
+          }
+          progress(
+            'pulse',
+            'info',
+            `Pulse ${String(pulseCountryCode).toUpperCase()} no estaba en caché; se actualizó desde el reporte ccTLD.`
+          );
+          const refreshedPulse = await getCachedCctldPulse(pulseCountryCode, 'local');
+          return refreshedPulse || {
+            available: false,
+            country: pulseCountryCode,
+            sourceUrl: `https://pulse.internetsociety.org/en/reports/${encodeURIComponent(pulseCountryCode)}/`,
+            notes: ['No se pudo recuperar Pulse.']
+          };
+        })
+        .catch(error => {
+          progress('pulse', 'info', `Pulse sin respuesta: ${errorMessage(error)}`);
+          return {
+            available: false,
+            sourceUrl: `https://pulse.internetsociety.org/en/reports/${encodeURIComponent(pulseCountryCode)}/`,
+            notes: ['No se pudo recuperar Pulse.']
+          };
+        })
+    : Promise.resolve({
+        available: false,
+        eligible: false,
+        sourceUrl: null,
+        notes: ['Dominio sin ccTLD; Pulse no aplica.']
+      });
+
+  const [ipv4Records, dnssecRaw, domainRpki, mxInfo, dnsviz, pulse, headers] = await Promise.all([
+    ipv4Promise,
+    dnssecPromise,
+    domainRpkiPromise,
+    mxInfoPromise,
+    dnsvizPromise,
+    pulsePromise,
+    headersPromise
+  ]);
+
+  const assessment = buildDnssecAssessment(dnssecRaw || {});
+  const dsRecords = Array.isArray(dnssecRaw?.dsRecords) ? dnssecRaw.dsRecords : [];
+  const dnskeyRecords = Array.isArray(dnssecRaw?.dnskeyRecords) ? dnssecRaw.dnskeyRecords : [];
+  const dnssecAlgorithms = [
+    ...dsRecords.map(record => {
+      const summary = parseDnssecDsRecord(record);
+      if (!summary) return null;
+      const algorithm = Number.isFinite(summary.algorithm) ? `${summary.algorithm}` : 'desconocido';
+      const name = summary.algorithmName ? ` (${summary.algorithmName})` : '';
+      const digest = summary.digestName ? ` · ${summary.digestName}` : '';
+      const keyTag = summary.keyTag !== null ? ` · keytag ${summary.keyTag}` : '';
+      return `DS ${algorithm}${name}${keyTag}${digest}`;
+    }),
+    ...dnskeyRecords.map(record => {
+      const summary = parseDnssecDnskeyRecord(record);
+      if (!summary) return null;
+      const algorithm = Number.isFinite(summary.algorithm) ? `${summary.algorithm}` : 'desconocido';
+      const name = summary.algorithmName ? ` (${summary.algorithmName})` : '';
+      const flags = summary.flags !== null ? ` · flags ${summary.flags}` : '';
+      return `DNSKEY ${algorithm}${name}${flags}`;
+    })
+  ].filter(Boolean);
+  const dnssecLines = [
+    assessment.valid ? 'DNSSEC válido.' : 'DNSSEC no validado.',
+    ...assessment.summaryLines.slice(0, 3)
+  ].filter(Boolean);
+
+  const mailRpkiPromise = summarizeRpkIps(mxInfo.ips || [])
+    .then(summary => {
+      progress(
+        'rpki-mail',
+        summary.status || 'info',
+        summary.valid ? 'RPKI del correo validado.' : 'RPKI del correo parcial o sin cobertura.'
+      );
+      return summary;
+    })
+    .catch(error => {
+      progress('rpki-mail', 'fail', `RPKI del correo sin respuesta: ${errorMessage(error)}`);
+      return { status: 'info', valid: false, results: [] };
+    });
+
+  const smtpResultsPromise = Promise.all(
+    (mxInfo.mx || []).map(async record => {
+      const { exchange } = normalizeMxRecord(record);
+      if (!exchange) return null;
+      const result = await checkSmtpUtf8(exchange).catch(error => {
+        progress('smtp', 'warning', `${exchange}: ${errorMessage(error)}`);
+        return { status: 'connection-error', port: 25 };
+      });
+      progress(
+        `smtp:${exchange}`,
+        result.status === 'supports' ? 'ok' : (result.status === 'no' ? 'fail' : 'warning'),
+        `${exchange}:${result.port || 25} → ${result.status}`
+      );
+      return {
+        server: exchange,
+        status: result.status,
+        port: result.port || 25
+      };
+    })
+  );
+
+  const [mailRpki, smtpResultsRaw] = await Promise.all([mailRpkiPromise, smtpResultsPromise]);
+  const smtpResults = smtpResultsRaw.filter(Boolean);
+  const smtpSupports = smtpResults.some(item => item.status === 'supports');
+
+  progress('done', 'ok', `Mini completado para ${domain}.`);
+
+  return {
+    domain,
+    country: pulseEligible ? pulseCountryCode : null,
+    ipv4: {
+      status: ipv4Records.length ? 'ok' : 'fail',
+      present: ipv4Records.length > 0,
+      records: ipv4Records
+    },
+    dnssec: {
+      status: assessment.status || (assessment.valid ? 'ok' : 'fail'),
+      valid: assessment.valid,
+      lines: dnssecLines,
+      algorithms: dnssecAlgorithms.slice(0, 6)
+    },
+    rpki: {
+      status: domainRpki.status === 'ok' && mailRpki.status === 'ok'
+        ? 'ok'
+        : (domainRpki.status === 'fail' || mailRpki.status === 'fail' ? 'fail' : 'info'),
+      domain: domainRpki,
+      mail: mailRpki
+    },
+    smtputf8: {
+      status: smtpSupports ? 'ok' : (smtpResults.length ? 'fail' : 'info'),
+      results: smtpResults.map(item => ({
+        server: item.server,
+        status: item.status,
+        port: item.port || 25
+      }))
+    },
+    dnsviz: {
+      status: dnsviz.available ? 'ok' : 'info',
+      ...dnsviz
+    },
+    headers,
+    pulse: {
+      available: Boolean(pulse.available),
+      eligible: pulseEligible,
+      country: pulseEligible ? pulseCountryCode : null,
+      sourceUrl: pulse.sourceUrl || null,
+      dnssecCoverage: pulse.dnssecCoverage || null,
+      dnssecAdoption: pulse.dnssecAdoption || null,
+      ipv6Adoption: pulse.ipv6Adoption || null,
+      domainUse: pulse.domainUse || null,
+      resilienceScore: pulse.resilienceScore || null,
+      roaItems: Array.isArray(pulse.roaItems) ? pulse.roaItems : [],
+      rov: pulse.rov || null,
+      notes: Array.isArray(pulse.notes) ? pulse.notes : []
+    },
+    roas: Array.isArray(pulse.roaItems) ? pulse.roaItems : [],
+    rov: pulse.rov || null
+  };
+}
+
+async function handleMiniData(domain, res) {
+  try {
+    const data = await buildMiniData(domain);
+    sendJSON(res, 200, data);
+  } catch (e) {
+    sendJSON(res, 200, { domain: normalizeDomain(domain), country: detectCcTld(domain), error: errorMessage(e) });
+  }
+}
+
+async function handleMiniStream(domain, res) {
+  const cleanDomain = normalizeDomain(domain);
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+  res.write(': mini stream ready\n\n');
+  let closed = false;
+  res.on('close', () => {
+    closed = true;
+  });
+  const emit = payload => {
+    if (closed) return;
+    writeSseEvent(res, 'progress', payload);
+  };
+  try {
+    const data = await buildMiniData(cleanDomain, emit);
+    if (!closed) writeSseEvent(res, 'result', data);
+  } catch (e) {
+    if (!closed) {
+      writeSseEvent(res, 'failure', {
+        domain: cleanDomain,
+        country: detectCcTld(cleanDomain),
+        error: errorMessage(e)
+      });
+    }
+  } finally {
+    if (!closed) res.end();
   }
 }
 
@@ -1988,39 +3201,103 @@ async function handleW3C(domain, res) {
 async function handleHeaders(domain, res) {
   domain = normalizeDomain(domain);
   try {
-    const httpsRes = await fetchHeaders(`https://${domain}`);
-    const httpRes = await fetchHeaders(`http://${domain}`, true).catch(
-      () => null
-    );
-    const hstsHeader = httpsRes.headers['strict-transport-security'] || '';
-    const hstsMatch = String(hstsHeader).match(/max-age=(\d+)/i);
-    const hstsMaxAge = hstsMatch ? Number(hstsMatch[1]) : null;
-    const result = {
-      domain,
-      https: httpsRes.statusCode >= 200 && httpsRes.statusCode < 400,
-      redirect:
-        httpRes &&
-        httpRes.statusCode >= 300 &&
-        httpRes.statusCode < 400 &&
-        typeof httpRes.headers.location === 'string' &&
-        httpRes.headers.location.startsWith('https://'),
-      hsts: Boolean(hstsHeader),
-      hstsMaxAge,
-      hstsStrict: Boolean(hstsHeader) && (hstsMaxAge === null || hstsMaxAge >= 31536000),
-      csp: Boolean(httpsRes.headers['content-security-policy']),
-      xfo: Boolean(httpsRes.headers['x-frame-options']),
-      xcto: Boolean(httpsRes.headers['x-content-type-options']),
-      referrer: Boolean(httpsRes.headers['referrer-policy']),
-      permissions: Boolean(httpsRes.headers['permissions-policy']),
-      xxss: Boolean(httpsRes.headers['x-xss-protection']),
-      compression: Boolean(httpsRes.headers['content-encoding']),
-      server: httpsRes.headers['server'] || '',
-      headers: httpsRes.headers
-    };
+    const result = await summarizeHttpHeaders(domain);
     sendJSON(res, 200, result);
   } catch (e) {
     sendJSON(res, 200, { domain, error: errorMessage(e) });
   }
+}
+
+async function summarizeHttpHeaders(domain) {
+  domain = normalizeDomain(domain);
+  const httpsRes = await fetchHeaders(`https://${domain}`);
+  const httpRes = await fetchHeaders(`http://${domain}`, true).catch(() => null);
+  const hstsHeader = httpsRes.headers['strict-transport-security'] || '';
+  const hstsMatch = String(hstsHeader).match(/max-age=(\d+)/i);
+  const hstsMaxAge = hstsMatch ? Number(hstsMatch[1]) : null;
+  const https = httpsRes.statusCode >= 200 && httpsRes.statusCode < 400;
+  const redirect =
+    Boolean(
+      httpRes &&
+      httpRes.statusCode >= 300 &&
+      httpRes.statusCode < 400 &&
+      typeof httpRes.headers.location === 'string' &&
+      httpRes.headers.location.startsWith('https://')
+    );
+  const result = {
+    domain,
+    https,
+    redirect,
+    hsts: Boolean(hstsHeader),
+    hstsMaxAge,
+    hstsStrict: Boolean(hstsHeader) && (hstsMaxAge === null || hstsMaxAge >= 31536000),
+    csp: Boolean(httpsRes.headers['content-security-policy']),
+    xfo: Boolean(httpsRes.headers['x-frame-options']),
+    xcto: Boolean(httpsRes.headers['x-content-type-options']),
+    referrer: Boolean(httpsRes.headers['referrer-policy']),
+    permissions: Boolean(httpsRes.headers['permissions-policy']),
+    xxss: Boolean(httpsRes.headers['x-xss-protection']),
+    compression: Boolean(httpsRes.headers['content-encoding']),
+    server: httpsRes.headers['server'] || '',
+    headers: httpsRes.headers
+  };
+  result.findings = [
+    {
+      id: 'https',
+      label: 'HTTPS',
+      status: result.https ? 'ok' : 'fail',
+      value: result.https ? 'present' : 'absent'
+    },
+    {
+      id: 'redirect',
+      label: 'Redirección',
+      status: result.redirect ? 'ok' : 'warning',
+      value: result.redirect ? 'forced' : 'notForced'
+    },
+    {
+      id: 'hsts',
+      label: 'HSTS',
+      status: result.hstsStrict ? 'ok' : (result.hsts ? 'warning' : 'fail'),
+      value: result.hstsStrict ? 'strong' : (result.hsts ? 'weak' : 'absent')
+    },
+    {
+      id: 'csp',
+      label: 'CSP',
+      status: result.csp ? 'ok' : 'warning',
+      value: result.csp ? 'present' : 'absent'
+    },
+    {
+      id: 'xfo',
+      label: 'X-Frame-Options',
+      status: result.xfo ? 'ok' : 'warning',
+      value: result.xfo ? 'present' : 'absent'
+    },
+    {
+      id: 'xcto',
+      label: 'X-Content-Type-Options',
+      status: result.xcto ? 'ok' : 'warning',
+      value: result.xcto ? 'present' : 'absent'
+    },
+    {
+      id: 'referrer',
+      label: 'Referrer-Policy',
+      status: result.referrer ? 'ok' : 'warning',
+      value: result.referrer ? 'present' : 'absent'
+    },
+    {
+      id: 'permissions',
+      label: 'Permissions-Policy',
+      status: result.permissions ? 'ok' : 'warning',
+      value: result.permissions ? 'present' : 'absent'
+    },
+    {
+      id: 'xxss',
+      label: 'X-XSS-Protection',
+      status: result.xxss ? 'info' : 'warning',
+      value: result.xxss ? 'present' : 'absent'
+    }
+  ];
+  return result;
 }
 
 async function handleCaa(domain, res) {
@@ -3019,6 +4296,19 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(res, 404, { error: 'Fragmento no encontrado' });
     }
   }
+  if (segments[0] === 'locales' && segments[1]) {
+    try {
+      const langFile = String(segments[1]).replace(/\.properties$/i, '');
+      const filePath = path.resolve(LOCALES_DIR, `${langFile}.properties`);
+      if (!filePath.startsWith(`${LOCALES_DIR}${path.sep}`)) {
+        return sendJSON(res, 400, { error: 'Ruta inválida' });
+      }
+      const text = await fs.readFile(filePath, 'utf8');
+      return sendText(res, 200, text);
+    } catch (e) {
+      return sendJSON(res, 404, { error: 'Archivo de idioma no encontrado' });
+    }
+  }
   if (segments.length === 0 || (segments.length === 1 && segments[0] === 'index.html')) {
     try {
       const html = await fs.readFile(INDEX_PATH, 'utf8');
@@ -3026,6 +4316,42 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
     }
+  }
+  if (segments[0] === 'home' && segments.length === 1) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
+  if (segments[0] === 'mini' && segments.length === 1) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
+  if (segments[0] === 'mini' && segments[1] === 'stream' && segments[2]) {
+    return handleMiniStream(segments[2], res);
+  }
+  if (segments[0] === 'cctlds' && segments.length === 1) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
+  if (segments[0] === 'mini' && segments[1] === 'data' && segments[2]) {
+    return handleMiniData(segments[2], res);
+  }
+  if (segments[0] === 'internetnl' && segments[1]) {
+    return handleInternetNl(segments[1], res, parsed.searchParams.get('type') || 'web');
+  }
+  if (segments[0] === 'compat' && segments[1]) {
+    return handleCompatBundle(segments[1], res, parsed.searchParams.get('type') || 'web');
   }
   if (segments[0] === 'dnsviz' && segments[1]) {
     return handleDnsviz(segments[1], res, parsed.searchParams.get('format') || '', parsed.searchParams.get('resolver') || 'remote');

@@ -74,12 +74,523 @@
       font-weight:700;
       border:1px solid rgba(13,104,82,.18);
     }
+    .lang-switch{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .lang-btn{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--muted);
+      border-radius:999px;
+      padding:8px 12px;
+      font:inherit;
+      font-size:.82rem;
+      font-weight:800;
+      letter-spacing:.04em;
+      cursor:pointer;
+      transition:transform .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .lang-btn:hover{
+      transform:translateY(-1px);
+      border-color:rgba(13,104,82,.26);
+    }
+    .lang-btn.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
     .layout{display:grid;gap:18px;margin-top:18px}
     .panel{padding:20px}
+    .results-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
+      align-items:start;
+      margin-top:10px;
+    }
+    .results-sidebar{
+      display:grid;
+      gap:12px;
+      align-self:start;
+    }
+    .results-detail{
+      min-width:0;
+      display:grid;
+      gap:12px;
+    }
+    .results-meta{
+      display:grid;
+      gap:10px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+    }
+    .results-meta .summary-strip{
+      grid-template-columns:1fr;
+    }
+    .results-meta .summary-chip{
+      white-space:normal;
+    }
+    .results-meta-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .results-meta-head h3{
+      margin:0;
+      font-size:.98rem;
+      letter-spacing:-.02em;
+    }
+    .results-meta-head p{
+      margin:0;
+      color:var(--muted);
+      font-size:.86rem;
+      line-height:1.45;
+    }
     .axis-grid,.cctld-grid{
       display:grid;
       gap:12px;
       grid-template-columns:repeat(auto-fit, minmax(290px, 1fr));
+    }
+    .feature-grid{
+      display:grid;
+      gap:12px;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .mini-shell{
+      display:grid;
+      gap:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.94), rgba(248,250,248,.96));
+      border:1px solid rgba(213,222,215,.95);
+      border-radius:28px;
+      padding:24px;
+      box-shadow:var(--shadow);
+    }
+    .mini-shell .panel-head{
+      margin-bottom:0;
+    }
+    .mini-input-row{
+      display:grid;
+      gap:12px;
+    }
+    .mini-input{
+      width:100%;
+      padding:20px 22px;
+      border-radius:24px;
+      border:1px solid var(--border);
+      background:#fff;
+      font:inherit;
+      font-size:1.18rem;
+      line-height:1.4;
+      color:var(--text);
+      outline:none;
+      min-height:92px;
+      resize:vertical;
+    }
+    .mini-input:focus{
+      border-color:rgba(13,104,82,.42);
+      box-shadow:0 0 0 4px rgba(13,104,82,.10);
+    }
+    .mini-hint{
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.5;
+    }
+    .mini-grid{
+      display:grid;
+      gap:14px;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .mini-top-grid,
+    .mini-bottom-grid{
+      display:grid;
+      gap:14px;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      align-items:start;
+    }
+    .mini-card{
+      display:grid;
+      gap:12px;
+      padding:22px;
+      border-radius:28px;
+      border:1px solid rgba(213,222,215,.95);
+      background:linear-gradient(180deg, #ffffff 0%, #f7faf8 100%);
+      box-shadow:0 12px 30px rgba(18,33,27,.05);
+      min-height:250px;
+      min-width:0;
+      align-content:start;
+    }
+    .mini-card.ok{border-color:rgba(11,122,75,.28)}
+    .mini-card.warning{border-color:rgba(154,106,0,.28)}
+    .mini-card.fail{border-color:rgba(170,46,37,.30)}
+    .mini-card.info{border-color:rgba(36,88,166,.22)}
+    .mini-card .row-title{
+      font-size:1.2rem;
+      letter-spacing:-.02em;
+      line-height:1.1;
+    }
+    .mini-card .row-body{
+      font-size:1rem;
+      line-height:1.6;
+    }
+    .mini-card .mini-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .mini-card .mini-head > div{
+      min-width:0;
+      flex:1 1 0;
+    }
+    .mini-card .status{
+      flex:0 0 auto;
+    }
+    .mini-card .mini-title{
+      font-size:1.2rem;
+      letter-spacing:-.02em;
+      line-height:1.12;
+      font-weight:820;
+      margin:0;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-card .mini-caption{
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.45;
+      margin-top:6px;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-card .mini-value{
+      font-size:clamp(1.4rem, 3vw, 2.35rem);
+      line-height:1.05;
+      letter-spacing:-.03em;
+      font-weight:850;
+      margin-top:auto;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-card .mini-sub{
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.45;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-card .mini-body{
+      display:grid;
+      gap:10px;
+      min-width:0;
+    }
+    .mini-card .mini-content{
+      min-width:0;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-dnsviz-stack{
+      display:grid;
+      gap:10px;
+      min-width:0;
+    }
+    .mini-dnsviz-section{
+      display:grid;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:#fff;
+      min-width:0;
+    }
+    .mini-dnsviz-section-title{
+      color:var(--muted);
+      font-size:.75rem;
+      font-weight:850;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .mini-dnsviz-group{
+      display:grid;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,251,249,.98));
+      min-width:0;
+    }
+    .mini-dnsviz-group-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .mini-dnsviz-group-title{
+      font-size:.88rem;
+      font-weight:820;
+      letter-spacing:-.01em;
+      color:var(--text);
+    }
+    .mini-dnsviz-group-meta{
+      color:var(--muted);
+      font-size:.78rem;
+      line-height:1.4;
+    }
+    .mini-dnsviz-item{
+      display:grid;
+      gap:4px;
+      padding:9px 10px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;
+      min-width:0;
+    }
+    .mini-dnsviz-item-text{
+      font-size:.84rem;
+      line-height:1.45;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-dnsviz-item-meta{
+      color:var(--muted);
+      font-size:.76rem;
+      line-height:1.35;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-dnsviz-link{
+      color:#1d4ed8;
+      font-weight:750;
+      text-decoration:underline;
+      text-decoration-thickness:1.5px;
+      text-underline-offset:2px;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-card .mini-list{
+      display:grid;
+      gap:8px;
+      margin:0;
+      padding:0;
+      list-style:none;
+      color:var(--text);
+      font-size:.95rem;
+      line-height:1.45;
+    }
+    .mini-card .mini-list li{
+      padding:10px 12px;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid var(--border);
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-card .mini-graph{
+      width:100%;
+      height:150px;
+      object-fit:contain;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:#fff;
+    }
+    .mini-card .mini-foot{
+      margin-top:auto;
+      color:var(--muted);
+      font-size:.85rem;
+      line-height:1.45;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .mini-log{
+      display:grid;
+      gap:8px;
+      border:1px solid rgba(213,222,215,.95);
+      background:linear-gradient(180deg, rgba(248,251,249,.96), rgba(240,246,242,.98));
+    }
+    .mini-trace{
+      display:grid;
+      gap:8px;
+    }
+    .mini-trace-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .mini-trace-head strong{
+      font-size:.88rem;
+      letter-spacing:-.01em;
+    }
+    .mini-trace-note{
+      color:var(--muted);
+      font-size:.84rem;
+      line-height:1.4;
+    }
+    .mini-log .chat-msg{
+      margin:0;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#fff;
+      border:1px solid var(--border);
+      box-shadow:0 6px 18px rgba(18,33,27,.03);
+    }
+    .mini-log .chat-msg strong{
+      display:block;
+      margin-bottom:4px;
+      color:var(--muted);
+      font-size:.76rem;
+      letter-spacing:.05em;
+    }
+    body[data-view="mini"]{
+      background:
+        radial-gradient(circle at top left, rgba(13,104,82,.08), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(36,88,166,.08), transparent 24%),
+        linear-gradient(180deg, #f8fbf9 0%, #eef3ef 100%);
+    }
+    body[data-view="mini"] .home-only,
+    body[data-view="mini"] #reporte-cctld,
+    body[data-view="mini"] .section-nav,
+    body[data-view="mini"] .chat-fab{
+      display:none !important;
+    }
+    body[data-view="mini"] .mini-only{
+      display:block !important;
+    }
+    body[data-view="cctlds"] .home-only,
+    body[data-view="cctlds"] .mini-only{
+      display:none !important;
+    }
+    body[data-view="cctlds"] .section-nav,
+    body[data-view="cctlds"] .chat-fab{
+      display:none !important;
+    }
+    body[data-view="home"] .mini-only{
+      display:none !important;
+    }
+    body[data-view="home"] #miniShell{
+      display:none !important;
+    }
+    .featured-summary{
+      padding:14px;
+      border-radius:20px;
+      border:1px solid rgba(13,104,82,.22);
+      background:linear-gradient(180deg, rgba(223,240,233,.9) 0%, rgba(255,255,255,.98) 100%);
+      box-shadow:0 10px 24px rgba(18,33,27,.04);
+      display:grid;
+      gap:10px;
+    }
+    .featured-summary .row-head{
+      align-items:flex-start;
+    }
+    .featured-summary .row-title{
+      font-size:1rem;
+      letter-spacing:-.01em;
+    }
+    .featured-summary .row-body{
+      font-size:.86rem;
+      color:var(--muted);
+    }
+    .measurement-family{
+      display:grid;
+      gap:12px;
+      border:1px solid var(--border);
+      border-radius:24px;
+      background:var(--surface);
+      padding:16px;
+      box-shadow:0 10px 28px rgba(18,33,27,.04);
+    }
+    .measurement-family-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .measurement-family-head h3{
+      margin:0;
+      font-size:1.02rem;
+      letter-spacing:-.02em;
+    }
+    .measurement-family-head p{
+      margin:5px 0 0;
+      color:var(--muted);
+      font-size:.86rem;
+      line-height:1.45;
+      max-width:72ch;
+    }
+    .measurement-family-count{
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-size:.8rem;
+      font-weight:750;
+      white-space:nowrap;
+    }
+    .measurement-family.repair-family{
+      border-style:dashed;
+      background:linear-gradient(180deg, #fffdfb 0%, #fff8f4 100%);
+    }
+    .measurement-family.repair-family .measurement-family-count{
+      background:#fff4eb;
+      color:#9a4f18;
+      border-color:rgba(154,79,24,.16);
+    }
+    .measurement-grid{
+      display:grid;
+      gap:12px;
+      grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+    }
+    .measurement-card{
+      padding:14px;
+      border-radius:20px;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, #ffffff 0%, #f7faf8 100%);
+      box-shadow:0 10px 24px rgba(18,33,27,.04);
+    }
+    .measurement-card.featured{
+      border-color:rgba(13,104,82,.22);
+      background:linear-gradient(180deg, rgba(223,240,233,.95) 0%, rgba(255,255,255,.97) 100%);
+    }
+    .measurement-card .row-head{
+      align-items:flex-start;
+    }
+    .measurement-card .row-title{
+      font-size:1rem;
+      letter-spacing:-.01em;
+    }
+    .measurement-card .row-body{
+      font-size:.88rem;
+    }
+    .comparison-strip{
+      display:grid;
+      gap:8px;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+    .comparison-chip{
+      display:grid;
+      gap:4px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:var(--surface);
+      font-size:.8rem;
+      line-height:1.4;
+    }
+    .comparison-chip strong{
+      font-size:.82rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
     }
     .section-nav{
       display:flex;
@@ -101,6 +612,31 @@
       font-weight:700;
     }
     .section-nav a:hover{background:#dbe8ff}
+    .mode-tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .mode-tab{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.88);
+      color:var(--text);
+      text-decoration:none;
+      font-size:.86rem;
+      font-weight:800;
+      letter-spacing:.01em;
+    }
+    .mode-tab.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:transparent;
+    }
     .axis-card,.cctld-card{
       border:1px solid var(--border);
       border-radius:20px;
@@ -183,15 +719,16 @@
     .form-grid{display:grid;gap:14px}
     textarea{
       width:100%;
-      min-height:96px;
-      padding:14px 16px;
+      min-height:120px;
+      padding:18px 20px;
       resize:vertical;
-      border-radius:18px;
+      border-radius:24px;
       border:1px solid var(--border);
       background:#fff;
       color:var(--text);
       font:inherit;
       line-height:1.5;
+      font-size:1.08rem;
       outline:none;
     }
     textarea:focus{border-color:rgba(13,104,82,.5);box-shadow:0 0 0 4px rgba(13,104,82,.12)}
@@ -319,7 +856,7 @@
     .tab-panel.active{box-shadow:0 0 0 2px rgba(13,104,82,.08)}
     .axis-results{
       display:grid;
-      grid-template-columns:1fr;
+      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
       gap:12px;
       align-items:start;
     }
@@ -352,6 +889,18 @@
     }
     .axis-sheet-body > *{
       min-width:0;
+    }
+    .repair-stack{
+      display:grid;
+      gap:12px;
+    }
+    .repair-stack .measurement-family{
+      border-style:dashed;
+    }
+    .repair-stack .measurement-family-count{
+      background:#fff4eb;
+      color:#9a4f18;
+      border-color:rgba(154,79,24,.16);
     }
     details{
       border:1px solid var(--border);
@@ -434,11 +983,27 @@
     .results-wrap{display:grid;gap:16px}
     .result-shell{display:grid;gap:12px}
     .result-nav{
+      display:grid;
+      gap:10px;
+      align-items:start;
+    }
+    .result-nav .tabs{
       display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
+      gap:8px;
       flex-wrap:wrap;
+      margin:0;
+    }
+    .result-nav .tab-button{
+      border-radius:999px;
+      padding:10px 14px;
+      background:var(--surface);
+      box-shadow:0 8px 20px rgba(18,33,27,.04);
+    }
+    .result-nav .nav-group{
+      display:flex;
+      gap:8px;
+      justify-content:flex-start;
+      align-items:center;
     }
     .nav-group{display:flex;gap:8px;align-items:center}
     .nav-button{
@@ -542,6 +1107,11 @@
       background:rgba(255,255,255,.82);
       display:grid;
       gap:10px;
+    }
+    .result-inline.repair-item{
+      border-style:solid;
+      border-color:rgba(170,46,37,.22);
+      background:linear-gradient(180deg, rgba(255,247,246,.98), rgba(255,255,255,.95));
     }
     .row-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
     .row-title{font-weight:750;line-height:1.3;font-size:.92rem}
@@ -855,12 +1425,21 @@
     @media (max-width: 720px){
       .page{padding:14px}
       .hero,.panel{border-radius:18px}
-      .axis-grid,.axis-results,.cctld-grid,.summary-strip{grid-template-columns:1fr}
+      .axis-grid,.axis-results,.cctld-grid,.summary-strip,.results-grid{grid-template-columns:1fr}
+      .measurement-grid,.feature-grid{grid-template-columns:1fr}
       summary,.check-item,.result-head,.result-list{padding-left:14px;padding-right:14px}
       .summary-chip{white-space:normal}
       .check-head{grid-template-columns:auto 1fr}
       .check-head .check-badge{grid-column:2}
       .counter{margin-left:0;width:100%}
+      .results-sidebar{
+        position:static;
+        max-height:none;
+        padding-right:0;
+      }
+      .result-nav .tabs{
+        max-height:none;
+      }
       .chat-fab{right:10px;bottom:10px;width:calc(100vw - 20px)}
     }
   </style>
@@ -876,13 +1455,23 @@
         <p class="lead">
           Medimos dominios, correo, DNS, TLS, universalidad y accesibilidad con una base inspirada en Internet.nl, pero ejecutada en Node.js para reutilizar nuestras rutas y mantener el flujo estable.
           <br>
-          La primera pantalla carga un reporte precalculado de los ccTLDs de LACNIC y se refresca automáticamente cada 15 minutos.
+          La interfaz incluye un reporte precalculado de los ccTLDs de LACNIC, que se refresca automáticamente cada 15 minutos y queda disponible más abajo.
         </p>
         <div class="inline-note">
           <span class="pill">DNSViz centrado</span>
           <span class="pill">Reporte ccTLD precalculado</span>
           <span class="pill">Logs claros en español</span>
         </div>
+        <div class="lang-switch" aria-label="Selector de idioma">
+          <button type="button" class="lang-btn" data-lang-switch="es">ES</button>
+          <button type="button" class="lang-btn" data-lang-switch="pt">PT</button>
+          <button type="button" class="lang-btn" data-lang-switch="en">EN</button>
+        </div>
+        <nav class="mode-tabs" aria-label="Modo de vista">
+          <a class="mode-tab" href="/" data-view-link="home">Home</a>
+          <a class="mode-tab" href="/mini" data-view-link="mini">Mini</a>
+          <a class="mode-tab" href="/cctlds" data-view-link="cctlds">ccTLDs</a>
+        </nav>
         <nav class="section-nav" aria-label="Navegación por secciones">
           <a href="#mapa-general">Seguridad</a>
           <a href="#reporte-cctld">ccTLD LACNIC</a>
@@ -893,7 +1482,51 @@
       </div>
     </header>
 
-    <main class="layout">
+    <section class="mini-shell mini-only" id="miniShell">
+      <div class="panel-head">
+        <div>
+          <h2>Mini</h2>
+          <p class="muted">Una lectura limpia, rápida y más visual. Si pegas varios dominios separados por coma, analizamos el primero.</p>
+        </div>
+        <div class="section-actions">
+          <span class="section-pill">Minimalista</span>
+        </div>
+      </div>
+      <div class="mini-input-row">
+        <textarea id="miniDomains" class="mini-input" placeholder="practicallyunhackable.com, ejemplo.com"></textarea>
+        <div class="toolbar">
+          <button id="miniRunButton" class="button primary" type="button">Analizar mini</button>
+          <span id="miniStatus" class="mini-hint">Pega un dominio y verás 8 tarjetas claras: 4 arriba y 4 abajo.</span>
+        </div>
+      </div>
+      <div class="mini-trace">
+        <div class="mini-trace-head">
+          <strong>Tiempo real</strong>
+          <span class="mini-trace-note">Vas viendo cada respuesta mientras llega.</span>
+        </div>
+        <div id="miniLog" class="chat-log mini-log" aria-live="polite">Esperando un dominio para comenzar.</div>
+      </div>
+      <div id="miniTopGrid" class="mini-top-grid"></div>
+      <div id="miniBottomGrid" class="mini-bottom-grid"></div>
+    </section>
+
+    <section class="panel home-only" id="explorador">
+      <div class="panel-head">
+        <div>
+          <h2>Explorador de mediciones</h2>
+          <p class="muted">Pega uno o varios dominios separados por coma. Esa es la única entrada principal.</p>
+        </div>
+      </div>
+      <div class="form-grid">
+        <textarea id="domains" placeholder="ejemplo.com, nic.uy, internet.org"></textarea>
+        <div id="loading" class="loading">
+          <span class="spinner"></span>
+          <span>Analizando uno por uno para evitar saturación.</span>
+        </div>
+      </div>
+    </section>
+
+    <main class="layout home-only">
       <section class="panel">
         <div class="section-title" id="mapa-general">
           <div>
@@ -907,6 +1540,112 @@
           <div id="axis-universalidad"></div>
           <div id="axis-accesibilidad"></div>
         </div>
+      </section>
+
+      <section class="panel" id="resultados">
+        <div class="panel-head">
+          <div>
+            <h2>Mediciones y resultados</h2>
+            <p class="muted">La vista principal ahora es una matriz de tarjetas: arriba quedan las cuatro mediciones base y abajo el resto, todo sobre los métodos locales.</p>
+          </div>
+          <div class="section-actions">
+            <button id="runButton" class="button primary" type="button">Analizar</button>
+            <button id="exportJsonButton" class="button secondary" type="button" disabled>Exportar JSON</button>
+            <button id="exportCsvButton" class="button secondary" type="button" disabled>Exportar CSV</button>
+            <button id="clearButton" class="button ghost" type="button">Limpiar</button>
+          </div>
+        </div>
+        <div class="results-grid">
+          <aside class="results-sidebar">
+            <div class="result-nav">
+              <div id="resultTabs" class="tabs"></div>
+              <div class="nav-group">
+                <button id="prevResult" class="nav-button" type="button" aria-label="Dominio anterior">‹</button>
+                <button id="nextResult" class="nav-button" type="button" aria-label="Siguiente dominio">›</button>
+              </div>
+            </div>
+            <div class="results-meta">
+              <div class="results-meta-head">
+                <div>
+                  <h3>Resumen por eje</h3>
+                  <p>El dominio activo se mantiene visible en esta franja superior.</p>
+                </div>
+                <div id="resultCounter" class="result-counter">0 / 0</div>
+              </div>
+              <div id="summary" class="summary-strip"></div>
+            </div>
+          </aside>
+          <div class="results-detail">
+            <div id="featuredCards" class="feature-grid"></div>
+            <div class="axis-results">
+              <section class="axis-sheet">
+                <div class="axis-sheet-head">
+                  <h3>Seguridad de cabeceras</h3>
+                  <p>HTTPS, cabeceras defensivas, TLS y correo.</p>
+                </div>
+                <div id="axis-results-headers" class="axis-sheet-body"></div>
+              </section>
+              <section class="axis-sheet">
+                <div class="axis-sheet-head">
+                  <h3>Seguridad DNS</h3>
+                  <p>DNSSEC, DNSViz, registros y TXT.</p>
+                </div>
+                <div id="axis-results-dns" class="axis-sheet-body"></div>
+              </section>
+              <section class="axis-sheet">
+                <div class="axis-sheet-head">
+                  <h3>Seguridad de enrutamiento</h3>
+                  <p>RPKI, routing y visibilidad de origen.</p>
+                </div>
+                <div id="axis-results-routing" class="axis-sheet-body"></div>
+              </section>
+              <section class="axis-sheet">
+                <div class="axis-sheet-head">
+                  <h3>Universalidad</h3>
+                  <p>IPv6 y UA/EAI.</p>
+                </div>
+                <div id="axis-results-universalidad" class="axis-sheet-body"></div>
+              </section>
+              <section class="axis-sheet">
+                <div class="axis-sheet-head">
+                  <h3>Accesibilidad</h3>
+                  <p>W3C, calidad y herramientas de apoyo.</p>
+                </div>
+                <div id="axis-results-accesibilidad" class="axis-sheet-body"></div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel home-only" id="repairPanel">
+        <div class="panel-head">
+          <div>
+            <h2>Las que hay que arreglar</h2>
+            <p class="muted">Acá quedan los falsos positivos, errores y respuestas que conviene revisar primero. No se duplican arriba.</p>
+          </div>
+        </div>
+        <div id="repairResults" class="repair-stack"></div>
+      </section>
+
+      <section class="panel home-only" id="futurePanel">
+        <div class="panel-head">
+          <div>
+            <h2>Próximamente</h2>
+            <p class="muted">Mediciones en preparación para integrar con una fuente estable.</p>
+          </div>
+        </div>
+        <div id="axis-results-future" class="axis-sheet-body"></div>
+      </section>
+
+      <section class="panel home-only" id="labPanel">
+        <div class="panel-head">
+          <div>
+            <h2>Laboratorio</h2>
+            <p class="muted">Herramientas extra para inspección, referencias y exploración.</p>
+          </div>
+        </div>
+        <div id="axis-results-lab" class="axis-sheet-body"></div>
       </section>
 
       <section class="panel" id="reporte-cctld">
@@ -923,75 +1662,7 @@
         <div id="cctldGrid" class="cctld-grid"></div>
       </section>
 
-      <section class="panel" id="explorador">
-        <div class="panel-head">
-          <div>
-            <h2>Explorador de mediciones</h2>
-            <p class="muted">Separá dominios por coma o salto de línea.</p>
-          </div>
-        </div>
-        <div class="form-grid">
-          <textarea id="domains" placeholder="ejemplo.com, nic.uy, internet.org"></textarea>
-          <div id="loading" class="loading">
-            <span class="spinner"></span>
-            <span>Analizando uno por uno para evitar saturación.</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel" id="resultados">
-        <div class="panel-head">
-          <div>
-            <h2>Mediciones y resultados</h2>
-            <p class="muted">Cada bloque explica qué mide, qué request hace y qué respondió el servicio. El gráfico DNSViz se carga desde nuestro servidor y queda centrado.</p>
-          </div>
-          <div class="section-actions">
-            <button id="runButton" class="button primary" type="button">Analizar</button>
-            <button id="exportJsonButton" class="button secondary" type="button" disabled>Exportar JSON</button>
-            <button id="exportCsvButton" class="button secondary" type="button" disabled>Exportar CSV</button>
-            <button id="clearButton" class="button ghost" type="button">Limpiar</button>
-          </div>
-        </div>
-        <div class="result-nav">
-          <div id="resultTabs" class="tabs"></div>
-          <div class="nav-group">
-            <button id="prevResult" class="nav-button" type="button" aria-label="Dominio anterior">‹</button>
-            <button id="nextResult" class="nav-button" type="button" aria-label="Siguiente dominio">›</button>
-          </div>
-        </div>
-        <div class="panel-head" style="margin-top:4px">
-          <div>
-            <h3 style="margin:0;font-size:.95rem;letter-spacing:-.02em">Resumen por eje</h3>
-          </div>
-          <div id="summary" class="summary-strip"></div>
-          <div id="resultCounter" class="result-counter">0 / 0</div>
-        </div>
-        <div class="axis-results">
-          <section class="axis-sheet">
-            <div class="axis-sheet-head">
-              <h3>Seguridad</h3>
-              <p>HTTPS, TLS, DNSSEC, correo y ruta.</p>
-            </div>
-            <div id="axis-results-security" class="axis-sheet-body"></div>
-          </section>
-          <section class="axis-sheet">
-            <div class="axis-sheet-head">
-              <h3>Universalidad</h3>
-              <p>IPv6 y UA/EAI.</p>
-            </div>
-            <div id="axis-results-universalidad" class="axis-sheet-body"></div>
-          </section>
-          <section class="axis-sheet">
-            <div class="axis-sheet-head">
-              <h3>Accesibilidad</h3>
-              <p>W3C, calidad y herramientas de apoyo.</p>
-            </div>
-            <div id="axis-results-accesibilidad" class="axis-sheet-body"></div>
-          </section>
-        </div>
-      </section>
-
-      <section class="panel" id="registro">
+      <section class="panel home-only" id="registro">
         <details class="aux-panel">
           <summary>
             <div>
@@ -1029,14 +1700,14 @@
         </details>
       </section>
 
-      <section class="panel">
+      <section class="panel home-only">
         <p class="footer-note">
           Nota: muchas mediciones dependen de terceros, pero el núcleo se ejecuta desde <code>server.js</code>.
           DNSViz, RIPE, DNS y SMTP se consultan desde el servidor para no depender del navegador.
         </p>
       </section>
 
-      <section class="panel">
+      <section class="panel home-only">
         <div class="panel-head">
           <div>
             <h2>Registro de ejecución</h2>
@@ -1073,18 +1744,34 @@
 
   <script>
     const API_BASE = location.protocol === 'file:' ? 'http://localhost:4000' : '';
+    const VIEW_MODE = location.pathname.startsWith('/mini')
+      ? 'mini'
+      : (location.pathname.startsWith('/cctlds') ? 'cctlds' : 'home');
+    document.body.dataset.view = VIEW_MODE;
     const domainsInput = document.getElementById('domains');
+    const miniDomains = document.getElementById('miniDomains');
     const runButton = document.getElementById('runButton');
+    const miniRunButton = document.getElementById('miniRunButton');
     const exportJsonButton = document.getElementById('exportJsonButton');
     const exportCsvButton = document.getElementById('exportCsvButton');
     const clearButton = document.getElementById('clearButton');
     const loading = document.getElementById('loading');
+    const miniStatus = document.getElementById('miniStatus');
+    const miniLog = document.getElementById('miniLog');
+    const miniTopGrid = document.getElementById('miniTopGrid');
+    const miniBottomGrid = document.getElementById('miniBottomGrid');
     const summaryEl = document.getElementById('summary');
+    const featuredCardsEl = document.getElementById('featuredCards');
     const cctldGrid = document.getElementById('cctldGrid');
     const cctldRefresh = document.getElementById('cctldRefresh');
-    const axisResultsSecurity = document.getElementById('axis-results-security');
+    const axisResultsHeaders = document.getElementById('axis-results-headers');
+    const axisResultsDns = document.getElementById('axis-results-dns');
+    const axisResultsRouting = document.getElementById('axis-results-routing');
     const axisResultsUniversalidad = document.getElementById('axis-results-universalidad');
     const axisResultsAccesibilidad = document.getElementById('axis-results-accesibilidad');
+    const axisResultsFuture = document.getElementById('axis-results-future');
+    const axisResultsLab = document.getElementById('axis-results-lab');
+    const repairResults = document.getElementById('repairResults');
     const selectionCount = document.getElementById('selectionCount');
     const resultTabs = document.getElementById('resultTabs');
     const wifiVariant = document.getElementById('wifiVariant');
@@ -1107,10 +1794,772 @@
     const chatLog = document.getElementById('chatLog');
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
+    const langButtons = Array.from(document.querySelectorAll('[data-lang-switch]'));
+    const modeTabLinks = Array.from(document.querySelectorAll('.mode-tab'));
     let currentResultIndex = 0;
     const cctldResolverMode = 'local';
     let lastRun = null;
+    let lastMiniData = null;
     let cctldRetryTimer = null;
+    let miniStream = null;
+    let miniRunToken = 0;
+    const SUPPORTED_LANGS = ['es', 'pt', 'en'];
+    let currentLang = localStorage.getItem('mediciones-lang') || 'es';
+    const localePacks = {
+      es: {},
+      pt: {},
+      en: {}
+    };
+    const fallbackLocalePacks = {
+      es: {
+        'app.kicker': 'Estándares de Internet / medición regional',
+        'app.title': 'Herramienta de Mediciones ISOC-LAC',
+        'app.lead': 'Medimos dominios, correo, DNS, TLS, universalidad y accesibilidad con una base inspirada en Internet.nl, pero ejecutada en Node.js para reutilizar nuestras rutas y mantener el flujo estable. La interfaz incluye un reporte precalculado de los ccTLDs de LACNIC, que se refresca automáticamente cada 15 minutos y queda disponible más abajo.',
+        'pill.dnsviz': 'DNSViz centrado',
+        'pill.report': 'Reporte ccTLD precalculado',
+        'pill.logs': 'Logs claros en español',
+        'nav.home': 'Home',
+        'nav.mini': 'Mini',
+        'nav.cctlds': 'ccTLDs',
+        'mini.title': 'Mini',
+        'mini.subtitle': 'Una lectura limpia, rápida y más visual. Si pegas varios dominios separados por coma, analizamos el primero.',
+        'mini.badge': 'Minimalista',
+        'mini.placeholder': 'practicallyunhackable.com, ejemplo.com',
+        'mini.run': 'Analizar mini',
+        'mini.status': 'Pega un dominio y verás tarjetas claras con el resumen.',
+        'mini.trace.title': 'Tiempo real',
+        'mini.trace.note': 'Vas viendo cada respuesta mientras llega.',
+        'mini.waiting': 'Esperando un dominio para comenzar.',
+        'mini.empty': 'Pega un dominio para mostrar el mini.',
+        'mini.consulting': 'Consultando {domain} en paralelo...',
+        'mini.done': 'Mini completado para {domain}.',
+        'mini.error': 'Error para {domain}: {error}',
+        'mini.noStream': 'No se pudo abrir o mantener el flujo en vivo.',
+        'home.explorer.title': 'Explorador de mediciones',
+        'home.explorer.desc': 'Pega uno o varios dominios separados por coma. Esa es la única entrada principal.',
+        'home.map.title': 'Mapa general',
+        'home.map.desc': 'Organizado en tres ejes: seguridad, universalidad y accesibilidad.',
+        'home.results.title': 'Mediciones y resultados',
+        'home.results.desc': 'La vista principal ahora es una matriz de tarjetas: arriba quedan las mediciones base y abajo el resto.',
+        'home.summary.title': 'Resumen por eje',
+        'home.summary.desc': 'El dominio activo se mantiene visible en esta franja superior.',
+        'home.headers.title': 'Seguridad de cabeceras',
+        'home.headers.desc': 'HTTPS, cabeceras defensivas, TLS y correo.',
+        'home.dns.title': 'Seguridad DNS',
+        'home.dns.desc': 'DNSSEC, DNSViz, registros y TXT.',
+        'home.routing.title': 'Seguridad de enrutamiento',
+        'home.routing.desc': 'RPKI, routing y visibilidad de origen.',
+        'home.universal.title': 'Aceptación universal',
+        'home.universal.desc': 'SMTPUTF8 y compatibilidad con direcciones internacionales.',
+        'home.access.title': 'Accesibilidad',
+        'home.access.desc': 'Validación W3C y señales de calidad web.',
+        'home.future.title': 'Próximamente',
+        'home.future.desc': 'Mediciones en preparación para integrar con una fuente estable.',
+        'home.lab.title': 'Laboratorio',
+        'home.lab.desc': 'Herramientas extra para inspección, referencias y exploración.',
+        'button.analyze': 'Analizar',
+        'button.analyzeMini': 'Analizar mini',
+        'button.clear': 'Limpiar',
+        'button.exportJson': 'Exportar JSON',
+        'button.exportCsv': 'Exportar CSV',
+        'button.info': 'Info',
+        'button.close': 'Cerrar',
+        'button.open': 'Abrir',
+        'lang.es': 'ES',
+        'lang.pt': 'PT',
+        'lang.en': 'EN',
+        'status.waiting': 'Esperando',
+        'status.pending': 'Pendiente',
+        'status.ok': 'OK',
+        'status.warning': 'Aviso',
+        'status.fail': 'Error',
+        'status.info': 'Info',
+        'mini.card.ipv4.title': 'Dirección IPv4',
+        'mini.card.ipv4.caption': 'La entrada A principal visible desde DNS.',
+        'mini.card.dnssec.title': 'DNSSEC + algoritmos',
+        'mini.card.dnssec.caption': 'DS y DNSKEY resumidos con números y nombres.',
+        'mini.card.rpki.title': 'RPKI',
+        'mini.card.rpki.caption': 'Dominio y correo cubiertos por ROAs.',
+        'mini.card.smtp.title': 'SMTPUTF8',
+        'mini.card.smtp.caption': 'Aceptación universal en MX.',
+        'mini.card.dnsviz.title': 'DNSViz',
+        'mini.card.dnsviz.caption': 'La cadena visual completa.',
+        'mini.card.http.title': 'Cabeceras HTTP',
+        'mini.card.http.caption': 'HTTPS, HSTS, CSP y defensas básicas.',
+        'mini.card.pulse.title': 'Pulse DNSSEC',
+        'mini.card.pulse.caption': 'Cobertura DNSSEC de Internet Society Pulse.',
+        'mini.card.roas.title': 'ROAs',
+        'mini.card.roas.caption': 'Resumen de las rutas cubiertas.',
+        'mini.card.rov.title': 'ROV',
+        'mini.card.rov.caption': 'Validación de rutas observada.',
+        'dnsviz.graph': 'Gráfico DNSViz',
+        'dnsviz.source': 'Fuente',
+        'dnsviz.observations': 'Observaciones',
+        'dnsviz.warnings': 'Advertencias',
+        'dnsviz.errors': 'Errores',
+        'dnsviz.noData': 'Sin datos.',
+        'dnsviz.noGraph': 'DNSViz no disponible',
+        'http.label.https': 'HTTPS',
+        'http.label.redirect': 'Redirección',
+        'http.label.hsts': 'HSTS',
+        'http.label.csp': 'CSP',
+        'http.label.xfo': 'X-Frame-Options',
+        'http.label.xcto': 'X-Content-Type-Options',
+        'http.label.referrer': 'Referrer-Policy',
+        'http.label.permissions': 'Permissions-Policy',
+        'http.label.xxss': 'X-XSS-Protection',
+        'http.value.present': 'presente',
+        'http.value.absent': 'ausente',
+        'http.value.forced': 'fuerza HTTPS',
+        'http.value.notForced': 'no fuerza HTTPS',
+        'http.value.strong': 'fuerte',
+        'http.value.weak': 'débil',
+        'http.value.secure': 'segura',
+        'http.value.insecure': 'insegura',
+        'http.summary.ok': 'HTTPS y cabeceras clave presentes.',
+        'http.summary.warn': 'Faltan una o más cabeceras importantes.',
+        'http.summary.fail': 'Sin respuesta HTTP útil.',
+        'tech.check': 'Qué se verifica',
+        'tech.request': 'Solicitud técnica',
+        'tech.response': 'Respuesta del servicio',
+        'tech.requestEmpty': 'No hay solicitud técnica directa.',
+        'tech.noRequest': 'Esta medición no tiene una solicitud técnica directa.',
+        'tech.informational': 'Se trata de una medición informativa o futura.',
+        'tech.loading': 'Cargando respuesta...',
+        'tech.runFirst': 'Ejecuta una medición primero para ver la respuesta técnica.',
+        'tech.noDomain': 'Sin dominio analizado todavía.',
+        'summary.quick': 'Resumen rápido.',
+        'group.fixPrefix': 'Las que hay que arreglar',
+        'group.fixDesc': 'Falsos positivos, errores o respuestas dudosas que conviene revisar.',
+        'group.fixCount': 'revisar',
+        'group.measurements': 'mediciones',
+        'group.https.title': 'HTTPS / Web',
+        'group.https.desc': 'Activación, redirección y cabeceras defensivas para publicación web.',
+        'group.appsecpriv.title': 'Cabeceras defensivas / AppSecPriv',
+        'group.appsecpriv.desc': 'Cabeceras HTTP y archivo de contacto de seguridad.',
+        'group.tls.title': 'TLS / Criptografía',
+        'group.tls.desc': 'Versión, cifrado y certificado de la conexión.',
+        'group.ip.title': 'IP / Direcciones',
+        'group.ip.desc': 'Publicación de direcciones A y AAAA en DNS.',
+        'group.dnssec.title': 'DNSSEC / DNS',
+        'group.dnssec.desc': 'Firma DNS, NSEC3 y la cadena DNSViz.',
+        'group.mailauth.title': 'DKIM, SPF y DMARC / Autenticación',
+        'group.mailauth.desc': 'Autenticación de correo basada en DNS.',
+        'group.mailtransport.title': 'MX y transporte / Transporte',
+        'group.mailtransport.desc': 'Servidores receptores y capacidades de transporte seguro.',
+        'group.ua.title': 'Universal Acceptance / Aceptación universal',
+        'group.ua.desc': 'SMTPUTF8 y compatibilidad con direcciones internacionales.',
+        'group.route.title': 'Ruta y confianza / Ruta e confiança',
+        'group.route.desc': 'Origen de ruta, ASN y validación de la red.',
+        'group.accessibility.title': 'Accesibilidad / Acessibilidade',
+        'group.accessibility.desc': 'Validación W3C y señales de calidad web.',
+        'group.future.title': 'Próximamente / Aproximadamente',
+        'group.future.desc': 'Mediciones en preparación para integrar con una fuente estable.',
+        'group.lab.title': 'Laboratorio / Laboratório',
+        'group.lab.desc': 'Herramientas extra para inspección, referencias y exploración.',
+        'mini.yes': 'Sí',
+        'mini.no': 'No',
+        'mini.pending': 'Pendiente',
+        'mini.ipv4.present': 'Presente',
+        'mini.ipv4.absent': 'Sin IPv4',
+        'mini.ipv4.visible': 'IPv4 visible en',
+        'mini.ipv4.records': 'registro(s).',
+        'mini.ipv4.missing': 'No se detectaron registros A.',
+        'mini.dnssec.ok': 'DNSSEC OK',
+        'mini.dnssec.partial': 'DNSSEC parcial',
+        'mini.dnssec.review': 'Se revisa DS, DNSKEY y cadena.',
+        'mini.rpki.full': 'ROAs cubren todo',
+        'mini.rpki.partial': 'ROAs parciales',
+        'mini.rpki.none': 'Sin ROAs',
+        'mini.rpki.domain': 'Dominio',
+        'mini.rpki.mail': 'Mail',
+        'mini.rpki.foot': 'Cobertura observada por RPKI/ROAs.',
+        'mini.smtp.yes': 'MX anuncia SMTPUTF8.',
+        'mini.smtp.no': 'No anuncia SMTPUTF8.',
+        'mini.smtp.none': 'Sin MX visibles.',
+        'mini.dnsviz.partial': 'DNSViz parcial',
+        'mini.updated': 'Actualizado',
+        'mini.dnsviz.source': 'Fuente y detalles técnicos.',
+        'mini.average': 'Promedio',
+        'mini.pulse.label': 'Cobertura DNSSEC del reporte {country}.',
+        'mini.pulse.adoption': 'Adopción DNSSEC',
+        'mini.roas.none': 'Sin ROAs',
+        'mini.roas.empty': 'No se listaron ROAs.',
+        'mini.source': 'Fuente: Internet Society Pulse.',
+        'mini.rov.label': 'ROV del reporte {country}.',
+        'mini.resilience': 'Resilience score',
+        'mini.showing': 'Mostrando {domain} · Pulse {country}',
+        'mini.showingNoPulse': 'Mostrando {domain}',
+        'mini.pulse.hidden': 'Se oculta porque el dominio no es ccTLD.',
+        'mini.roas.hidden': 'Se oculta porque el dominio no es ccTLD.',
+        'mini.rov.hidden': 'Se oculta porque el dominio no es ccTLD.',
+        'mini.progress': 'Progreso recibido.',
+        'mini.invalidResponse': 'Respuesta inválida del servidor',
+        'mini.streamFailed': 'La medición en vivo falló.',
+        'mini.fallback': 'Evento SSE no disponible; se usó respuesta directa.',
+        'status.loading': 'Cargando...',
+        'home.cctld.title': 'Reporte ccTLD LACNIC',
+        'home.cctld.desc': 'Vista precalculada de todos los ccTLDs de la región, lista al abrir la herramienta.',
+        'home.log.title': 'Registro de ejecución',
+        'home.log.desc': 'Mensajes claros con el avance de la medición, errores y exportación.',
+        'help.title': 'Ayuda rápida',
+        'help.placeholder': 'Escribe dnssec, ipv6, spf...',
+        'mini.dig': 'Dig local'
+      },
+      pt: {
+        'app.kicker': 'Padrões de Internet / medição regional',
+        'app.title': 'Ferramenta de Medições ISOC-LAC',
+        'app.lead': 'Medimos domínios, e-mail, DNS, TLS, universalidade e acessibilidade com uma base inspirada no Internet.nl, mas executada em Node.js para reutilizar nossas rotas e manter o fluxo estável. A interface inclui um relatório pré-calculado dos ccTLDs da LACNIC, que é atualizado automaticamente a cada 15 minutos e fica disponível mais abaixo.',
+        'pill.dnsviz': 'DNSViz em foco',
+        'pill.report': 'Relatório ccTLD pré-calculado',
+        'pill.logs': 'Logs claros em espanhol',
+        'nav.home': 'Home',
+        'nav.mini': 'Mini',
+        'nav.cctlds': 'ccTLDs',
+        'mini.title': 'Mini',
+        'mini.subtitle': 'Uma leitura limpa, rápida e mais visual. Se você colar vários domínios separados por vírgula, analisamos o primeiro.',
+        'mini.badge': 'Minimalista',
+        'mini.placeholder': 'practicallyunhackable.com, exemplo.com',
+        'mini.run': 'Analisar mini',
+        'mini.status': 'Cole um domínio e verá cartões claros com o resumo.',
+        'mini.trace.title': 'Tempo real',
+        'mini.trace.note': 'Você vê cada resposta enquanto chega.',
+        'mini.waiting': 'Aguardando um domínio para começar.',
+        'mini.empty': 'Cole um domínio para mostrar o mini.',
+        'mini.consulting': 'Consultando {domain} em paralelo...',
+        'mini.done': 'Mini concluído para {domain}.',
+        'mini.error': 'Erro para {domain}: {error}',
+        'mini.noStream': 'Não foi possível abrir ou manter o fluxo ao vivo.',
+        'home.explorer.title': 'Explorador de medições',
+        'home.explorer.desc': 'Cole um ou vários domínios separados por vírgula. Essa é a única entrada principal.',
+        'home.map.title': 'Mapa geral',
+        'home.map.desc': 'Organizado em três eixos: segurança, universalidade e acessibilidade.',
+        'home.results.title': 'Medições e resultados',
+        'home.results.desc': 'A visão principal agora é uma matriz de cartões: acima ficam as medições base e abaixo o resto.',
+        'home.summary.title': 'Resumo por eixo',
+        'home.summary.desc': 'O domínio ativo permanece visível nesta faixa superior.',
+        'home.headers.title': 'Segurança de cabeçalhos',
+        'home.headers.desc': 'HTTPS, cabeçalhos defensivos, TLS e e-mail.',
+        'home.dns.title': 'Segurança DNS',
+        'home.dns.desc': 'DNSSEC, DNSViz, registros e TXT.',
+        'home.routing.title': 'Segurança de roteamento',
+        'home.routing.desc': 'RPKI, routing e visibilidade de origem.',
+        'home.universal.title': 'Aceitação universal',
+        'home.universal.desc': 'SMTPUTF8 e compatibilidade com endereços internacionais.',
+        'home.access.title': 'Acessibilidade',
+        'home.access.desc': 'Validação W3C e sinais de qualidade web.',
+        'home.future.title': 'Em breve',
+        'home.future.desc': 'Medições em preparação para integrar com uma fonte estável.',
+        'home.lab.title': 'Laboratório',
+        'home.lab.desc': 'Ferramentas extras para inspeção, referências e exploração.',
+        'button.analyze': 'Analisar',
+        'button.analyzeMini': 'Analisar mini',
+        'button.clear': 'Limpar',
+        'button.exportJson': 'Exportar JSON',
+        'button.exportCsv': 'Exportar CSV',
+        'button.info': 'Info',
+        'button.close': 'Fechar',
+        'button.open': 'Abrir',
+        'lang.es': 'ES',
+        'lang.pt': 'PT',
+        'lang.en': 'EN',
+        'status.waiting': 'Aguardando',
+        'status.pending': 'Pendente',
+        'status.ok': 'OK',
+        'status.warning': 'Aviso',
+        'status.fail': 'Erro',
+        'status.info': 'Info',
+        'mini.card.ipv4.title': 'Endereço IPv4',
+        'mini.card.ipv4.caption': 'A entrada A principal visível no DNS.',
+        'mini.card.dnssec.title': 'DNSSEC + algoritmos',
+        'mini.card.dnssec.caption': 'DS e DNSKEY resumidos com números e nomes.',
+        'mini.card.rpki.title': 'RPKI',
+        'mini.card.rpki.caption': 'Domínio e e-mail cobertos por ROAs.',
+        'mini.card.smtp.title': 'SMTPUTF8',
+        'mini.card.smtp.caption': 'Aceitação universal nos MX.',
+        'mini.card.dnsviz.title': 'DNSViz',
+        'mini.card.dnsviz.caption': 'A cadeia visual completa.',
+        'mini.card.http.title': 'Cabeçalhos HTTP',
+        'mini.card.http.caption': 'HTTPS, HSTS, CSP e defesas básicas.',
+        'mini.card.pulse.title': 'Pulse DNSSEC',
+        'mini.card.pulse.caption': 'Cobertura DNSSEC do Internet Society Pulse.',
+        'mini.card.roas.title': 'ROAs',
+        'mini.card.roas.caption': 'Resumo das rotas cobertas.',
+        'mini.card.rov.title': 'ROV',
+        'mini.card.rov.caption': 'Validação de rotas observada.',
+        'dnsviz.graph': 'Gráfico DNSViz',
+        'dnsviz.source': 'Fonte',
+        'dnsviz.observations': 'Observações',
+        'dnsviz.warnings': 'Avisos',
+        'dnsviz.errors': 'Erros',
+        'dnsviz.noData': 'Sem dados.',
+        'dnsviz.noGraph': 'DNSViz indisponível',
+        'http.label.https': 'HTTPS',
+        'http.label.redirect': 'Redirecionamento',
+        'http.label.hsts': 'HSTS',
+        'http.label.csp': 'CSP',
+        'http.label.xfo': 'X-Frame-Options',
+        'http.label.xcto': 'X-Content-Type-Options',
+        'http.label.referrer': 'Referrer-Policy',
+        'http.label.permissions': 'Permissions-Policy',
+        'http.label.xxss': 'X-XSS-Protection',
+        'http.value.present': 'presente',
+        'http.value.absent': 'ausente',
+        'http.value.forced': 'força HTTPS',
+        'http.value.notForced': 'não força HTTPS',
+        'http.value.strong': 'forte',
+        'http.value.weak': 'fraca',
+        'http.value.secure': 'segura',
+        'http.value.insecure': 'insegura',
+        'http.summary.ok': 'HTTPS e cabeçalhos-chave presentes.',
+        'http.summary.warn': 'Faltam um ou mais cabeçalhos importantes.',
+        'http.summary.fail': 'Sem resposta HTTP útil.',
+        'tech.check': 'O que se verifica',
+        'tech.request': 'Solicitação técnica',
+        'tech.response': 'Resposta do serviço',
+        'tech.requestEmpty': 'Não há solicitação técnica direta.',
+        'tech.noRequest': 'Esta medição não tem uma solicitação técnica direta.',
+        'tech.informational': 'Trata-se de uma medição informativa ou futura.',
+        'tech.loading': 'Carregando resposta...',
+        'tech.runFirst': 'Execute uma medição primeiro para ver a resposta técnica.',
+        'tech.noDomain': 'Ainda não há domínio analisado.',
+        'summary.quick': 'Resumo rápido.',
+        'group.fixPrefix': 'As que precisam de ajuste',
+        'group.fixDesc': 'Falsos positivos, erros ou respostas duvidosas que vale revisar.',
+        'group.fixCount': 'revisar',
+        'group.measurements': 'medições',
+        'group.https.title': 'HTTPS / Web',
+        'group.https.desc': 'Ativação, redirecionamento e cabeçalhos defensivos para publicação web.',
+        'group.appsecpriv.title': 'Cabeçalhos defensivos / AppSecPriv',
+        'group.appsecpriv.desc': 'Cabeçalhos HTTP e arquivo de contato de segurança.',
+        'group.tls.title': 'TLS / Criptografia',
+        'group.tls.desc': 'Versão, cifra e certificado da conexão.',
+        'group.ip.title': 'IP / Endereços',
+        'group.ip.desc': 'Publicação de endereços A e AAAA no DNS.',
+        'group.dnssec.title': 'DNSSEC / DNS',
+        'group.dnssec.desc': 'Assinatura DNS, NSEC3 e a cadeia DNSViz.',
+        'group.mailauth.title': 'DKIM, SPF e DMARC / Autenticação',
+        'group.mailauth.desc': 'Autenticação de e-mail baseada em DNS.',
+        'group.mailtransport.title': 'MX e transporte / Transporte',
+        'group.mailtransport.desc': 'Servidores receptores e capacidades de transporte seguro.',
+        'group.ua.title': 'Universal Acceptance / Aceitação universal',
+        'group.ua.desc': 'SMTPUTF8 e compatibilidade com endereços internacionais.',
+        'group.route.title': 'Rota e confiança / Rota e confiança',
+        'group.route.desc': 'Origem de rota, ASN e validação da rede.',
+        'group.accessibility.title': 'Acessibilidade / Acessibilidade',
+        'group.accessibility.desc': 'Validação W3C e sinais de qualidade web.',
+        'group.future.title': 'Em breve / Aproximadamente',
+        'group.future.desc': 'Medições em preparação para integrar com uma fonte estável.',
+        'group.lab.title': 'Laboratório / Laboratório',
+        'group.lab.desc': 'Ferramentas extras para inspeção, referências e exploração.',
+        'mini.yes': 'Sim',
+        'mini.no': 'Não',
+        'mini.pending': 'Pendente',
+        'mini.ipv4.present': 'Presente',
+        'mini.ipv4.absent': 'Sem IPv4',
+        'mini.ipv4.visible': 'IPv4 visível em',
+        'mini.ipv4.records': 'registro(s).',
+        'mini.ipv4.missing': 'Não foram detectados registros A.',
+        'mini.dnssec.ok': 'DNSSEC OK',
+        'mini.dnssec.partial': 'DNSSEC parcial',
+        'mini.dnssec.review': 'DS, DNSKEY e cadeia são revisados.',
+        'mini.rpki.full': 'ROAs cobrem tudo',
+        'mini.rpki.partial': 'ROAs parciais',
+        'mini.rpki.none': 'Sem ROAs',
+        'mini.rpki.domain': 'Domínio',
+        'mini.rpki.mail': 'E-mail',
+        'mini.rpki.foot': 'Cobertura observada por RPKI/ROAs.',
+        'mini.smtp.yes': 'MX anuncia SMTPUTF8.',
+        'mini.smtp.no': 'Não anuncia SMTPUTF8.',
+        'mini.smtp.none': 'Sem MX visíveis.',
+        'mini.dnsviz.partial': 'DNSViz parcial',
+        'mini.updated': 'Atualizado',
+        'mini.dnsviz.source': 'Fonte e detalhes técnicos.',
+        'mini.average': 'Média',
+        'mini.pulse.label': 'Cobertura DNSSEC do relatório {country}.',
+        'mini.pulse.adoption': 'Adoção DNSSEC',
+        'mini.roas.none': 'Sem ROAs',
+        'mini.roas.empty': 'Nenhum ROA listado.',
+        'mini.source': 'Fonte: Internet Society Pulse.',
+        'mini.rov.label': 'ROV do relatório {country}.',
+        'mini.resilience': 'Resilience score',
+        'mini.showing': 'Mostrando {domain} · Pulse {country}',
+        'mini.showingNoPulse': 'Mostrando {domain}',
+        'mini.pulse.hidden': 'Se oculta porque o domínio não é ccTLD.',
+        'mini.roas.hidden': 'Se oculta porque o domínio não é ccTLD.',
+        'mini.rov.hidden': 'Se oculta porque o domínio não é ccTLD.',
+        'mini.progress': 'Progresso recebido.',
+        'mini.invalidResponse': 'Resposta inválida do servidor',
+        'mini.streamFailed': 'A medição ao vivo falhou.',
+        'mini.fallback': 'Evento SSE indisponível; resposta direta usada.',
+        'status.loading': 'Carregando...',
+        'home.cctld.title': 'Relatório ccTLD LACNIC',
+        'home.cctld.desc': 'Visão pré-calculada de todos os ccTLDs da região, pronta ao abrir a ferramenta.',
+        'home.log.title': 'Registro de execução',
+        'home.log.desc': 'Mensagens claras com o avanço da medição, erros e exportação.',
+        'help.title': 'Ajuda rápida',
+        'help.placeholder': 'Digite dnssec, ipv6, spf...',
+        'mini.dig': 'Dig local'
+      },
+      en: {
+        'app.kicker': 'Internet standards / regional measurement',
+        'app.title': 'ISOC-LAC Measurement Tool',
+        'app.lead': 'We measure domains, mail, DNS, TLS, universal acceptance and accessibility on a base inspired by Internet.nl, but running in Node.js so we can reuse our routes and keep the flow stable. The interface also includes a precomputed LACNIC ccTLD report that refreshes every 15 minutes and stays available below.',
+        'pill.dnsviz': 'DNSViz focused',
+        'pill.report': 'Precomputed ccTLD report',
+        'pill.logs': 'Clear logs in Spanish',
+        'nav.home': 'Home',
+        'nav.mini': 'Mini',
+        'nav.cctlds': 'ccTLDs',
+        'mini.title': 'Mini',
+        'mini.subtitle': 'A clean, fast, more visual readout. If you paste several domains separated by commas, we analyze the first one.',
+        'mini.badge': 'Minimal',
+        'mini.placeholder': 'practicallyunhackable.com, example.com',
+        'mini.run': 'Analyze mini',
+        'mini.status': 'Paste a domain and you will see clear summary cards.',
+        'mini.trace.title': 'Live',
+        'mini.trace.note': 'You can see each response as it arrives.',
+        'mini.waiting': 'Waiting for a domain to start.',
+        'mini.empty': 'Paste a domain to show the mini view.',
+        'mini.consulting': 'Querying {domain} in parallel...',
+        'mini.done': 'Mini finished for {domain}.',
+        'mini.error': 'Error for {domain}: {error}',
+        'mini.noStream': 'Could not open or keep the live stream.',
+        'home.explorer.title': 'Measurement explorer',
+        'home.explorer.desc': 'Paste one or more domains separated by commas. That is the only main input.',
+        'home.map.title': 'Overview',
+        'home.map.desc': 'Organized into three axes: security, universal acceptance and accessibility.',
+        'home.results.title': 'Measurements and results',
+        'home.results.desc': 'The main view is now a grid of cards: the base measurements go on top and the rest below.',
+        'home.summary.title': 'Axis summary',
+        'home.summary.desc': 'The active domain stays visible in this top strip.',
+        'home.headers.title': 'Header security',
+        'home.headers.desc': 'HTTPS, defensive headers, TLS and mail.',
+        'home.dns.title': 'DNS security',
+        'home.dns.desc': 'DNSSEC, DNSViz, records and TXT.',
+        'home.routing.title': 'Routing security',
+        'home.routing.desc': 'RPKI, routing and origin visibility.',
+        'home.universal.title': 'Universal acceptance',
+        'home.universal.desc': 'SMTPUTF8 and international-address compatibility.',
+        'home.access.title': 'Accessibility',
+        'home.access.desc': 'W3C validation and web quality signals.',
+        'home.future.title': 'Coming soon',
+        'home.future.desc': 'Measurements being prepared for a stable source.',
+        'home.lab.title': 'Lab',
+        'home.lab.desc': 'Extra tools for inspection, references and exploration.',
+        'button.analyze': 'Analyze',
+        'button.analyzeMini': 'Analyze mini',
+        'button.clear': 'Clear',
+        'button.exportJson': 'Export JSON',
+        'button.exportCsv': 'Export CSV',
+        'button.info': 'Info',
+        'button.close': 'Close',
+        'button.open': 'Open',
+        'lang.es': 'ES',
+        'lang.pt': 'PT',
+        'lang.en': 'EN',
+        'status.waiting': 'Waiting',
+        'status.pending': 'Pending',
+        'status.ok': 'OK',
+        'status.warning': 'Warning',
+        'status.fail': 'Error',
+        'status.info': 'Info',
+        'mini.card.ipv4.title': 'IPv4 address',
+        'mini.card.ipv4.caption': 'The main A record visible in DNS.',
+        'mini.card.dnssec.title': 'DNSSEC + algorithms',
+        'mini.card.dnssec.caption': 'DS and DNSKEY summarized with numbers and names.',
+        'mini.card.rpki.title': 'RPKI',
+        'mini.card.rpki.caption': 'Domain and mail covered by ROAs.',
+        'mini.card.smtp.title': 'SMTPUTF8',
+        'mini.card.smtp.caption': 'Universal acceptance on MX.',
+        'mini.card.dnsviz.title': 'DNSViz',
+        'mini.card.dnsviz.caption': 'The full visual chain.',
+        'mini.card.http.title': 'HTTP headers',
+        'mini.card.http.caption': 'HTTPS, HSTS, CSP and basic defenses.',
+        'mini.card.pulse.title': 'DNSSEC Pulse',
+        'mini.card.pulse.caption': 'DNSSEC coverage from Internet Society Pulse.',
+        'mini.card.roas.title': 'ROAs',
+        'mini.card.roas.caption': 'Summary of covered routes.',
+        'mini.card.rov.title': 'ROV',
+        'mini.card.rov.caption': 'Observed route validation.',
+        'dnsviz.graph': 'DNSViz graph',
+        'dnsviz.source': 'Source',
+        'dnsviz.observations': 'Observations',
+        'dnsviz.warnings': 'Warnings',
+        'dnsviz.errors': 'Errors',
+        'dnsviz.noData': 'No data.',
+        'dnsviz.noGraph': 'DNSViz unavailable',
+        'http.label.https': 'HTTPS',
+        'http.label.redirect': 'Redirect',
+        'http.label.hsts': 'HSTS',
+        'http.label.csp': 'CSP',
+        'http.label.xfo': 'X-Frame-Options',
+        'http.label.xcto': 'X-Content-Type-Options',
+        'http.label.referrer': 'Referrer-Policy',
+        'http.label.permissions': 'Permissions-Policy',
+        'http.label.xxss': 'X-XSS-Protection',
+        'http.value.present': 'present',
+        'http.value.absent': 'absent',
+        'http.value.forced': 'forces HTTPS',
+        'http.value.notForced': 'does not force HTTPS',
+        'http.value.strong': 'strong',
+        'http.value.weak': 'weak',
+        'http.value.secure': 'secure',
+        'http.value.insecure': 'insecure',
+        'http.summary.ok': 'HTTPS and key headers present.',
+        'http.summary.warn': 'One or more important headers are missing.',
+        'http.summary.fail': 'No useful HTTP response.',
+        'tech.check': 'What is checked',
+        'tech.request': 'Technical request',
+        'tech.response': 'Service response',
+        'tech.requestEmpty': 'There is no direct technical request.',
+        'tech.noRequest': 'This measurement has no direct technical request.',
+        'tech.informational': 'This is an informational or future measurement.',
+        'tech.loading': 'Loading response...',
+        'tech.runFirst': 'Run a measurement first to see the technical response.',
+        'tech.noDomain': 'No domain has been analyzed yet.',
+        'summary.quick': 'Quick summary.',
+        'group.fixPrefix': 'Needs fixing',
+        'group.fixDesc': 'False positives, errors or doubtful responses worth reviewing.',
+        'group.fixCount': 'review',
+        'group.measurements': 'measurements',
+        'group.https.title': 'HTTPS / Web',
+        'group.https.desc': 'Activation, redirection and defensive headers for web publishing.',
+        'group.appsecpriv.title': 'Defensive headers / AppSecPriv',
+        'group.appsecpriv.desc': 'HTTP headers and security contact file.',
+        'group.tls.title': 'TLS / Cryptography',
+        'group.tls.desc': 'Connection version, cipher and certificate.',
+        'group.ip.title': 'IP / Addresses',
+        'group.ip.desc': 'Publication of A and AAAA records in DNS.',
+        'group.dnssec.title': 'DNSSEC / DNS',
+        'group.dnssec.desc': 'DNS signing, NSEC3 and the DNSViz chain.',
+        'group.mailauth.title': 'DKIM, SPF and DMARC / Authentication',
+        'group.mailauth.desc': 'Mail authentication based on DNS.',
+        'group.mailtransport.title': 'MX and transport / Transport',
+        'group.mailtransport.desc': 'Receiving servers and secure transport capabilities.',
+        'group.ua.title': 'Universal Acceptance / Universal acceptance',
+        'group.ua.desc': 'SMTPUTF8 and international-address compatibility.',
+        'group.route.title': 'Routing and trust / Routing and trust',
+        'group.route.desc': 'Route origin, ASN and network validation.',
+        'group.accessibility.title': 'Accessibility / Accessibility',
+        'group.accessibility.desc': 'W3C validation and web quality signals.',
+        'group.future.title': 'Coming soon / Coming soon',
+        'group.future.desc': 'Measurements being prepared for a stable source.',
+        'group.lab.title': 'Lab / Lab',
+        'group.lab.desc': 'Extra tools for inspection, references and exploration.',
+        'mini.yes': 'Yes',
+        'mini.no': 'No',
+        'mini.pending': 'Pending',
+        'mini.ipv4.present': 'Present',
+        'mini.ipv4.absent': 'No IPv4',
+        'mini.ipv4.visible': 'IPv4 visible in',
+        'mini.ipv4.records': 'record(s).',
+        'mini.ipv4.missing': 'No A records were detected.',
+        'mini.dnssec.ok': 'DNSSEC OK',
+        'mini.dnssec.partial': 'Partial DNSSEC',
+        'mini.dnssec.review': 'DS, DNSKEY and chain are reviewed.',
+        'mini.rpki.full': 'ROAs cover everything',
+        'mini.rpki.partial': 'Partial ROAs',
+        'mini.rpki.none': 'No ROAs',
+        'mini.rpki.domain': 'Domain',
+        'mini.rpki.mail': 'Mail',
+        'mini.rpki.foot': 'Coverage observed by RPKI/ROAs.',
+        'mini.smtp.yes': 'MX advertises SMTPUTF8.',
+        'mini.smtp.no': 'MX does not advertise SMTPUTF8.',
+        'mini.smtp.none': 'No visible MX servers.',
+        'mini.dnsviz.partial': 'Partial DNSViz',
+        'mini.updated': 'Updated',
+        'mini.dnsviz.source': 'Source and technical details.',
+        'mini.average': 'Average',
+        'mini.pulse.label': 'DNSSEC coverage from the {country} report.',
+        'mini.pulse.adoption': 'DNSSEC adoption',
+        'mini.roas.none': 'No ROAs',
+        'mini.roas.empty': 'No ROAs listed.',
+        'mini.source': 'Source: Internet Society Pulse.',
+        'mini.rov.label': 'ROV from the {country} report.',
+        'mini.resilience': 'Resilience score',
+        'mini.showing': 'Showing {domain} · Pulse {country}',
+        'mini.showingNoPulse': 'Showing {domain}',
+        'mini.pulse.hidden': 'Hidden because the domain is not a ccTLD.',
+        'mini.roas.hidden': 'Hidden because the domain is not a ccTLD.',
+        'mini.rov.hidden': 'Hidden because the domain is not a ccTLD.',
+        'mini.progress': 'Progress received.',
+        'mini.invalidResponse': 'Invalid server response',
+        'mini.streamFailed': 'The live measurement failed.',
+        'mini.fallback': 'SSE event unavailable; direct response used.',
+        'status.loading': 'Loading...',
+        'home.cctld.title': 'LACNIC ccTLD report',
+        'home.cctld.desc': 'Precomputed view of all regional ccTLDs, ready when the tool opens.',
+        'home.log.title': 'Execution log',
+        'home.log.desc': 'Clear messages for progress, errors and export.',
+        'help.title': 'Quick help',
+        'help.placeholder': 'Type dnssec, ipv6, spf...',
+        'mini.dig': 'Local dig'
+      }
+    };
+    const loadLocalePack = lang => ({ ...fallbackLocalePacks[lang], ...localePacks[lang] });
+    function parseProperties(text) {
+      const out = {};
+      String(text || '').split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('!')) return;
+        const index = trimmed.indexOf('=');
+        if (index === -1) return;
+        const key = trimmed.slice(0, index).trim();
+        const value = trimmed.slice(index + 1).trim();
+        if (key) out[key] = value;
+      });
+      return out;
+    }
+    async function refreshLocalePack(lang) {
+      if (!SUPPORTED_LANGS.includes(lang)) return;
+      try {
+        const response = await fetch(`${API_BASE}/locales/${encodeURIComponent(lang)}.properties`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        localePacks[lang] = { ...fallbackLocalePacks[lang], ...parseProperties(text) };
+      } catch (error) {
+        localePacks[lang] = { ...fallbackLocalePacks[lang] };
+      }
+    }
+    function t(key, fallback = '') {
+      return loadLocalePack(currentLang)[key] || loadLocalePack('es')[key] || fallback || key;
+    }
+    function tf(key, values = {}, fallback = '') {
+      return String(t(key, fallback)).replace(/\{(\w+)\}/g, (_, name) => (name in values ? values[name] : `{${name}}`));
+    }
+    function textFor(item, field, fallback = '') {
+      const lookupKey = item?.id ? `check.${item.id}.${field}` : '';
+      return lookupKey ? t(lookupKey, fallback) : fallback;
+    }
+    function groupText(group, field, fallback = '') {
+      const lookupKey = group?.id ? `group.${group.id}.${field}` : '';
+      return lookupKey ? t(lookupKey, fallback) : fallback;
+    }
+    function miniText(key, fallback = '') {
+      return t(`mini.${key}`, fallback);
+    }
+    function httpText(key, fallback = '') {
+      return t(`http.${key}`, fallback);
+    }
+    function setNodeText(selector, value) {
+      const node = document.querySelector(selector);
+      if (node) node.textContent = value;
+    }
+    function setNodePlaceholder(selector, value) {
+      const node = document.querySelector(selector);
+      if (node) node.placeholder = value;
+    }
+    function setNodeAriaLabel(selector, value) {
+      const node = document.querySelector(selector);
+      if (node) node.setAttribute('aria-label', value);
+    }
+    function updateLangButtons() {
+      langButtons.forEach(button => {
+        const lang = button.dataset.langSwitch;
+        const active = lang === currentLang;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        button.textContent = t(`lang.${lang}`, lang.toUpperCase());
+      });
+    }
+    function applyStaticTranslations() {
+      setNodeText('.kicker', t('app.kicker', 'Estándares de Internet / medición regional'));
+      setNodeText('.hero h1', t('app.title', 'Herramienta de Mediciones ISOC-LAC'));
+      setNodeText('.hero .lead', t('app.lead', 'Medimos dominios, correo, DNS, TLS, universalidad y accesibilidad.'));
+      const pills = document.querySelectorAll('.inline-note .pill');
+      if (pills[0]) pills[0].textContent = t('pill.dnsviz', 'DNSViz centrado');
+      if (pills[1]) pills[1].textContent = t('pill.report', 'Reporte ccTLD precalculado');
+      if (pills[2]) pills[2].textContent = t('pill.logs', 'Logs claros en español');
+      const tabs = Array.from(document.querySelectorAll('.mode-tabs .mode-tab'));
+      if (tabs[0]) tabs[0].textContent = t('nav.home', 'Home');
+      if (tabs[1]) tabs[1].textContent = t('nav.mini', 'Mini');
+      if (tabs[2]) tabs[2].textContent = t('nav.cctlds', 'ccTLDs');
+      setNodeText('#miniShell h2', t('mini.title', 'Mini'));
+      setNodeText('#miniShell .muted', t('mini.subtitle', 'Una lectura limpia, rápida y más visual.'));
+      setNodePlaceholder('#miniDomains', t('mini.placeholder', 'practicallyunhackable.com, ejemplo.com'));
+      setNodeText('#miniRunButton', t('button.analyzeMini', 'Analizar mini'));
+      setNodeText('#miniStatus', t('mini.status', 'Pega un dominio y verás tarjetas claras con el resumen.'));
+      setNodeText('.mini-trace-head strong', t('mini.trace.title', 'Tiempo real'));
+      setNodeText('.mini-trace-note', t('mini.trace.note', 'Vas viendo cada respuesta mientras llega.'));
+      setNodeText('#explorador h2', t('home.explorer.title', 'Explorador de mediciones'));
+      setNodeText('#explorador .muted', t('home.explorer.desc', 'Pega uno o varios dominios separados por coma.'));
+      setNodeText('#mapa-general h2', t('home.map.title', 'Mapa general'));
+      setNodeText('#mapa-general p', t('home.map.desc', 'Organizado en tres ejes.'));
+      setNodeText('#resultados h2', t('home.results.title', 'Mediciones y resultados'));
+      const resultsDesc = document.querySelector('#resultados .panel-head .muted');
+      if (resultsDesc) resultsDesc.textContent = t('home.results.desc', 'La vista principal ahora es una matriz de tarjetas.');
+      setNodeText('#runButton', t('button.analyze', 'Analizar'));
+      setNodeText('#exportJsonButton', t('button.exportJson', 'Exportar JSON'));
+      setNodeText('#exportCsvButton', t('button.exportCsv', 'Exportar CSV'));
+      setNodeText('#clearButton', t('button.clear', 'Limpiar'));
+      setNodeText('#resultados .results-meta-head h3', t('home.summary.title', 'Resumen por eje'));
+      const summaryDesc = document.querySelector('#resultados .results-meta-head p');
+      if (summaryDesc) summaryDesc.textContent = t('home.summary.desc', 'El dominio activo se mantiene visible en esta franja superior.');
+      const axisSheets = document.querySelectorAll('.axis-sheet');
+      const axisTexts = [
+        ['home.headers.title', 'home.headers.desc'],
+        ['home.dns.title', 'home.dns.desc'],
+        ['home.routing.title', 'home.routing.desc'],
+        ['home.universal.title', 'home.universal.desc'],
+        ['home.access.title', 'home.access.desc']
+      ];
+      axisSheets.forEach((sheet, index) => {
+        const head = sheet.querySelector('.axis-sheet-head');
+        if (!head) return;
+        const title = head.querySelector('h3');
+        const desc = head.querySelector('p');
+        const pair = axisTexts[index];
+        if (title && pair) title.textContent = t(pair[0], title.textContent);
+        if (desc && pair) desc.textContent = t(pair[1], desc.textContent);
+      });
+      setNodeText('#repairPanel h2', t('group.fixPrefix', 'Las que hay que arreglar'));
+      setNodeText('#repairPanel .muted', t('group.fixDesc', 'Falsos positivos, errores o respuestas dudosas que conviene revisar.'));
+      setNodeText('#futurePanel h2', t('home.future.title', 'Próximamente'));
+      setNodeText('#futurePanel .muted', t('home.future.desc', 'Mediciones en preparación para integrar con una fuente estable.'));
+      setNodeText('#labPanel h2', t('home.lab.title', 'Laboratorio'));
+      setNodeText('#labPanel .muted', t('home.lab.desc', 'Herramientas extra para inspección, referencias y exploración.'));
+      setNodeText('#reporte-cctld h2', t('home.cctld.title', 'Reporte ccTLD LACNIC'));
+      const cctldDesc = document.querySelector('#reporte-cctld .section-title p');
+      if (cctldDesc) cctldDesc.textContent = t('home.cctld.desc', 'Vista precalculada de todos los ccTLDs de la región, lista al abrir la herramienta.');
+      setNodeText('#cctldRefresh', t('status.loading', 'Cargando...'));
+      const miniToggle = document.querySelector('#reporte-cctld .mini-toggle');
+      if (miniToggle) miniToggle.textContent = t('mini.dig', 'Dig local');
+      setNodeText('#registro h2', t('home.log.title', 'Registro de ejecución'));
+      const regDesc = document.querySelector('#registro .muted');
+      if (regDesc) regDesc.textContent = t('home.log.desc', 'Mensajes claros con el avance de la medición, errores y exportación.');
+      const helpTitle = document.querySelector('#helpChat .chat-head strong');
+      if (helpTitle) helpTitle.textContent = t('help.title', 'Ayuda rápida');
+      const chatToggleText = document.getElementById('chatToggle');
+      if (chatToggleText) chatToggleText.textContent = t('button.open', 'Abrir');
+      setNodePlaceholder('#chatInput', t('help.placeholder', 'Escribe dnssec, ipv6, spf...'));
+      const chatSubmit = document.querySelector('#chatForm button');
+      if (chatSubmit) chatSubmit.textContent = t('button.info', 'Ver');
+      updateLangButtons();
+      if (document.body.dataset.view === 'mini') {
+        buildMiniCards();
+        if (lastMiniData) renderMiniResults(lastMiniData);
+        else renderMiniEmpty(t('mini.empty', 'Pega un dominio para mostrar el mini.'));
+      } else if (document.body.dataset.view === 'home') {
+        renderCatalog();
+      }
+    }
+    async function setLanguage(lang) {
+      if (!SUPPORTED_LANGS.includes(lang)) return;
+      currentLang = lang;
+      localStorage.setItem('mediciones-lang', lang);
+      await refreshLocalePack(lang);
+      applyStaticTranslations();
+      if (document.body.dataset.view === 'home') {
+        renderCatalog();
+        if (lastRun) {
+          renderResultPager();
+        }
+      }
+      if (document.body.dataset.view === 'mini' && lastMiniData) {
+        renderMiniResults(lastMiniData);
+      }
+    }
 
     const make = (tag, className, text) => {
       const node = document.createElement(tag);
@@ -1206,6 +2655,7 @@
         checks: [
           check('dnssec', 'DNSSEC', 'DNSSEC', 'Verifica DS y DNSKEY en la cadena del dominio.', 'Verifica DS e DNSKEY na cadeia do domínio.'),
           check('dnsviz', 'DNSViz', 'DNSViz', 'Muestra la cadena de autenticación completa por niveles.', 'Mostra a cadeia de autenticação completa por níveis.'),
+          check('internetnlweb', 'Método nuevo web', 'Método novo web', 'Compone una lectura local al estilo Internet.nl para comparar la capa web.', 'Compõe uma leitura local no estilo Internet.nl para comparar a camada web.'),
           check('dnsrecords', 'Registros DNS', 'Registros DNS', 'Muestra un resumen de los registros principales.', 'Mostra um resumo dos registros principais.'),
           check('txtrecords', 'TXT', 'TXT', 'Lista los TXT presentes en el dominio.', 'Lista os TXT presentes no domínio.')
         ]
@@ -1236,7 +2686,8 @@
         checks: [
           check('mx', 'MX', 'MX', 'Comprueba si hay servidores receptores de correo.', 'Verifica se há servidores receptores de e-mail.'),
           check('mailipv6', 'IPv6 en MX', 'IPv6 nos MX', 'Comprueba si los MX publican AAAA.', 'Verifica se os MX publicam AAAA.'),
-          check('starttls', 'STARTTLS', 'STARTTLS', 'Comprueba si los MX anuncian STARTTLS.', 'Verifica se os MX anunciam STARTTLS.')
+          check('starttls', 'STARTTLS', 'STARTTLS', 'Comprueba si los MX anuncian STARTTLS.', 'Verifica se os MX anunciam STARTTLS.'),
+          check('internetnlmail', 'Método nuevo mail', 'Método novo mail', 'Compone una lectura local al estilo Internet.nl para comparar la capa de correo.', 'Compõe uma leitura local no estilo Internet.nl para comparar a camada de e-mail.')
         ]
       },
       {
@@ -1349,6 +2800,12 @@
         title: 'RPKI y routing',
         es: 'Mostramos la ruta ASN/prefix que observamos para cada IP y la validación RPKI. El objetivo es saber si la ruta que anuncia el origen es válida, inválida o no encontrada.',
         pt: 'Mostramos a rota ASN/prefix observada para cada IP e a validação RPKI. O objetivo é saber se a rota anunciada é válida, inválida ou não encontrada.'
+      },
+      {
+        terms: ['internetnl', 'batch'],
+        title: 'Bundle local',
+        es: 'Consulta el bundle local inspirado en Internet.nl y resume puntaje, categorías y evidencias para web y correo.',
+        pt: 'Consulta o bundle local inspirado no Internet.nl e resume pontuação, categorias e evidências para web e e-mail.'
       },
       {
         terms: ['csp', 'xfo', 'xcto', 'referrer', 'permissions', 'security.txt'],
@@ -1476,6 +2933,37 @@
       });
     });
 
+    const featuredMeasurementIds = ['ipv6', 'dnssec', 'rpki', 'smtputf8'];
+    const featuredMeasurementSet = new Set(featuredMeasurementIds);
+    const sectionContainers = {
+      headers: axisResultsHeaders,
+      dns: axisResultsDns,
+      routing: axisResultsRouting,
+      universalidad: axisResultsUniversalidad,
+      accesibilidad: axisResultsAccesibilidad,
+      future: axisResultsFuture,
+      lab: axisResultsLab
+    };
+    const groupSectionMap = {
+      https: 'headers',
+      appsecpriv: 'headers',
+      tls: 'headers',
+      mailauth: 'headers',
+      mailtransport: 'headers',
+      dnssec: 'dns',
+      route: 'routing',
+      ip: 'universalidad',
+      ua: 'universalidad',
+      accessibility: 'accesibilidad',
+      future: 'future',
+      lab: 'lab'
+    };
+    const groupOrder = ['https', 'appsecpriv', 'tls', 'mailauth', 'mailtransport', 'dnssec', 'route', 'ip', 'ua', 'accessibility', 'future', 'lab'];
+    const groupCards = new Map();
+    const repairCards = new Map();
+    const repairableGroupIds = new Set(['https', 'appsecpriv', 'tls', 'mailauth', 'mailtransport', 'dnssec', 'route', 'ip', 'ua', 'accessibility']);
+    const featuredCardSlots = new Map();
+
     const requestTemplates = {
       https: domain => `/headers/${encodeURIComponent(domain)}`,
       redirect: domain => `/headers/${encodeURIComponent(domain)}`,
@@ -1509,6 +2997,8 @@
       smtputf8: domain => `/smtputf8/${encodeURIComponent(domain)}`,
       rpki: domain => `/rpki/${encodeURIComponent(domain)}`,
       routing: domain => `/routing/${encodeURIComponent(domain)}`,
+      internetnlweb: domain => `/compat/${encodeURIComponent(domain)}?type=web`,
+      internetnlmail: domain => `/compat/${encodeURIComponent(domain)}?type=mail`,
       serverinfo: domain => `/serverinfo/${encodeURIComponent(domain)}`,
       serverstatus: domain => `/serverstatus/${encodeURIComponent(domain)}`,
       redirectchain: domain => `/redirectchain/${encodeURIComponent(domain)}`,
@@ -1747,17 +3237,17 @@
       slot.tech.classList.toggle('open', Boolean(content));
       if (!content) return;
       const title = make('div', 'tech-line');
-      const label = make('span', 'tech-label', 'Qué se verifica');
+      const label = make('span', 'tech-label', t('tech.check', 'Qué se verifica'));
       title.append(label, document.createTextNode(content.explanation || ''));
       slot.tech.appendChild(title);
 
       const requestLine = make('div', 'tech-line');
-      requestLine.append(make('span', 'tech-label', 'Solicitud técnica'));
-      requestLine.appendChild(make('div', 'tech-pre', content.request || 'No hay solicitud técnica directa.'));
+      requestLine.append(make('span', 'tech-label', t('tech.request', 'Solicitud técnica')));
+      requestLine.appendChild(make('div', 'tech-pre', content.request || t('tech.requestEmpty', 'No hay solicitud técnica directa.')));
       slot.tech.appendChild(requestLine);
 
       const responseLine = make('div', 'tech-line');
-      responseLine.append(make('span', 'tech-label', 'Respuesta del servicio'));
+      responseLine.append(make('span', 'tech-label', t('tech.response', 'Respuesta del servicio')));
       responseLine.appendChild(make('div', 'tech-pre', prettyResponse(content.response)));
       slot.tech.appendChild(responseLine);
     }
@@ -1766,29 +3256,29 @@
       const request = requestForMeasurement(id, domain);
       if (!request) {
         setTechPanel(slot, {
-          explanation: checkMap.get(id)?.descEs || 'Sin descripción disponible.',
-          request: 'Esta medición no tiene una solicitud técnica directa.',
-          response: 'Se trata de una medición informativa o futura.'
+          explanation: textFor(checkMap.get(id), 'desc', checkMap.get(id)?.descEs || 'Sin descripción disponible.'),
+          request: t('tech.noRequest', 'Esta medición no tiene una solicitud técnica directa.'),
+          response: t('tech.informational', 'Se trata de una medición informativa o futura.')
         });
         return;
       }
 
       setTechPanel(slot, {
-        explanation: checkMap.get(id)?.descEs || 'Sin descripción disponible.',
+        explanation: textFor(checkMap.get(id), 'desc', checkMap.get(id)?.descEs || 'Sin descripción disponible.'),
         request,
-        response: 'Cargando respuesta...'
+        response: t('tech.loading', 'Cargando respuesta...')
       });
       slot.infoButton.disabled = true;
       try {
         const response = await apiJson(request, 20000);
         setTechPanel(slot, {
-          explanation: checkMap.get(id)?.descEs || 'Sin descripción disponible.',
+          explanation: textFor(checkMap.get(id), 'desc', checkMap.get(id)?.descEs || 'Sin descripción disponible.'),
           request,
           response
         });
       } catch (error) {
         setTechPanel(slot, {
-          explanation: checkMap.get(id)?.descEs || 'Sin descripción disponible.',
+          explanation: textFor(checkMap.get(id), 'desc', checkMap.get(id)?.descEs || 'Sin descripción disponible.'),
           request,
           response: { error: error.message || 'Servicio no disponible' }
         });
@@ -1798,105 +3288,104 @@
     }
 
     function axisForGroup(groupId) {
-      if (['https', 'appsecpriv', 'tls', 'dnssec', 'mailauth', 'mailtransport', 'route', 'lab', 'future'].includes(groupId)) {
-        return 'security';
-      }
-      if (['ip', 'ua'].includes(groupId)) {
-        return 'universalidad';
-      }
-      return 'accesibilidad';
+      return groupSectionMap[groupId] || 'accesibilidad';
     }
 
     function axisContainer(axis) {
-      return axis === 'security'
-        ? axisResultsSecurity
-        : axis === 'universalidad'
-          ? axisResultsUniversalidad
-          : axisResultsAccesibilidad;
+      return sectionContainers[axis] || axisResultsAccesibilidad;
     }
 
-    function createGroupCard(group) {
-      const details = document.createElement('details');
-      details.className = 'tab-panel';
-      details.dataset.catalogPanel = group.id;
-      details.id = `catalog-${group.id}`;
+    function createGroupCard(group, { repair = false } = {}) {
+      const family = document.createElement('article');
+      family.className = 'measurement-family';
+      if (repair) family.classList.add('repair-family');
+      if (repair) family.hidden = true;
+      family.dataset.catalogPanel = group.id;
+      family.id = `catalog-${group.id}`;
 
-      const summary = document.createElement('summary');
+      const head = document.createElement('div');
+      head.className = 'measurement-family-head';
       const left = document.createElement('div');
-      const title = make('h3', 'cat-title', group.title);
-      const sub = make('p', 'cat-sub', `${group.descEs} / ${group.descPt}`);
-      left.append(title, sub);
-      const right = document.createElement('div');
-      right.style.display = 'flex';
-      right.style.alignItems = 'center';
-      right.style.gap = '8px';
-      right.append(make('span', 'cat-count', `${group.checks.length} mediciones`), make('span', 'chevron', '⌄'));
-      summary.append(left, right);
-      details.appendChild(summary);
+      const titlePrefix = repair ? `${t('group.fixPrefix', 'Las que hay que arreglar')} · ` : '';
+      left.append(
+        make('h3', '', `${titlePrefix}${groupText(group, 'title', group.title)}`),
+        make('p', '', repair
+          ? t('group.fixDesc', 'Falsos positivos, errores o respuestas dudosas que conviene revisar.')
+          : `${groupText(group, 'desc', group.descEs)}`
+        )
+      );
+      const count = make('span', 'measurement-family-count', repair ? t('group.fixCount', 'revisar') : `${group.checks.length} ${t('group.measurements', 'mediciones')}`);
+      head.append(left, count);
 
-      const list = make('div', 'check-list');
-      group.checks.forEach(item => {
-        const label = document.createElement('label');
-        label.className = 'check-item';
-        if (item.comingSoon) label.classList.add('coming-soon');
+      const grid = make('div', 'measurement-grid');
+      if (repair) {
+        repairCards.set(group.id, grid);
+      } else {
+        groupCards.set(group.id, grid);
+      }
 
-        const head = make('div', 'check-head');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.dataset.check = item.id;
-        checkbox.checked = !item.comingSoon;
-        checkbox.disabled = Boolean(item.comingSoon);
-
-        const text = document.createElement('div');
-        const itemTitle = make('div', 'check-title', item.label);
-        const desc = document.createElement('div');
-        desc.className = 'check-desc';
-        desc.innerHTML = `<strong>ES:</strong> ${item.descEs}<br><strong>PT:</strong> ${item.descPt}`;
-        text.append(itemTitle, desc);
-
-        const badge = item.comingSoon ? make('span', 'status info', 'Próximamente') : null;
-        if (badge) badge.style.alignSelf = 'start';
-
-        head.append(checkbox, text);
-        if (badge) head.appendChild(badge);
-        label.appendChild(head);
-        const inline = buildInlineResultSlot(item);
-        label.appendChild(inline.row);
-        catalogResultSlots.set(item.id, inline);
-        list.appendChild(label);
-      });
-
-      details.appendChild(list);
-      return details;
+      family.append(head, grid);
+      return family;
     }
 
     function renderCatalog() {
-      clearNode(axisResultsSecurity);
+      if (featuredCardsEl) {
+        clearNode(featuredCardsEl);
+      }
+      clearNode(axisResultsHeaders);
+      clearNode(axisResultsDns);
+      clearNode(axisResultsRouting);
       clearNode(axisResultsUniversalidad);
       clearNode(axisResultsAccesibilidad);
+      clearNode(axisResultsFuture);
+      clearNode(axisResultsLab);
+      clearNode(repairResults);
+      groupCards.clear();
+      repairCards.clear();
+      catalogResultSlots.clear();
+      featuredCardSlots.clear();
 
-      groups.forEach(group => {
+      featuredMeasurementIds.forEach(id => {
+        const item = checkMap.get(id);
+        if (!item) return;
+        const summary = buildFeaturedSummarySlot(item);
+        featuredCardSlots.set(item.id, summary);
+        featuredCardsEl.appendChild(summary.row);
+      });
+
+      const renderedGroups = new Set();
+      groupOrder.forEach(groupId => {
+        const group = categoryMap.get(groupId);
+        if (!group || renderedGroups.has(groupId)) return;
+        renderedGroups.add(groupId);
+        const axis = axisForGroup(group.id);
         const card = createGroupCard(group);
-        axisContainer(axisForGroup(group.id)).appendChild(card);
+        axisContainer(axis).appendChild(card);
+        let repairCard = null;
+        if (repairableGroupIds.has(group.id)) {
+          repairCard = createGroupCard(group, { repair: true });
+          repairResults.appendChild(repairCard);
+        }
+        group.checks.forEach(item => {
+          const inline = buildInlineResultSlot(item);
+          inline.row.classList.add('measurement-card');
+          inline.row.dataset.group = group.id;
+          inline.goodContainer = card.querySelector('.measurement-grid');
+          inline.repairContainer = repairCard ? repairCard.querySelector('.measurement-grid') : null;
+          inline.currentContainer = inline.goodContainer;
+          catalogResultSlots.set(item.id, inline);
+          inline.goodContainer.appendChild(inline.row);
+        });
       });
       updateSelectionCount();
     }
 
     function getSelectedIds() {
-      return Array.from(document.querySelectorAll('input[type="checkbox"][data-check]'))
-        .filter(node => !node.disabled)
-        .map(node => node.dataset.check);
+      return allIds.filter(id => !checkMap.get(id)?.comingSoon);
     }
 
     function setPreset(name) {
-      const ids = name === 'all' ? new Set(allIds)
-        : name === 'core' ? new Set(coreIds)
-        : name === 'lab' ? new Set(labIds)
-        : new Set((categoryMap.get(name)?.checks || []).map(item => item.id));
-      document.querySelectorAll('input[type="checkbox"][data-check]').forEach(node => {
-        node.checked = !node.disabled && ids.has(node.dataset.check);
-      });
-      updateSelectionCount();
+      return name;
     }
 
     function parseDomains(value) {
@@ -1989,6 +3478,8 @@
     async function getTxtrecords(domain) { return apiJson(`/txtrecords/${encodeURIComponent(domain)}`); }
     async function getRpki(domain) { return apiJson(`/rpki/${encodeURIComponent(domain)}`); }
     async function getRouting(domain) { return apiJson(`/routing/${encodeURIComponent(domain)}`); }
+    async function getInternetNl(domain, type = 'web') { return apiJson(`/internetnl/${encodeURIComponent(domain)}?type=${encodeURIComponent(type)}`); }
+    async function getCompatBundle(domain, type = 'web') { return apiJson(`/compat/${encodeURIComponent(domain)}?type=${encodeURIComponent(type)}`); }
     async function getServerInfo(domain) { return apiJson(`/serverinfo/${encodeURIComponent(domain)}`); }
     async function getDomainInfo(domain) { return apiJson(`/domaininfo/${encodeURIComponent(domain)}`); }
     async function getWhois(domain) { return apiJson(`/whois/${encodeURIComponent(domain)}`); }
@@ -2008,6 +3499,147 @@
     async function getRanking(domain) { return apiJson(`/ranking/${encodeURIComponent(domain)}`); }
     async function getWifiSpectrum(variantId) { return apiJson(`/wifispectrum/${encodeURIComponent(variantId)}`); }
     async function getCctldReport(mode = 'local') { return apiJson(`/cctlds?resolver=${encodeURIComponent(mode)}`); }
+    async function getMiniData(domain) {
+      return apiJson(`/mini/data/${encodeURIComponent(domain)}`);
+    }
+    function getMiniStreamUrl(domain) {
+      return `${API_BASE}/mini/stream/${encodeURIComponent(domain)}`;
+    }
+
+    function resetMiniLog(message = 'Esperando un dominio para comenzar.') {
+      if (!miniLog) return;
+      clearNode(miniLog);
+      miniLog.textContent = message;
+    }
+
+    function appendMiniLog(message, kind = 'info', stage = '') {
+      if (!miniLog) return;
+      if (miniLog.childElementCount === 0 && miniLog.textContent.trim()) {
+        miniLog.textContent = '';
+      }
+      const entry = document.createElement('div');
+      entry.className = 'chat-msg';
+      const head = document.createElement('strong');
+      const stageText = stage ? ` · ${stage}` : '';
+      head.textContent = `[${formatTimestamp()}] ${String(kind || 'info').toUpperCase()}${stageText}`;
+      const body = document.createElement('div');
+      body.textContent = message;
+      entry.append(head, body);
+      miniLog.appendChild(entry);
+      miniLog.scrollTop = miniLog.scrollHeight;
+      while (miniLog.childElementCount > 80) {
+        miniLog.removeChild(miniLog.firstElementChild);
+      }
+    }
+
+    function closeMiniStream() {
+      if (miniStream) {
+        miniStream.close();
+        miniStream = null;
+      }
+    }
+
+    async function runMiniStream(domain) {
+      closeMiniStream();
+      const token = ++miniRunToken;
+      if (miniRunButton) miniRunButton.disabled = true;
+      renderMiniEmpty(tf('mini.consulting.short', { domain }, `Consultando ${domain}...`));
+      resetMiniLog(tf('mini.consulting', { domain }, `Consultando ${domain} en paralelo...`));
+      if (miniStatus) miniStatus.textContent = tf('mini.consulting', { domain }, `Consultando ${domain} en paralelo...`);
+
+      return new Promise(resolve => {
+        if (typeof EventSource === 'undefined') {
+          getMiniData(domain)
+            .then(data => {
+              if (token !== miniRunToken) return resolve();
+              appendMiniLog(t('mini.fallback', 'Evento SSE no disponible; se usó respuesta directa.'), 'info', 'fallback');
+              renderMiniResults(data);
+            })
+            .catch(error => {
+              if (token !== miniRunToken) return resolve();
+              renderMiniResults({ domain, error: error.message || 'Servicio no disponible' });
+              appendMiniLog(error.message || 'Servicio no disponible', 'error', 'fallback');
+            })
+            .finally(() => {
+              if (token === miniRunToken && miniRunButton) miniRunButton.disabled = false;
+              resolve();
+            });
+          return;
+        }
+
+        const source = new EventSource(getMiniStreamUrl(domain));
+        miniStream = source;
+
+        source.addEventListener('progress', event => {
+          if (token !== miniRunToken) return;
+          try {
+            const payload = JSON.parse(event.data || '{}');
+            appendMiniLog(payload.message || t('mini.progress', 'Progreso recibido.'), payload.status || 'info', payload.stage || '');
+            if (miniStatus) miniStatus.textContent = payload.message || tf('mini.consulting.short', { domain }, `Consultando ${domain}...`);
+          } catch (error) {
+            appendMiniLog(t('mini.progress', 'Progreso recibido.'), 'info', 'stream');
+          }
+        });
+
+        source.addEventListener('result', event => {
+          if (token !== miniRunToken) return;
+          try {
+            const data = JSON.parse(event.data || '{}');
+            renderMiniResults(data);
+            appendMiniLog(tf('mini.done', { domain }, `Mini completado para ${domain}.`), 'ok', 'final');
+          } catch (error) {
+            renderMiniResults({ domain, error: 'Respuesta inválida del servidor' });
+            appendMiniLog(t('mini.invalidResponse', 'Respuesta inválida del servidor'), 'error', 'final');
+          } finally {
+            source.close();
+            if (miniStream === source) miniStream = null;
+            if (token === miniRunToken && miniRunButton) miniRunButton.disabled = false;
+            resolve();
+          }
+        });
+
+        source.addEventListener('failure', event => {
+          if (token !== miniRunToken) return;
+          source.close();
+          if (miniStream === source) miniStream = null;
+          try {
+            const payload = JSON.parse(event.data || '{}');
+            appendMiniLog(payload.error || t('mini.streamFailed', 'La medición en vivo falló.'), 'error', 'stream');
+            renderMiniResults({
+              domain,
+              error: payload.error || 'Servicio no disponible'
+            });
+          } catch (error) {
+            appendMiniLog(t('mini.streamFailed', 'La medición en vivo falló.'), 'error', 'stream');
+            renderMiniResults({ domain, error: 'Servicio no disponible' });
+          } finally {
+            if (token === miniRunToken && miniRunButton) miniRunButton.disabled = false;
+            resolve();
+          }
+        });
+
+        source.addEventListener('error', event => {
+          if (token !== miniRunToken) return;
+          source.close();
+          if (miniStream === source) miniStream = null;
+          const errorMessageText = 'No se pudo abrir o mantener el flujo en vivo.';
+          appendMiniLog(errorMessageText, 'error', 'stream');
+          getMiniData(domain)
+            .then(data => {
+              if (token !== miniRunToken) return resolve();
+              renderMiniResults(data);
+            })
+            .catch(error => {
+              if (token !== miniRunToken) return resolve();
+              renderMiniResults({ domain, error: error.message || errorMessageText });
+            })
+            .finally(() => {
+              if (token === miniRunToken && miniRunButton) miniRunButton.disabled = false;
+              resolve();
+          });
+        });
+      });
+    }
 
     function buildRow(title, badgeStatus) {
       const row = make('section', 'result-row pending');
@@ -2023,10 +3655,15 @@
     }
 
     function buildInlineResultSlot(item) {
-      const row = make('div', 'result-inline');
+      const row = make('div', 'result-inline measurement-card');
       const head = make('div', 'row-head');
       const left = document.createElement('div');
-      left.appendChild(make('div', 'row-title', 'Pendiente'));
+      left.appendChild(make('div', 'row-title', textFor(item, 'label', item.label || 'Medición')));
+      const metaLine = make('div', 'muted');
+      metaLine.style.fontSize = '.8rem';
+      metaLine.style.lineHeight = '1.45';
+      metaLine.textContent = textFor(item, 'desc', item.descEs || item.descPt || 'Sin descripción.');
+      left.appendChild(metaLine);
       const actions = document.createElement('div');
       actions.style.display = 'flex';
       actions.style.gap = '8px';
@@ -2034,8 +3671,8 @@
       const infoButton = document.createElement('button');
       infoButton.type = 'button';
       infoButton.className = 'tech-toggle';
-      infoButton.textContent = 'Info';
-      infoButton.title = 'Ver la solicitud y la respuesta técnica';
+      infoButton.textContent = t('button.info', 'Info');
+      infoButton.title = t('button.infoTitle', 'Ver la solicitud y la respuesta técnica');
       if (item.comingSoon) infoButton.disabled = true;
       const badge = createStatusBadge('pending');
       actions.append(infoButton, badge);
@@ -2049,31 +3686,491 @@
       infoButton.addEventListener('click', () => {
         if (!slot.currentDomain) {
           setTechPanel(slot, {
-            explanation: checkMap.get(item.id)?.descEs || item.descEs,
-            request: 'Ejecuta una medición primero para ver la respuesta técnica.',
-            response: 'Sin dominio analizado todavía.'
+            explanation: textFor(checkMap.get(item.id), 'desc', item.descEs),
+            request: t('tech.runFirst', 'Ejecuta una medición primero para ver la respuesta técnica.'),
+            response: t('tech.noDomain', 'Sin dominio analizado todavía.')
           });
           return;
         }
         if (tech.classList.contains('open')) {
           tech.classList.remove('open');
-          infoButton.textContent = 'Info';
+          infoButton.textContent = t('button.info', 'Info');
           return;
         }
-        infoButton.textContent = 'Cerrar';
+        infoButton.textContent = t('button.close', 'Cerrar');
         tech.classList.add('open');
         loadMeasurementInfo(slot, item.id, slot.currentDomain);
       });
       return slot;
     }
 
+    function buildFeaturedSummarySlot(item) {
+      const row = make('article', 'featured-summary');
+      const head = make('div', 'row-head');
+      const left = document.createElement('div');
+      left.appendChild(make('div', 'row-title', textFor(item, 'label', item.label || 'Medición')));
+      const metaLine = make('div', 'muted');
+      metaLine.style.fontSize = '.84rem';
+      metaLine.style.lineHeight = '1.45';
+      metaLine.textContent = textFor(item, 'desc', item.descEs || item.descPt || 'Sin descripción.');
+      left.appendChild(metaLine);
+      const badge = createStatusBadge('pending');
+      head.append(left, badge);
+      const body = make('div', 'row-body');
+      body.appendChild(make('p', 'muted', t('summary.quick', 'Resumen rápido.')));
+      row.append(head, body);
+      return { row, badge, body, item, currentResult: null };
+    }
+
+    function buildMiniCardSlot(title, caption) {
+      const card = make('article', 'mini-card');
+      const head = make('div', 'mini-head');
+      const left = document.createElement('div');
+      const titleNode = make('h3', 'mini-title', title);
+      const captionNode = make('div', 'mini-caption', caption);
+      left.appendChild(titleNode);
+      left.appendChild(captionNode);
+      const badge = createStatusBadge('pending');
+      head.append(left, badge);
+
+      const body = document.createElement('div');
+      body.className = 'mini-body';
+      const value = make('div', 'mini-value', '--');
+      const sub = make('div', 'mini-sub', 'Pega un dominio para empezar.');
+      const content = document.createElement('div');
+      content.className = 'mini-content';
+      const foot = make('div', 'mini-foot', '');
+      body.append(value, sub, content, foot);
+      card.append(head, body);
+      return { card, badge, value, sub, content, foot, title, caption, titleNode, captionNode };
+    }
+
+    function setMiniSimpleCard(slot, status, value, sub, foot) {
+      slot.card.className = `mini-card ${statusClass(status)}`;
+      slot.badge.replaceWith(createStatusBadge(status));
+      slot.badge = slot.card.querySelector('.status');
+      slot.value.textContent = value || '--';
+      slot.sub.textContent = sub || '';
+      slot.foot.textContent = foot || '';
+      clearNode(slot.content);
+    }
+
+    function setMiniGraphCard(slot, status, imageUrl, lines, foot) {
+      slot.card.className = `mini-card ${statusClass(status)}`;
+      slot.badge.replaceWith(createStatusBadge(status));
+      slot.badge = slot.card.querySelector('.status');
+      slot.value.textContent = '';
+      slot.sub.textContent = Array.isArray(lines) && lines.length ? lines[0] : 'DNSViz visual.';
+      slot.foot.textContent = foot || '';
+      clearNode(slot.content);
+      if (imageUrl) {
+        const img = document.createElement('img');
+        img.className = 'mini-graph';
+        img.loading = 'lazy';
+        img.alt = 'DNSViz';
+        img.src = imageUrl;
+        img.onerror = () => {
+          if (img.dataset.fallbackDone === '1') return;
+          img.dataset.fallbackDone = '1';
+          img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260">
+              <rect width="960" height="260" rx="18" fill="#f7faf8"/>
+              <text x="36" y="108" font-size="28" fill="#17211b" font-family="Arial, sans-serif">DNSViz no disponible</text>
+              <text x="36" y="154" font-size="18" fill="#5d6a64" font-family="Arial, sans-serif">La tarjeta sigue mostrando el resumen técnico.</text>
+            </svg>`
+          )}`;
+        };
+        slot.content.appendChild(img);
+      }
+      if (Array.isArray(lines) && lines.length) {
+        const list = document.createElement('ul');
+        list.className = 'mini-list';
+        lines.forEach(line => {
+          const li = document.createElement('li');
+          li.textContent = line;
+          list.appendChild(li);
+        });
+        slot.content.appendChild(list);
+      }
+    }
+
+    function buildMiniCards() {
+      if (!miniTopGrid || !miniBottomGrid || miniTopGrid.childElementCount || miniBottomGrid.childElementCount) return;
+      const topCards = [
+        buildMiniCardSlot(miniText('card.ipv4.title', 'Dirección IPv4'), miniText('card.ipv4.caption', 'La entrada A principal visible desde DNS.')),
+        buildMiniCardSlot(miniText('card.dnssec.title', 'DNSSEC + algoritmos'), miniText('card.dnssec.caption', 'DS y DNSKEY resumidos con números y nombres.')),
+        buildMiniCardSlot(miniText('card.rpki.title', 'RPKI'), miniText('card.rpki.caption', 'Dominio y correo cubiertos por ROAs.')),
+        buildMiniCardSlot(miniText('card.smtp.title', 'SMTPUTF8'), miniText('card.smtp.caption', 'Aceptación universal en MX.'))
+      ];
+      const bottomCards = [
+        buildMiniCardSlot(miniText('card.dnsviz.title', 'DNSViz'), miniText('card.dnsviz.caption', 'La cadena visual completa.')),
+        buildMiniCardSlot(miniText('card.http.title', 'Cabeceras HTTP'), miniText('card.http.caption', 'HTTPS, HSTS, CSP y defensas básicas.')),
+        buildMiniCardSlot(miniText('card.pulse.title', 'Pulse DNSSEC'), miniText('card.pulse.caption', 'Cobertura DNSSEC de Internet Society Pulse.')),
+        buildMiniCardSlot(miniText('card.roas.title', 'ROAs'), miniText('card.roas.caption', 'Resumen de las rutas cubiertas.')),
+        buildMiniCardSlot(miniText('card.rov.title', 'ROV'), miniText('card.rov.caption', 'Validación de rutas observada.'))
+      ];
+      topCards.forEach(slot => miniTopGrid.appendChild(slot.card));
+      bottomCards.forEach(slot => miniBottomGrid.appendChild(slot.card));
+      miniTopGrid._slots = topCards;
+      miniBottomGrid._slots = bottomCards;
+    }
+
+    function setMiniSlotVisible(slot, visible) {
+      if (!slot?.card) return;
+      slot.card.hidden = !visible;
+      slot.card.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    }
+
+    function renderMiniEmpty(message = 'Pega un dominio para mostrar las 8 tarjetas.') {
+      if (miniStatus) miniStatus.textContent = message;
+      resetMiniLog(t('mini.waiting', 'Esperando un dominio para comenzar.'));
+      const topSlots = miniTopGrid?._slots || [];
+      const bottomSlots = miniBottomGrid?._slots || [];
+      topSlots.forEach(slot => setMiniSimpleCard(slot, 'pending', '--', t('mini.waiting', 'Esperando un dominio.'), ''));
+      bottomSlots.forEach((slot, index) => {
+        const visible = index < 2;
+        setMiniSlotVisible(slot, visible);
+        if (visible) {
+          setMiniSimpleCard(slot, 'pending', '--', t('mini.waiting', 'Esperando un dominio.'), '');
+        }
+      });
+    }
+
+    function formatMiniRoaItems(items) {
+      return (Array.isArray(items) ? items : [])
+        .slice(0, 4)
+        .map(item => {
+          const label = String(item?.label || '').trim();
+          const value = String(item?.value || '').trim();
+          return [label, value].filter(Boolean).join(' · ');
+        })
+        .filter(Boolean);
+    }
+
+    function formatMiniDnsvizEntry(entry) {
+      if (entry === null || entry === undefined) return '';
+      if (typeof entry === 'string') return entry.trim();
+      if (Array.isArray(entry)) {
+        return entry.map(formatMiniDnsvizEntry).filter(Boolean).join(' · ');
+      }
+      if (typeof entry === 'object') {
+        const bits = [
+          entry.message,
+          entry.text,
+          entry.title,
+          entry.description,
+          entry.name,
+          entry.detail
+        ].map(value => String(value || '').trim()).filter(Boolean);
+        if (bits.length) return bits.join(' · ');
+        try {
+          return JSON.stringify(entry);
+        } catch (error) {
+          return String(entry);
+        }
+      }
+      return String(entry);
+    }
+
+    function dnsvizToneForGroup(label) {
+      const value = String(label || '').toLowerCase();
+      if (value.includes('secure') || value.includes('seguro')) return 'ok';
+      if (value.includes('warning') || value.includes('advertencia')) return 'warning';
+      if (value.includes('error') || value.includes('errores') || value.includes('errores')) return 'fail';
+      if (value.includes('insecure') || value.includes('non existent') || value.includes('non-existent') || value.includes('bogus') || value.includes('inseguro') || value.includes('no existente')) return 'fail';
+      return 'info';
+    }
+
+    function buildMiniDnsvizRawSection(title, lines, emptyText = 'Sin datos.') {
+      const section = document.createElement('div');
+      section.className = 'mini-dnsviz-section';
+      section.appendChild(make('div', 'mini-dnsviz-section-title', title));
+      if (!Array.isArray(lines) || !lines.length) {
+        section.appendChild(make('div', 'mini-sub', emptyText));
+        return section;
+      }
+      const list = document.createElement('ul');
+      list.className = 'mini-list';
+      lines.forEach(line => {
+        const value = formatMiniDnsvizEntry(line);
+        if (!value) return;
+        const li = document.createElement('li');
+        li.textContent = value;
+        list.appendChild(li);
+      });
+      if (!list.childElementCount) {
+        section.appendChild(make('div', 'mini-sub', emptyText));
+        return section;
+      }
+      section.appendChild(list);
+      return section;
+    }
+
+    function buildMiniDnsvizItem(entry) {
+      const item = document.createElement('div');
+      item.className = 'mini-dnsviz-item';
+      const text = make('div', 'mini-dnsviz-item-text', entry?.text || entry?.raw || 'Sin detalle.');
+      item.appendChild(text);
+      const metaBits = [
+        entry?.algorithm !== null && entry?.algorithm !== undefined ? `alg ${entry.algorithm}` : null,
+        entry?.id !== null && entry?.id !== undefined ? `id ${entry.id}` : null
+      ].filter(Boolean);
+      if (metaBits.length) {
+        item.appendChild(make('div', 'mini-dnsviz-item-meta', metaBits.join(' · ')));
+      }
+      return item;
+    }
+
+    function buildMiniDnsvizGroup(group) {
+      const box = document.createElement('div');
+      box.className = 'mini-dnsviz-group';
+      const head = document.createElement('div');
+      head.className = 'mini-dnsviz-group-head';
+      head.appendChild(make('div', 'mini-dnsviz-group-title', group.label || 'Grupo'));
+      head.appendChild(makeResultTag(`${group.count || 0}`, dnsvizToneForGroup(group.tone || group.label)));
+      box.appendChild(head);
+      if (group.note) {
+        box.appendChild(make('div', 'mini-dnsviz-group-meta', group.note));
+      }
+      const items = Array.isArray(group.items) ? group.items : [];
+      if (!items.length) {
+        box.appendChild(make('div', 'mini-sub', 'Sin elementos.'));
+        return box;
+      }
+      items.forEach(entry => {
+        box.appendChild(buildMiniDnsvizItem(entry));
+      });
+      return box;
+    }
+
+    function buildMiniDnsvizSection(section) {
+      const sectionBox = document.createElement('div');
+      sectionBox.className = 'mini-dnsviz-section';
+      sectionBox.appendChild(make('div', 'mini-dnsviz-section-title', section.title || 'Sección'));
+      const groups = Array.isArray(section.groups) ? section.groups : [];
+      if (!groups.length) {
+        sectionBox.appendChild(make('div', 'mini-sub', 'Sin datos.'));
+        return sectionBox;
+      }
+      groups.forEach(group => {
+        sectionBox.appendChild(buildMiniDnsvizGroup(group));
+      });
+      return sectionBox;
+    }
+
+    function appendMiniDnsvizDetails(container, domain, dnsviz, includeGraph = false, showSections = true) {
+      const stack = document.createElement('div');
+      stack.className = 'mini-dnsviz-stack';
+      const observations = Array.isArray(dnsviz?.observations) ? dnsviz.observations : [];
+      const warnings = Array.isArray(dnsviz?.warnings) ? dnsviz.warnings : [];
+      const errors = Array.isArray(dnsviz?.errors) ? dnsviz.errors : [];
+      if (includeGraph && dnsviz?.svgUrl) {
+        const graphSection = document.createElement('div');
+        graphSection.className = 'mini-dnsviz-section';
+        graphSection.appendChild(make('div', 'mini-dnsviz-section-title', t('dnsviz.graph', 'Gráfico DNSViz')));
+        const img = document.createElement('img');
+        img.className = 'mini-graph';
+        img.loading = 'lazy';
+        img.alt = `DNSViz para ${domain}`;
+        img.src = `${API_BASE}/dnsviz/${encodeURIComponent(domain)}?format=svg&resolver=local`;
+        img.onerror = () => {
+          if (img.dataset.fallbackDone === '1') return;
+          img.dataset.fallbackDone = '1';
+          img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260">
+              <rect width="960" height="260" rx="18" fill="#f7faf8"/>
+              <text x="36" y="108" font-size="28" fill="#17211b" font-family="Arial, sans-serif">DNSViz no disponible</text>
+              <text x="36" y="154" font-size="18" fill="#5d6a64" font-family="Arial, sans-serif">El detalle y las advertencias siguen visibles abajo.</text>
+            </svg>`
+          )}`;
+        };
+        graphSection.appendChild(img);
+        stack.appendChild(graphSection);
+      }
+      if (showSections && Array.isArray(dnsviz?.noticeSections) && dnsviz.noticeSections.length) {
+        dnsviz.noticeSections.forEach(section => {
+          stack.appendChild(buildMiniDnsvizSection(section));
+        });
+      } else {
+        stack.appendChild(buildMiniDnsvizRawSection(t('dnsviz.observations', 'Observaciones'), observations, t('dnsviz.noData', 'Sin datos.')));
+        stack.appendChild(buildMiniDnsvizRawSection(t('dnsviz.warnings', 'Advertencias'), warnings, t('dnsviz.noData', 'Sin datos.')));
+        stack.appendChild(buildMiniDnsvizRawSection(t('dnsviz.errors', 'Errores'), errors, t('dnsviz.noData', 'Sin datos.')));
+      }
+      if (dnsviz?.pageUrl) {
+        const linkSection = document.createElement('div');
+        linkSection.className = 'mini-dnsviz-section';
+        linkSection.appendChild(make('div', 'mini-dnsviz-section-title', t('dnsviz.source', 'Fuente')));
+        const link = document.createElement('a');
+        link.href = dnsviz.pageUrl;
+        link.target = '_blank';
+        link.rel = 'noreferrer';
+        link.className = 'mini-dnsviz-link';
+        link.textContent = dnsviz.pageUrl;
+        linkSection.appendChild(link);
+        stack.appendChild(linkSection);
+      }
+      clearNode(container);
+      container.appendChild(stack);
+    }
+
+    function renderMiniResults(data) {
+      lastMiniData = data || null;
+      buildMiniCards();
+      const domain = String(data?.domain || '').trim() || '—';
+      const ipv4Slot = miniTopGrid?._slots?.[0];
+      const dnssecSlot = miniTopGrid?._slots?.[1];
+      const rpkiSlot = miniTopGrid?._slots?.[2];
+      const smtpSlot = miniTopGrid?._slots?.[3];
+      const dnsvizSlot = miniBottomGrid?._slots?.[0];
+      const httpSlot = miniBottomGrid?._slots?.[1];
+      const pulseSlot = miniBottomGrid?._slots?.[2];
+      const roasSlot = miniBottomGrid?._slots?.[3];
+      const rovSlot = miniBottomGrid?._slots?.[4];
+      const pulseEligible = Boolean(data?.pulse?.eligible);
+
+      if (miniStatus) {
+        miniStatus.textContent = data?.error
+          ? tf('mini.error', { domain, error: data.error })
+          : (pulseEligible && data?.country
+            ? tf('mini.showing', { domain, country: String(data.country).toUpperCase() }, `${domain} · Pulse ${String(data.country).toUpperCase()}`)
+            : tf('mini.showingNoPulse', { domain }, `Mostrando ${domain}`));
+      }
+
+      if (!ipv4Slot || !dnssecSlot || !rpkiSlot || !smtpSlot || !dnsvizSlot || !httpSlot || !pulseSlot || !roasSlot || !rovSlot) return;
+
+      const ipv4Records = Array.isArray(data?.ipv4?.records) ? data.ipv4.records : [];
+      const ipv4Value = ipv4Records[0] || (data?.ipv4?.present ? t('mini.ipv4.present', 'Presente') : t('mini.ipv4.absent', 'Sin IPv4'));
+      setMiniSimpleCard(
+        ipv4Slot,
+        data?.ipv4?.present ? 'ok' : 'fail',
+        ipv4Value,
+        data?.ipv4?.present
+          ? `${t('mini.ipv4.visible', 'IPv4 visible en')} ${ipv4Records.length} ${t('mini.ipv4.records', 'registro(s).')}`
+          : t('mini.ipv4.missing', 'No se detectaron registros A.'),
+        domain
+      );
+
+      const dnssecLines = Array.isArray(data?.dnssec?.algorithms) ? data.dnssec.algorithms.slice(0, 4) : [];
+      setMiniSimpleCard(
+        dnssecSlot,
+        data?.dnssec?.status || 'info',
+        data?.dnssec?.valid ? t('mini.dnssec.ok', 'DNSSEC OK') : t('mini.dnssec.partial', 'DNSSEC parcial'),
+        data?.dnssec?.lines?.[0] || t('mini.dnssec.review', 'Se revisa DS, DNSKEY y cadena.'),
+        dnssecLines.join(' · ')
+      );
+      appendMiniDnsvizDetails(dnssecSlot.content, domain, data?.dnsviz || {}, true, true);
+
+      const domainValid = data?.rpki?.domain?.valid;
+      const mailValid = data?.rpki?.mail?.valid;
+      const rpkiValue = domainValid && mailValid ? t('mini.rpki.full', 'ROAs cubren todo') : (domainValid || mailValid ? t('mini.rpki.partial', 'ROAs parciales') : t('mini.rpki.none', 'Sin ROAs'));
+      const rpkiSub = [
+        `${t('mini.rpki.domain', 'Dominio')}: ${domainValid ? t('mini.yes', 'sí') : t('mini.no', 'no')}`,
+        `${t('mini.rpki.mail', 'Mail')}: ${mailValid ? t('mini.yes', 'sí') : t('mini.no', 'no')}`
+      ].join(' · ');
+      setMiniSimpleCard(
+        rpkiSlot,
+        data?.rpki?.status || 'info',
+        rpkiValue,
+        rpkiSub,
+        t('mini.rpki.foot', 'Cobertura observada por RPKI/ROAs.')
+      );
+
+      const smtpResults = Array.isArray(data?.smtputf8?.results) ? data.smtputf8.results : [];
+      const smtpSupports = smtpResults.some(item => item.status === 'supports');
+      setMiniSimpleCard(
+        smtpSlot,
+        data?.smtputf8?.status || 'info',
+        smtpSupports ? t('mini.yes', 'Sí') : (smtpResults.length ? t('mini.no', 'No') : t('mini.pending', 'Pendiente')),
+        smtpSupports ? t('mini.smtp.yes', 'MX anuncia SMTPUTF8.') : (smtpResults.length ? t('mini.smtp.no', 'No anuncia SMTPUTF8.') : t('mini.smtp.none', 'Sin MX visibles.')),
+        smtpResults.length ? smtpResults.map(item => `${item.server}:${item.port} ${item.status}`).join(' · ') : ''
+      );
+
+      const dnsviz = data?.dnsviz || {};
+      setMiniSimpleCard(
+        dnsvizSlot,
+        dnsviz.status || 'info',
+        dnsviz.available ? 'DNSViz' : t('mini.dnsviz.partial', 'DNSViz parcial'),
+        dnsviz.updated ? `${t('mini.updated', 'Actualizado')}: ${dnsviz.updated}` : t('mini.dnsviz.source', 'Fuente y detalles técnicos.'),
+        [
+          Array.isArray(dnsviz.observations) && dnsviz.observations.length ? `${dnsviz.observations.length} ${t('dnsviz.observations', 'observación(es)')}` : null,
+          Array.isArray(dnsviz.warnings) && dnsviz.warnings.length ? `${dnsviz.warnings.length} ${t('dnsviz.warnings', 'advertencia(s)')}` : null,
+          Array.isArray(dnsviz.errors) && dnsviz.errors.length ? `${dnsviz.errors.length} ${t('dnsviz.errors', 'error(es)')}` : null
+        ].filter(Boolean).join(' · ')
+      );
+      appendMiniDnsvizDetails(dnsvizSlot.content, domain, dnsviz, false, false);
+
+      const headers = data?.headers || {};
+      const findings = Array.isArray(headers.findings) ? headers.findings : [];
+      const headerValue = headers.https ? t('http.summary.ok', 'HTTPS y cabeceras clave presentes.') : (headers.error ? t('http.summary.fail', 'Sin respuesta HTTP útil.') : t('http.summary.warn', 'Faltan una o más cabeceras importantes.'));
+      const headerLines = findings.slice(0, 5).map(item => `${httpText(`label.${item.id}`, item.label)}: ${httpText(`value.${item.value}`, item.value)}`);
+      setMiniSimpleCard(
+        httpSlot,
+        headers.https ? 'ok' : (headers.error ? 'fail' : 'warning'),
+        headers.https ? t('http.label.https', 'HTTPS') : 'HTTP',
+        headerValue,
+        headerLines.join(' · ')
+      );
+
+      const pulse = data?.pulse || {};
+      setMiniSlotVisible(pulseSlot, pulseEligible);
+      setMiniSlotVisible(roasSlot, pulseEligible);
+      setMiniSlotVisible(rovSlot, pulseEligible);
+      if (!pulseEligible) {
+        setMiniSimpleCard(pulseSlot, 'info', '--', t('mini.pulse.hidden', 'Se oculta porque el dominio no es ccTLD.'), '');
+        setMiniSimpleCard(roasSlot, 'info', '--', t('mini.roas.hidden', 'Se oculta porque el dominio no es ccTLD.'), '');
+        setMiniSimpleCard(rovSlot, 'info', '--', t('mini.rov.hidden', 'Se oculta porque el dominio no es ccTLD.'), '');
+        return;
+      }
+      const pulseCoverage = pulse.dnssecCoverage?.value || 'Sin dato';
+      const pulseCountryLabel = String(data?.country || pulse.country || '').toUpperCase() || '??';
+      const pulseAverage = pulse.dnssecCoverage?.average ? `${t('mini.average', 'Promedio')}: ${pulse.dnssecCoverage.average}` : '';
+      setMiniSimpleCard(
+        pulseSlot,
+        pulse.available ? 'ok' : 'info',
+        pulseCoverage,
+        pulse.dnssecCoverage?.label || tf('mini.pulse.label', { country: pulseCountryLabel }, 'Cobertura DNSSEC del reporte ' + pulseCountryLabel + '.'),
+        [pulseAverage, pulse.dnssecAdoption?.value ? `${t('mini.pulse.adoption', 'Adopción DNSSEC')}: ${pulse.dnssecAdoption.value}` : null].filter(Boolean).join(' · ')
+      );
+
+      const roaItems = formatMiniRoaItems(pulse.roaItems || []);
+      setMiniSimpleCard(
+        roasSlot,
+        roaItems.length ? 'ok' : 'info',
+        roaItems.length ? `${roaItems.length} ROA(s)` : t('mini.roas.none', 'Sin ROAs'),
+        pulse.sourceUrl || t('mini.source', 'Fuente: Internet Society Pulse.'),
+        roaItems.length ? roaItems.join(' · ') : t('mini.roas.empty', 'No se listaron ROAs.')
+      );
+
+      const rov = pulse.rov || {};
+      const rovValue = rov.value || (rov.label || 'Sin dato');
+      setMiniSimpleCard(
+        rovSlot,
+        rovValue && /yes|supported|covered|valid/i.test(String(rovValue)) ? 'ok' : 'info',
+        rovValue,
+        rov.label || tf('mini.rov.label', { country: pulseCountryLabel }, 'ROV del reporte ' + pulseCountryLabel + '.'),
+        pulse.resilienceScore?.value ? `${t('mini.resilience', 'Resilience score')}: ${pulse.resilienceScore.value}` : ''
+      );
+    }
+
+    async function handleMiniRun() {
+      if (!miniDomains) return;
+      const domains = parseDomains(miniDomains.value);
+      const domain = domains[0];
+      buildMiniCards();
+      if (!domain) {
+        renderMiniEmpty(t('mini.empty', 'Pega un dominio para mostrar el mini.'));
+        return;
+      }
+      await runMiniStream(domain);
+    }
+
     function renderGraphBox(domain, meta) {
       const box = make('div', 'graph-box');
       const top = make('div', 'graph-top');
       const left = document.createElement('div');
-      left.appendChild(make('h4', '', 'Gráfico DNSViz / Gráfico DNSViz'));
+      left.appendChild(make('h4', '', t('dnsviz.graph', 'Gráfico DNSViz')));
       const subtitle = make('p');
-      subtitle.textContent = meta.updated ? `Último análisis: ${meta.updated}` : 'DNSViz muestra la cadena de autenticación DNSSEC.';
+      subtitle.textContent = meta.updated ? `${t('mini.updated', 'Último análisis')}: ${meta.updated}` : 'DNSViz muestra la cadena de autenticación DNSSEC.';
       left.appendChild(subtitle);
       const right = document.createElement('div');
       const link = document.createElement('a');
@@ -2461,10 +4558,43 @@
 
     function paintCatalogResults(domain, results) {
       const byId = new Map(results.map(item => [item.id, item]));
+      featuredCardSlots.forEach((slot, id) => {
+        const result = byId.get(id);
+        if (!result) {
+          slot.row.querySelector('.row-title').textContent = checkMap.get(id)?.label || id;
+          slot.badge.replaceWith(createStatusBadge('pending'));
+          slot.badge = slot.row.querySelector('.status');
+          clearNode(slot.body);
+          slot.body.appendChild(make('p', 'muted', 'Resumen rápido.'));
+          return;
+        }
+        slot.row.querySelector('.row-title').textContent = checkMap.get(id)?.label || id;
+        slot.badge.replaceWith(createStatusBadge(result.status));
+        slot.badge = slot.row.querySelector('.status');
+        clearNode(slot.body);
+        const stateText = result.status === 'ok'
+          ? 'Estado: pasó la prueba'
+          : result.status === 'warning'
+            ? 'Estado: cumple con observaciones'
+            : result.status === 'fail'
+              ? 'Estado: no pasó la prueba'
+              : result.status === 'error'
+                ? 'Estado: error de medición'
+                : 'Estado: informativa';
+        const primary = Array.isArray(result.lines) && result.lines.length ? result.lines[0] : null;
+        const summary = make('p', 'muted', primary || stateText);
+        slot.body.appendChild(summary);
+        slot.currentResult = result;
+      });
       catalogResultSlots.forEach((slot, id) => {
         slot.currentDomain = domain || null;
         const result = byId.get(id);
         if (!result) {
+          const targetContainer = slot.goodContainer || slot.currentContainer || null;
+          if (targetContainer && slot.row.parentElement !== targetContainer) {
+            targetContainer.appendChild(slot.row);
+          }
+          slot.currentContainer = targetContainer || slot.currentContainer || null;
           slot.row.className = 'result-inline';
           slot.badge.replaceWith(createStatusBadge('pending'));
           slot.badge = slot.row.querySelector('.status');
@@ -2476,7 +4606,19 @@
           clearNode(slot.tech);
           return;
         }
-        slot.row.className = `result-inline ${statusClass(result.status)}`;
+        const needsRepair = ['fail', 'error'].includes(result.status) && id !== 'smtputf8';
+        const targetContainer = needsRepair && slot.repairContainer
+          ? slot.repairContainer
+          : (slot.goodContainer || slot.currentContainer || null);
+        if (needsRepair && slot.repairContainer) {
+          const repairFamily = slot.repairContainer.closest('.measurement-family');
+          if (repairFamily) repairFamily.hidden = false;
+        }
+        if (targetContainer && slot.row.parentElement !== targetContainer) {
+          targetContainer.appendChild(slot.row);
+        }
+        slot.currentContainer = targetContainer || slot.currentContainer || null;
+        slot.row.className = `result-inline ${statusClass(result.status)}${needsRepair ? ' repair-item' : ''}`;
         slot.badge.replaceWith(createStatusBadge(result.status));
         slot.badge = slot.row.querySelector('.status');
         slot.row.querySelector('.row-title').textContent = checkMap.get(id)?.label || id;
@@ -2556,7 +4698,9 @@
       summaryEl.appendChild(complianceChip);
 
       const axisDefinitions = [
-        { label: 'Seguridad', groups: ['https', 'appsecpriv', 'tls', 'dnssec', 'mailauth', 'mailtransport', 'route', 'lab', 'future'], hint: 'HTTPS, cabeceras, TLS, DNSSEC, correo, RPKI y laboratorio' },
+        { label: 'Seguridad de cabeceras', groups: ['https', 'appsecpriv', 'tls', 'mailauth', 'mailtransport'], hint: 'HTTPS, cabeceras defensivas, TLS y correo' },
+        { label: 'Seguridad DNS', groups: ['dnssec'], hint: 'DNSSEC, DNSViz y registros' },
+        { label: 'Seguridad de enrutamiento', groups: ['route'], hint: 'RPKI y routing' },
         { label: 'Universalidad', groups: ['ip', 'ua'], hint: 'IPv6 y UA/EAI' },
         { label: 'Accesibilidad', groups: ['accessibility'], hint: 'W3C y calidad web' }
       ];
@@ -2681,7 +4825,7 @@
 
     function setChatOpen(open) {
       helpChat.classList.toggle('collapsed', !open);
-      chatToggle.textContent = open ? 'Cerrar' : 'Abrir';
+      chatToggle.textContent = open ? t('button.close', 'Cerrar') : t('button.open', 'Abrir');
     }
 
     async function loadFragment(targetId, url) {
@@ -3146,6 +5290,25 @@
               }] : []
             };
           }
+          case 'internetnlweb':
+          case 'internetnlmail': {
+            const data = await getCompatBundle(domain, id === 'internetnlmail' ? 'mail' : 'web');
+            if (data.error) {
+              return {
+                status: 'error',
+                lines: [data.error, data.message ? `Detalle: ${data.message}` : null].filter(Boolean),
+                sections: []
+              };
+            }
+            return {
+              status: data.status || 'info',
+              lines: Array.isArray(data.lines) && data.lines.length ? data.lines : ['El bundle local no devolvió detalles aún.'],
+              sections: Array.isArray(data.sections) ? data.sections : [],
+              request: data.request || { status: 'done', type: id === 'internetnlmail' ? 'mail' : 'web' },
+              batchResults: data.results || null,
+              batchTechnical: data.technical || null
+            };
+          }
           case 'serverinfo': {
             const data = await getServerInfo(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
@@ -3450,7 +5613,7 @@
       loading.style.display = 'flex';
       runButton.disabled = true;
       updateExportButtons(false);
-      logRun(`Se inició la medición de ${domains.length} dominio(s) con ${selectedIds.length} mediciones seleccionadas.`, 'info');
+      logRun(`Se inició la medición de ${domains.length} dominio(s) con ${selectedIds.length} mediciones activas.`, 'info');
 
       const totals = { ok: 0, warning: 0, info: 0, fail: 0, error: 0, totalChecks: domains.length * selectedIds.length };
       renderResultsHeader(totals.totalChecks, totals);
@@ -3478,9 +5641,18 @@
     }
 
     runButton.addEventListener('click', handleRun);
+    if (miniRunButton) miniRunButton.addEventListener('click', handleMiniRun);
     exportJsonButton.addEventListener('click', exportAsJson);
     exportCsvButton.addEventListener('click', exportAsCsv);
     wifiProbe.addEventListener('click', handleWifiProbe);
+    if (miniDomains) {
+      miniDomains.addEventListener('keydown', event => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+          event.preventDefault();
+          handleMiniRun();
+        }
+      });
+    }
     prevResult.addEventListener('click', () => {
       currentResultIndex = Math.max(0, currentResultIndex - 1);
       renderResultPager();
@@ -3508,6 +5680,9 @@
       chatInput.value = '';
       setChatOpen(true);
     });
+    langButtons.forEach(button => {
+      button.addEventListener('click', () => setLanguage(button.dataset.langSwitch || 'es'));
+    });
     document.querySelectorAll('[data-chat-term]').forEach(button => {
       button.addEventListener('click', () => {
         const term = button.dataset.chatTerm || '';
@@ -3517,24 +5692,53 @@
       });
     });
 
-    renderCatalog();
-    resetState();
-    setSummary({ ok: 0, warning: 0, info: 0, fail: 0, error: 0 }, 0);
-    renderResultPager();
-    loadFragment('axis-security', 'partials/seguridad.html');
-    loadFragment('axis-universalidad', 'partials/universalidad.html');
-    loadFragment('axis-accesibilidad', 'partials/accesibilidad.html');
-    loadCctldReport();
-    setInterval(() => loadCctldReport(), 15 * 60 * 1000);
+    modeTabLinks.forEach(link => {
+      const target = (link.dataset.viewLink || '').trim();
+      const active = (VIEW_MODE === 'home' && target === 'home')
+        || (VIEW_MODE === 'mini' && target === 'mini')
+        || (VIEW_MODE === 'cctlds' && target === 'cctlds');
+      if (active) {
+        link.classList.add('active');
+        link.setAttribute('aria-current', 'page');
+      }
+    });
+
+    buildMiniCards();
+    void setLanguage(currentLang);
+
+    if (VIEW_MODE === 'home') {
+      renderCatalog();
+      resetState();
+      setSummary({ ok: 0, warning: 0, info: 0, fail: 0, error: 0 }, 0);
+      renderResultPager();
+      loadFragment('axis-security', 'partials/seguridad.html');
+      loadFragment('axis-universalidad', 'partials/universalidad.html');
+      loadFragment('axis-accesibilidad', 'partials/accesibilidad.html');
+      loadCctldReport();
+      setInterval(() => loadCctldReport(), 15 * 60 * 1000);
+    } else if (VIEW_MODE === 'cctlds') {
+      loadCctldReport();
+      setInterval(() => loadCctldReport(), 15 * 60 * 1000);
+    } else if (VIEW_MODE === 'mini') {
+      renderMiniEmpty('Pega un dominio para mostrar el mini.');
+    }
+
     wifiVariant.value = 'WFA115006';
     renderWifiSpectrumResult({ bands: [], sourceUrl: 'Pega un variantId y pulsa Probar.' });
-    appendChatMessage(
-      'Ayuda rápida',
-      'Escribe una medición para ver qué valida el sistema.',
-      'Escreva uma medição para ver o que o sistema valida.'
-    );
+    if (VIEW_MODE === 'home') {
+      appendChatMessage(
+        'Ayuda rápida',
+        'Escribe una medición para ver qué valida el sistema.',
+        'Escreva uma medição para ver o que o sistema valida.'
+      );
+    }
     setChatOpen(false);
-    logRun('Sistema listo. Ingresa dominios y pulsa Analizar.', 'info');
+    logRun(
+      VIEW_MODE === 'mini'
+        ? 'Mini listo. Ingresa un dominio y pulsa Analizar mini.'
+        : 'Sistema listo. Ingresa dominios y pulsa Analizar.',
+      'info'
+    );
   </script>
 </body>
 </html>
