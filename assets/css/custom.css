@@ -1621,21 +1621,48 @@
     }
 
     .axis-grid,
+    .axis-results,
+    .axis-sheet-body,
     .cctld-grid,
     .results-grid,
     .feature-grid,
+    .summary-strip,
     .measurement-grid,
     .mini-top-grid,
     .mini-bottom-grid {
       gap: 0;
     }
 
+    .axis-grid,
+    .axis-results,
+    .axis-sheet-body,
+    .cctld-grid,
+    .feature-grid,
+    .summary-strip,
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
     .axis-grid > *,
+    .axis-results > *,
+    .axis-sheet-body > *,
     .cctld-grid > *,
     .feature-grid > *,
+    .summary-strip > *,
     .mini-top-grid > *,
     .mini-bottom-grid > * {
-      padding: 2rem;
+      padding: 0;
+    }
+
+    .axis-sheet,
+    .measurement-family,
+    .cctld-card,
+    .featured-summary,
+    .result-row,
+    .result-inline,
+    .graph-box {
+      margin-bottom: 2rem;
     }
 
     .measurement-family {
@@ -1655,7 +1682,8 @@
 
     .measurement-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 0;
     }
 
     .measurement-grid > * {
@@ -1806,6 +1834,16 @@
 
       .measurement-grid > *:first-child {
         border-top-width: 0;
+      }
+
+      .axis-grid,
+      .axis-results,
+      .axis-sheet-body,
+      .cctld-grid,
+      .feature-grid,
+      .summary-strip,
+      .results-grid {
+        grid-template-columns: 1fr;
       }
     }
 
