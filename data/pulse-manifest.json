@@ -1,0 +1,364 @@
+{
+  "generatedAt": "2026-06-10T03:40:11.573557+00:00",
+  "success": 0,
+  "failure": 51,
+  "items": [
+    {
+      "code": "ar",
+      "url": "https://pulse.internetsociety.org/es/reports/ar/",
+      "path": "data/pulse-html/ar.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "bo",
+      "url": "https://pulse.internetsociety.org/es/reports/bo/",
+      "path": "data/pulse-html/bo.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "br",
+      "url": "https://pulse.internetsociety.org/es/reports/br/",
+      "path": "data/pulse-html/br.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "cl",
+      "url": "https://pulse.internetsociety.org/es/reports/cl/",
+      "path": "data/pulse-html/cl.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "co",
+      "url": "https://pulse.internetsociety.org/es/reports/co/",
+      "path": "data/pulse-html/co.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "ec",
+      "url": "https://pulse.internetsociety.org/es/reports/ec/",
+      "path": "data/pulse-html/ec.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "fk",
+      "url": "https://pulse.internetsociety.org/es/reports/fk/",
+      "path": "data/pulse-html/fk.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "gf",
+      "url": "https://pulse.internetsociety.org/es/reports/gf/",
+      "path": "data/pulse-html/gf.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "gy",
+      "url": "https://pulse.internetsociety.org/es/reports/gy/",
+      "path": "data/pulse-html/gy.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "pe",
+      "url": "https://pulse.internetsociety.org/es/reports/pe/",
+      "path": "data/pulse-html/pe.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "py",
+      "url": "https://pulse.internetsociety.org/es/reports/py/",
+      "path": "data/pulse-html/py.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "sr",
+      "url": "https://pulse.internetsociety.org/es/reports/sr/",
+      "path": "data/pulse-html/sr.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "uy",
+      "url": "https://pulse.internetsociety.org/es/reports/uy/",
+      "path": "data/pulse-html/uy.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "ve",
+      "url": "https://pulse.internetsociety.org/es/reports/ve/",
+      "path": "data/pulse-html/ve.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "bz",
+      "url": "https://pulse.internetsociety.org/es/reports/bz/",
+      "path": "data/pulse-html/bz.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "cr",
+      "url": "https://pulse.internetsociety.org/es/reports/cr/",
+      "path": "data/pulse-html/cr.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "gt",
+      "url": "https://pulse.internetsociety.org/es/reports/gt/",
+      "path": "data/pulse-html/gt.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "hn",
+      "url": "https://pulse.internetsociety.org/es/reports/hn/",
+      "path": "data/pulse-html/hn.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "ni",
+      "url": "https://pulse.internetsociety.org/es/reports/ni/",
+      "path": "data/pulse-html/ni.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "pa",
+      "url": "https://pulse.internetsociety.org/es/reports/pa/",
+      "path": "data/pulse-html/pa.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "sv",
+      "url": "https://pulse.internetsociety.org/es/reports/sv/",
+      "path": "data/pulse-html/sv.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "mx",
+      "url": "https://pulse.internetsociety.org/es/reports/mx/",
+      "path": "data/pulse-html/mx.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "ai",
+      "url": "https://pulse.internetsociety.org/es/reports/ai/",
+      "path": "data/pulse-html/ai.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "ag",
+      "url": "https://pulse.internetsociety.org/es/reports/ag/",
+      "path": "data/pulse-html/ag.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "aw",
+      "url": "https://pulse.internetsociety.org/es/reports/aw/",
+      "path": "data/pulse-html/aw.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "bb",
+      "url": "https://pulse.internetsociety.org/es/reports/bb/",
+      "path": "data/pulse-html/bb.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "bl",
+      "url": "https://pulse.internetsociety.org/es/reports/bl/",
+      "path": "data/pulse-html/bl.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "bm",
+      "url": "https://pulse.internetsociety.org/es/reports/bm/",
+      "path": "data/pulse-html/bm.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "bq",
+      "url": "https://pulse.internetsociety.org/es/reports/bq/",
+      "path": "data/pulse-html/bq.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "bs",
+      "url": "https://pulse.internetsociety.org/es/reports/bs/",
+      "path": "data/pulse-html/bs.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "cu",
+      "url": "https://pulse.internetsociety.org/es/reports/cu/",
+      "path": "data/pulse-html/cu.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "cw",
+      "url": "https://pulse.internetsociety.org/es/reports/cw/",
+      "path": "data/pulse-html/cw.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "dm",
+      "url": "https://pulse.internetsociety.org/es/reports/dm/",
+      "path": "data/pulse-html/dm.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "do",
+      "url": "https://pulse.internetsociety.org/es/reports/do/",
+      "path": "data/pulse-html/do.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "gd",
+      "url": "https://pulse.internetsociety.org/es/reports/gd/",
+      "path": "data/pulse-html/gd.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "gp",
+      "url": "https://pulse.internetsociety.org/es/reports/gp/",
+      "path": "data/pulse-html/gp.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "ht",
+      "url": "https://pulse.internetsociety.org/es/reports/ht/",
+      "path": "data/pulse-html/ht.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "jm",
+      "url": "https://pulse.internetsociety.org/es/reports/jm/",
+      "path": "data/pulse-html/jm.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "kn",
+      "url": "https://pulse.internetsociety.org/es/reports/kn/",
+      "path": "data/pulse-html/kn.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "ky",
+      "url": "https://pulse.internetsociety.org/es/reports/ky/",
+      "path": "data/pulse-html/ky.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "lc",
+      "url": "https://pulse.internetsociety.org/es/reports/lc/",
+      "path": "data/pulse-html/lc.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "mf",
+      "url": "https://pulse.internetsociety.org/es/reports/mf/",
+      "path": "data/pulse-html/mf.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "mq",
+      "url": "https://pulse.internetsociety.org/es/reports/mq/",
+      "path": "data/pulse-html/mq.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "ms",
+      "url": "https://pulse.internetsociety.org/es/reports/ms/",
+      "path": "data/pulse-html/ms.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "pr",
+      "url": "https://pulse.internetsociety.org/es/reports/pr/",
+      "path": "data/pulse-html/pr.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "sx",
+      "url": "https://pulse.internetsociety.org/es/reports/sx/",
+      "path": "data/pulse-html/sx.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "tc",
+      "url": "https://pulse.internetsociety.org/es/reports/tc/",
+      "path": "data/pulse-html/tc.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "tt",
+      "url": "https://pulse.internetsociety.org/es/reports/tt/",
+      "path": "data/pulse-html/tt.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "vc",
+      "url": "https://pulse.internetsociety.org/es/reports/vc/",
+      "path": "data/pulse-html/vc.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "vg",
+      "url": "https://pulse.internetsociety.org/es/reports/vg/",
+      "path": "data/pulse-html/vg.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    },
+    {
+      "code": "vi",
+      "url": "https://pulse.internetsociety.org/es/reports/vi/",
+      "path": "data/pulse-html/vi.html",
+      "ok": false,
+      "error": "curl: (56) The requested URL returned error: 403"
+    }
+  ]
+}

@@ -47,7 +47,12 @@ const INDEX_PATH = path.join(__dirname, 'index.html');
 const PARTIALS_DIR = path.join(__dirname, 'partials');
 const LOCALES_DIR = path.join(__dirname, 'locales');
 const PULSE_SNAPSHOT_DIR = path.join(__dirname, 'data', 'pulse-html');
-const PULSE_HARDCODED_REPORTS = require('./data/pulse-hardcoded.json');
+let PULSE_HARDCODED_REPORTS = [];
+try {
+  PULSE_HARDCODED_REPORTS = require('./data/pulse-hardcoded.json');
+} catch (error) {
+  PULSE_HARDCODED_REPORTS = [];
+}
 const LACNIC_CCTLDS = [
   'ar','bo','br','cl','co','ec','fk','gf','gy','pe','py','sr','uy','ve',
   'bz','cr','gt','hn','ni','pa','sv',
@@ -4866,7 +4871,7 @@ async function handleDnsviz(domain, res, format = '', mode = 'remote') {
   }
 }
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   const parsed = new URL(req.url, 'http://localhost');
   const segments = parsed.pathname.split('/').filter(Boolean);
   if (segments[0] === 'partials' && segments[1]) {
@@ -5078,17 +5083,26 @@ const server = http.createServer(async (req, res) => {
   if (segments[0] === 'wifispectrum' && segments[1])
     return handleWifiSpectrum(segments[1], res);
   sendJSON(res, 404, { error: 'Not found' });
-});
+}
 
-const PORT = process.env.PORT || 4000;
-const HOST = process.env.HOST || '127.0.0.1';
-server.listen(PORT, HOST, () =>
-  console.log(`Servidor escuchando en ${HOST}:${PORT}`)
-);
+function startServer() {
+  const server = http.createServer(handleRequest);
+  const PORT = process.env.PORT || 4000;
+  const HOST = process.env.HOST || '127.0.0.1';
+  server.listen(PORT, HOST, () =>
+    console.log(`Servidor escuchando en ${HOST}:${PORT}`)
+  );
 
-setTimeout(() => {
-  refreshCctldReport().catch(e => console.log(`[cctld] error - ${errorMessage(e)}`));
-}, 0);
-setInterval(() => {
-  refreshCctldReport().catch(e => console.log(`[cctld] error - ${errorMessage(e)}`));
-}, 15 * 60 * 1000).unref();
+  setTimeout(() => {
+    refreshCctldReport().catch(e => console.log(`[cctld] error - ${errorMessage(e)}`));
+  }, 0);
+  setInterval(() => {
+    refreshCctldReport().catch(e => console.log(`[cctld] error - ${errorMessage(e)}`));
+  }, 15 * 60 * 1000).unref();
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { handleRequest, refreshCctldReport };

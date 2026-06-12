@@ -1,1 +1,7 @@
-node_modules/
+data/*
+!data/pulse-hardcoded.json
+!data/pulse-manifest.json
+!data/.keep
+data/pulse-chrome-profile/
+data/pulse-html/
+data/*.log
