@@ -5,3 +5,4 @@ data/*
 data/pulse-chrome-profile/
 data/pulse-html/
 data/*.log
+.vercel
