@@ -1420,6 +1420,21 @@
     .cctld-card > summary{
       padding:14px 16px;
     }
+    .cctld-title-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .cctld-flag{
+      width:28px;
+      height:20px;
+      flex:0 0 auto;
+      border-radius:4px;
+      object-fit:cover;
+      box-shadow:0 1px 2px rgba(0,0,0,.14);
+      border:1px solid rgba(18,33,27,.08);
+      background:#fff;
+    }
     .cctld-card > div{
       padding:0 16px 16px;
     }

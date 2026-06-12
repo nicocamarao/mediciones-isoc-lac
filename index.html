@@ -3593,6 +3593,12 @@
       return item?.tld ? item.tld.toUpperCase() : 'País';
     }
 
+    function getCctldFlagUrl(item) {
+      const code = String(item?.tld || '').trim().toUpperCase();
+      if (!code) return '';
+      return `https://pulse.internetsociety.org/static/img/flags/full/${code}.png`;
+    }
+
     function getCctldMapSummary(items) {
       const list = Array.isArray(items) ? items : [];
       return {
@@ -3881,7 +3887,19 @@
       card.className = `cctld-card ${statusClass(cardStatus)}`;
       const summary = document.createElement('summary');
       const left = document.createElement('div');
-      left.appendChild(make('h3', '', `.${item.tld}`));
+      const titleRow = make('div', 'cctld-title-row');
+      const flag = document.createElement('img');
+      flag.className = 'cctld-flag';
+      flag.src = getCctldFlagUrl(item);
+      flag.alt = `Bandera de ${getCctldDisplayName(item)}`;
+      flag.loading = 'lazy';
+      flag.decoding = 'async';
+      flag.referrerPolicy = 'no-referrer';
+      flag.onerror = () => {
+        flag.hidden = true;
+      };
+      titleRow.append(flag, make('h3', '', `.${item.tld}`));
+      left.appendChild(titleRow);
       left.appendChild(make('p', '', `${item.nsCount} NS, ${item.ipv4NsCount} con IPv4, ${item.ipv6NsCount} con IPv6`));
       const right = document.createElement('div');
       right.style.display = 'flex';
