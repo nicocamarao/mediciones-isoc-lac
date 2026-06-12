@@ -30,8 +30,7 @@ const cctldCache = new Map();
 const pulseCache = new Map();
 const dnsvizMetaCache = new Map();
 const dnsvizSvgCache = new Map();
-const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 10000);
-const SELFTEST_TIMEOUT_MS = Number(process.env.SELFTEST_TIMEOUT_MS || 12000);
+const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 25000);
 const INTERNETNL_BATCH_BASE_URL = String(process.env.INTERNETNL_BATCH_BASE_URL || 'http://localhost:8080/api/batch/v2').replace(/\/+$/, '');
 const INTERNETNL_BATCH_AUTH = String(process.env.INTERNETNL_BATCH_AUTH || '').trim();
 const INTERNETNL_BATCH_USER = String(process.env.INTERNETNL_BATCH_USER || '').trim();
@@ -47,6 +46,8 @@ const LOCAL_APP_BASE_URL = String(
 const INDEX_PATH = path.join(__dirname, 'index.html');
 const PARTIALS_DIR = path.join(__dirname, 'partials');
 const LOCALES_DIR = path.join(__dirname, 'locales');
+const PULSE_SNAPSHOT_DIR = path.join(__dirname, 'data', 'pulse-html');
+const PULSE_HARDCODED_REPORTS = require('./data/pulse-hardcoded.json');
 const LACNIC_CCTLDS = [
   'ar','bo','br','cl','co','ec','fk','gf','gy','pe','py','sr','uy','ve',
   'bz','cr','gt','hn','ni','pa','sv',
@@ -78,12 +79,15 @@ const WIFI_6GHZ_STATUS_BY_CCTLD = {
   gy: [{ territory: 'Guyana', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
   ht: [{ territory: 'Haiti', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
   hn: [{ territory: 'Honduras', status: 'LOW_5925_6425' }],
+  jm: [{ territory: 'Jamaica', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
   mx: [{ territory: 'Mexico', status: 'LOW_5925_6425' }],
   ni: [{ territory: 'Nicaragua', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
-  pa: [{ territory: 'Panama', status: 'CONSULTATION', note: 'Public consultation proposed indoor unlicensed 5925-7125 MHz' }],
+  pa: [{ territory: 'Panama', status: 'FULL_5925_7125', note: 'Public consultation became part of the full-band regional set.' }],
   py: [{ territory: 'Paraguay', status: 'LOW_5925_6425', note: 'Confirmed by CONATEL Resolution 1035/2025' }],
   pe: [{ territory: 'Peru', status: 'FULL_5925_7125' }],
   do: [{ territory: 'Dominican Republic', status: 'FULL_5925_7125' }],
+  bb: [{ territory: 'Barbados', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
+  bs: [{ territory: 'Bahamas', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
   sx: [{ territory: 'Sint Maarten', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
   fk: [{ territory: 'Falkland Islands (Malvinas)', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
   gs: [{ territory: 'South Georgia and the South Sandwich Islands', status: 'NO_PUBLIC_ADOPTION_FOUND' }],
@@ -1513,6 +1517,8 @@ async function summarizeCctld(tld, mode = 'local') {
   const ipv6NsCount = nsDetails.filter(item => item.reachableV6).length;
   const validDnssec = Boolean(dnssec.parent && dnssec.child);
   const dnssecAssessmentStatus = dnssecAssessment.status || (validDnssec ? 'ok' : 'fail');
+  const pulseCountry = detectCcTld(domain);
+  const pulseCountryCode = pulseCountry ? pulseCountry.toUpperCase() : null;
   const wifi = await summarizeWifiCountry(domain).catch(() => ({
     status: 'pending',
     label: 'Próximamente',
@@ -1522,6 +1528,17 @@ async function summarizeCctld(tld, mode = 'local') {
     available: false,
     notes: ['No se pudo recuperar Pulse.']
   }));
+  const backendCommands = [
+    `dig +short NS ${domain}`,
+    `dig +short DS ${domain}`,
+    `dig +short DNSKEY ${domain}`,
+    `dig +short NSEC3PARAM ${domain}`,
+    `dig +trace +dnssec ${domain}`,
+    ...ns.slice(0, 6).flatMap(host => [`dig +short A ${host}`, `dig +short AAAA ${host}`]),
+    `curl -L https://dnsviz.net/d/${domain}/dnssec/`,
+    `curl -L https://dnsviz.net/d/${domain}/dnssec/auth_graph.svg?download=1`,
+    pulseCountryCode ? `curl -L https://pulse.internetsociety.org/en/reports/${pulseCountryCode}/` : null
+  ].filter(Boolean);
   const value = {
     tld: domain,
     nsCount: ns.length,
@@ -1551,6 +1568,15 @@ async function summarizeCctld(tld, mode = 'local') {
     nsDetails,
     wifi,
     pulse,
+    backend: {
+      source: 'Equivalente de consultas backend usadas para generar el reporte.',
+      commands: [...new Set(backendCommands)],
+      notes: [
+        'NS, DS, DNSKEY y NSEC3PARAM se resuelven con caché local.',
+        'DNSViz se consulta aparte para obtener grafo, avisos y errores.',
+        'Pulse se recupera con caché independiente por ccTLD.'
+      ]
+    },
     status: dnssecAssessmentStatus === 'warning' ? 'warning' : (validDnssec ? 'ok' : 'fail'),
     dnssecValid: validDnssec,
     refreshedAt: new Date().toISOString()
@@ -1594,6 +1620,72 @@ async function summarizeCctld(tld, mode = 'local') {
   return value;
 }
 
+function buildCctldErrorItem(tld, mode, message) {
+  const domain = normalizeDomain(tld);
+  const errorLines = [`Error al generar el reporte: ${message}`];
+  return {
+    tld: domain,
+    nsCount: 0,
+    ipv4NsCount: 0,
+    ipv6NsCount: 0,
+    dnssec: {
+      parent: false,
+      child: false,
+      valid: false,
+      algorithms: [],
+      digests: [],
+      dsRecords: [],
+      dnskeyRecords: [],
+      nsec3: {
+        present: false,
+        configured: false,
+        hashAlgorithm: null,
+        hashAlgorithmName: null,
+        iterations: null,
+        salt: null,
+        hasSha1: false,
+        records: [],
+        notes: errorLines.slice()
+      },
+      assessment: {
+        status: 'error',
+        summaryLines: errorLines.slice(),
+        sections: []
+      }
+    },
+    nsDetails: [],
+    wifi: {
+      status: 'pending',
+      label: 'Próximamente',
+      notes: errorLines.slice()
+    },
+    pulse: {
+      available: false,
+      notes: errorLines.slice(),
+      sourceUrl: `https://pulse.internetsociety.org/en/reports/${encodeURIComponent(domain)}/`
+    },
+    dnsviz: {
+      available: false,
+      pageUrl: `https://dnsviz.net/d/${domain}/dnssec/`,
+      svgUrl: `https://dnsviz.net/d/${domain}/dnssec/auth_graph.svg?download=1`,
+      observations: errorLines.slice(),
+      warningCount: 0,
+      errorCount: 1,
+      warnings: errorLines.slice(),
+      errors: errorLines.slice(),
+      notices: {
+        warnings: errorLines.slice(),
+        errors: errorLines.slice()
+      }
+    },
+    status: 'fail',
+    dnssecValid: false,
+    refreshedAt: new Date().toISOString(),
+    error: message,
+    mode
+  };
+}
+
 async function getCachedCctldPulse(tld, mode = 'local') {
   const domain = normalizeDomain(tld);
   if (!domain) return null;
@@ -1617,18 +1709,64 @@ async function getCachedCctldPulse(tld, mode = 'local') {
 
 async function refreshCctldReport(mode = 'local') {
   if (cctldRefreshPromises.has(mode)) return cctldRefreshPromises.get(mode);
+  cctldDebugState.active = true;
+  cctldDebugState.lastMode = mode;
+  cctldDebugState.lastStartedAt = new Date().toISOString();
+  cctldDebugState.lastFinishedAt = null;
+  cctldDebugState.lastError = null;
+  cctldDebugState.lastFailures = 0;
+  console.log(`[cctld] refresh start mode=${mode}`);
   const promise = (async () => {
-    const items = await withConcurrency(LACNIC_CCTLDS, 4, async tld => summarizeCctld(tld, mode));
+    const items = await withConcurrency(LACNIC_CCTLDS, 4, async tld => {
+      try {
+        return await summarizeCctld(tld, mode);
+      } catch (e) {
+        const message = errorMessage(e);
+        cctldDebugState.lastFailures += 1;
+        cctldDebugState.lastError = {
+          tld: normalizeDomain(tld),
+          message,
+          at: new Date().toISOString()
+        };
+        console.log(`[cctld] ${normalizeDomain(tld)} fallback - ${message}`);
+        return buildCctldErrorItem(tld, mode, message);
+      }
+    });
     cctldReportState.items = items;
     cctldReportState.generatedAt = new Date().toISOString();
     cctldReportState.mode = mode;
+    cctldDebugState.lastItems = items.length;
+    cctldDebugState.lastFinishedAt = cctldReportState.generatedAt;
+    cctldDebugState.active = false;
+    console.log(`[cctld] refresh ok items=${items.length} failures=${cctldDebugState.lastFailures}`);
     return cctldReportState;
-  })().finally(() => {
+  })().catch(e => {
+    const message = errorMessage(e);
+    cctldDebugState.active = false;
+    cctldDebugState.lastError = {
+      tld: null,
+      message,
+      at: new Date().toISOString()
+    };
+    console.log(`[cctld] refresh fatal - ${message}`);
+    throw e;
+  }).finally(() => {
+    cctldDebugState.active = false;
     cctldRefreshPromises.delete(mode);
   });
   cctldRefreshPromises.set(mode, promise);
   return promise;
 }
+
+const cctldDebugState = {
+  active: false,
+  lastMode: 'local',
+  lastStartedAt: null,
+  lastFinishedAt: null,
+  lastItems: 0,
+  lastFailures: 0,
+  lastError: null
+};
 
 const cctldReportState = {
   generatedAt: null,
@@ -1638,9 +1776,15 @@ const cctldReportState = {
 
 async function handleCctldReport(res, mode = 'local') {
   if (!cctldReportState.items.length || cctldReportState.mode !== mode) {
-    await refreshCctldReport(mode).catch(() => {});
+    if (!cctldRefreshPromises.has(mode)) {
+      refreshCctldReport(mode).catch(e => console.log(`[cctld] error - ${errorMessage(e)}`));
+    }
   }
-  sendJSON(res, 200, { ...cctldReportState, generating: cctldRefreshPromises.has(mode) });
+  sendJSON(res, 200, {
+    ...cctldReportState,
+    generating: cctldRefreshPromises.has(mode),
+    debug: { ...cctldDebugState }
+  });
 }
 
 function pickLib(target) {
@@ -1845,6 +1989,34 @@ function decodeHtmlEntities(value) {
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function htmlToVisibleText(value) {
+  return decodeHtmlEntities(
+    String(value || '')
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<\/(p|div|li|h[1-6]|tr|td|th|section|article|ul|ol)>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\r/g, '\n')
+  )
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/[ \t]+\n/g, '\n');
+}
+
+function htmlToVisibleLines(value) {
+  return String(value || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<\/(p|div|li|h[1-6]|tr|td|th|section|article|ul|ol)>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map(line => decodeHtmlEntities(line).replace(/[ \t]+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 function parsePingOutput(output) {
@@ -2468,8 +2640,8 @@ async function summarizeWifiCountry(countryCode) {
   if (!entries || !entries.length) {
     return {
       status: 'pending',
-      label: 'Próximamente',
-      notes: ['Sin dato hardcodeado para este ccTLD.']
+      label: 'Info no disponible',
+      notes: ['Info no disponible.']
     };
   }
 
@@ -2490,6 +2662,91 @@ async function summarizeWifiCountry(countryCode) {
   };
 }
 
+function buildPulseCountryFromSnapshot(countryCode, html, sourceUrl) {
+  const code = String(countryCode || '').trim().toUpperCase();
+  const dnssecCoverage = extractPulseMetricAlias(html, ['Cobertura de DNSSEC', 'DNSSEC coverage']);
+  const dnssecAdoption = extractPulseMetricAlias(html, ['Adopción de DNSSEC', 'Adoption of DNSSEC']);
+  const ipv6Adoption = extractPulseMetricAlias(html, ['Adopción de IPv6', 'Adoption of IPv6']);
+  const internetPenetration = extractPulseMetricAlias(html, ['Penetración de Internet', 'Internet penetration']);
+  const downloadSpeed = extractPulseMetricAlias(html, ['Velocidad de descarga promedio', 'Average download speed']);
+  const internetCost = extractPulseMetricAlias(html, ['Costo promedio de Internet', 'Average cost of Internet']);
+  const mobileCoverage = extractPulseMetricAlias(html, ['Cobertura móvil 4G y 5G', 'Mobile 4G and 5G coverage']);
+  const activeNetworks = extractPulseMetricAlias(html, ['Redes activas', 'Active networks']);
+  const internationalConnectivity = extractPulseMetricAlias(html, ['Conexiones internacionales', 'International connections']);
+  const dataCenters = extractPulseMetricAlias(html, ['Centros de datos', 'Data centers']);
+  const ixp = extractPulseMetricAlias(html, ['Puntos de intercambio de Internet (IXP)', 'Internet exchange points (IXP)']);
+  const localCaching = extractPulseMetricAlias(html, ['Contenido almacenado en caché local', 'Locally cached content']);
+  const domainUse = extractPulseMetricAlias(html, ['Uso de dominios a nivel del país', 'Country-level domain use']);
+  const resilienceScore = extractPulseMetricAlias(html, ['Índice de resiliencia de Internet', 'Internet Resilience Score']);
+  const roaItems = extractPulseListMetricsAlias(html, ['ROA']);
+  const rov = extractPulseListMetricsAlias(html, ['ROV'])[0] || null;
+  const value = {
+    available: Boolean(html),
+    hardcoded: true,
+    country: code,
+    sourceUrl,
+    dnssecCoverage,
+    dnssecAdoption,
+    ipv6Adoption,
+    internetPenetration,
+    downloadSpeed,
+    internetCost,
+    mobileCoverage,
+    activeNetworks,
+    internationalConnectivity,
+    dataCenters,
+    ixp,
+    localCaching,
+    domainUse,
+    resilienceScore,
+    roaItems,
+    rov,
+    reportHighlights: [],
+    reportLines: [],
+    displayCards: null,
+    notes: []
+  };
+  if (dnssecCoverage?.value) value.notes.push(`DNSSEC coverage ${dnssecCoverage.value}`);
+  if (dnssecAdoption?.value) value.notes.push(`DNSSEC adoption ${dnssecAdoption.value}`);
+  if (ipv6Adoption?.value) value.notes.push(`IPv6 adoption ${ipv6Adoption.value}`);
+  if (internetPenetration?.value) value.notes.push(`Internet penetration ${internetPenetration.value}`);
+  if (downloadSpeed?.value) value.notes.push(`Average download speed ${downloadSpeed.value}`);
+  if (internetCost?.value) value.notes.push(`Internet cost ${internetCost.value}`);
+  if (mobileCoverage?.value) value.notes.push(`Mobile coverage ${mobileCoverage.value}`);
+  if (activeNetworks?.value) value.notes.push(`Active networks ${activeNetworks.value}`);
+  if (internationalConnectivity?.value) value.notes.push(`International connectivity ${internationalConnectivity.value}`);
+  if (dataCenters?.value) value.notes.push(`Data centers ${dataCenters.value}`);
+  if (ixp?.value) value.notes.push(`IXP ${ixp.value}`);
+  if (localCaching?.value) value.notes.push(`Local caching ${localCaching.value}`);
+  if (resilienceScore?.value) value.notes.push(`Internet resilience score ${resilienceScore.value}`);
+  if (
+    value.available &&
+    !dnssecCoverage?.value &&
+    !dnssecAdoption?.value &&
+    !ipv6Adoption?.value &&
+    !internetPenetration?.value &&
+    !downloadSpeed?.value &&
+    !internetCost?.value &&
+    !mobileCoverage?.value &&
+    !activeNetworks?.value &&
+    !internationalConnectivity?.value &&
+    !dataCenters?.value &&
+    !ixp?.value &&
+    !localCaching?.value &&
+    !domainUse?.value &&
+    !resilienceScore?.value &&
+    !(Array.isArray(roaItems) && roaItems.length) &&
+    !rov
+  ) {
+    value.notes.push('Snapshot local disponible, pero no se pudieron extraer métricas visibles.');
+  }
+  if (value.available && (dnssecCoverage?.value || dnssecAdoption?.value || ipv6Adoption?.value || domainUse?.value || resilienceScore?.value)) {
+    value.notes.push('Métricas Pulse extraídas desde snapshot HTML local.');
+  }
+  value.displayCards = buildPulseDisplayCards(htmlToVisibleText(html), [], value);
+  return value;
+}
+
 function extractPulseSection(html, title) {
   const titlePattern = escapeRegExp(title);
   const titleRegex = new RegExp(
@@ -2501,37 +2758,357 @@ function extractPulseSection(html, title) {
   return match[1];
 }
 
+function extractPulseMetricFromText(html, title) {
+  const text = htmlToVisibleLines(html);
+  if (!text) return null;
+  const lines = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+  const titleIndex = lines.findIndex(line => new RegExp(`^${escapeRegExp(title)}$`, 'i').test(line));
+  if (titleIndex < 0) return null;
+  const window = lines.slice(titleIndex + 1, titleIndex + 14);
+  const numericLines = window.filter(line => {
+    const normalized = String(line || '').trim();
+    return (
+      /^<\s*\d+(?:[.,]\d+)?%?$/.test(normalized) ||
+      /^\d[\d.,\s]*%$/.test(normalized) ||
+      /^\d[\d.,\s]*\s*(?:Mbps|Gbps|Kbps|ms)\b/i.test(normalized) ||
+      /^\d+\s*\/\s*\d+$/.test(normalized) ||
+      (/^\d[\d\s.,]*$/.test(normalized) && !/^\d{4}$/.test(normalized))
+    );
+  });
+  const value = numericLines[0] || window.find(line => /\d/.test(line)) || null;
+  const averageLabelIndex = window.findIndex(line => /average/i.test(line));
+  const average = averageLabelIndex >= 0
+    ? (window.slice(averageLabelIndex + 1).find(line => /\d/.test(line)) || null)
+    : (numericLines[1] || null);
+  const label = window.find(line => /[A-Za-z]/.test(line) && !/average/i.test(line) && !line.includes(value || '')) || null;
+  return {
+    value: value ? decodeHtmlEntities(value) : null,
+    average: average ? decodeHtmlEntities(average) : null,
+    label: label ? decodeHtmlEntities(label) : null
+  };
+}
+
 function extractPulseMetric(html, title) {
   const block = extractPulseSection(html, title);
-  if (!block) return null;
-  const primary = block.match(/<div class="primary">([\s\S]*?)<\/div>/i)?.[1] || '';
-  const secondary = block.match(/<div class="secondary">([\s\S]*?)<\/div>/i)?.[1] || '';
-  const label = block.match(/<div class="label">([\s\S]*?)<\/div>/i)?.[1] || '';
-  return {
-    value: decodeHtmlEntities(primary),
-    average: decodeHtmlEntities(secondary),
-    label: decodeHtmlEntities(label)
-  };
+  if (block) {
+    const primary = block.match(/<div class="primary">([\s\S]*?)<\/div>/i)?.[1] || '';
+    const secondary = block.match(/<div class="secondary">([\s\S]*?)<\/div>/i)?.[1] || '';
+    const label = block.match(/<div class="label">([\s\S]*?)<\/div>/i)?.[1] || '';
+    const value = decodeHtmlEntities(primary);
+    const average = decodeHtmlEntities(secondary);
+    const labelValue = decodeHtmlEntities(label);
+    if (value || average || labelValue) {
+      return { value, average, label: labelValue };
+    }
+  }
+  return extractPulseMetricFromText(html, title);
 }
 
 function extractPulseListMetrics(html, title) {
   const block = extractPulseSection(html, title);
-  if (!block) return [];
+  if (block) {
+    const items = [];
+    const listItemRegex = /<li>([\s\S]*?)<\/li>/gi;
+    let match;
+    while ((match = listItemRegex.exec(block))) {
+      const itemBlock = match[1];
+      const primary = itemBlock.match(/<div class="primary">([\s\S]*?)<\/div>/i)?.[1] || '';
+      const label = itemBlock.match(/<div class="label">([\s\S]*?)<\/div>/i)?.[1] || '';
+      if (primary || label) {
+        items.push({
+          value: decodeHtmlEntities(primary),
+          label: decodeHtmlEntities(label)
+        });
+      }
+    }
+    if (items.length) return items;
+  }
+  const text = htmlToVisibleLines(html);
+  if (!text) return [];
+  const lines = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+  const titleIndex = lines.findIndex(line => new RegExp(`^${escapeRegExp(title)}$`, 'i').test(line));
+  if (titleIndex < 0) return [];
+  const window = lines.slice(titleIndex + 1, titleIndex + 24);
   const items = [];
-  const listItemRegex = /<li>([\s\S]*?)<\/li>/gi;
-  let match;
-  while ((match = listItemRegex.exec(block))) {
-    const itemBlock = match[1];
-    const primary = itemBlock.match(/<div class="primary">([\s\S]*?)<\/div>/i)?.[1] || '';
-    const label = itemBlock.match(/<div class="label">([\s\S]*?)<\/div>/i)?.[1] || '';
-    if (primary || label) {
-      items.push({
-        value: decodeHtmlEntities(primary),
-        label: decodeHtmlEntities(label)
-      });
+  let current = null;
+  for (const line of window) {
+    if (!line) continue;
+    if (/^(ROA|ROV)\b/i.test(line) && current) {
+      items.push(current);
+      current = { value: '', label: line };
+      continue;
+    }
+    if (!current) {
+      current = { value: '', label: '' };
+    }
+    if (!current.value && /\d/.test(line)) {
+      current.value = line;
+      continue;
+    }
+    if (!current.label && /[A-Za-z]/.test(line) && !/average/i.test(line)) {
+      current.label = line;
+      continue;
+    }
+    if (current.value && current.label) {
+      items.push(current);
+      current = null;
     }
   }
-  return items;
+  if (current && (current.value || current.label)) items.push(current);
+  return items.filter(item => item.value || item.label).slice(0, 8);
+}
+
+function extractPulseMetricAlias(html, titles) {
+  const list = Array.isArray(titles) ? titles : [titles];
+  for (const title of list) {
+    const value = extractPulseMetric(html, title);
+    if (value?.value || value?.average || value?.label) return value;
+  }
+  return null;
+}
+
+function extractPulseListMetricsAlias(html, titles) {
+  const list = Array.isArray(titles) ? titles : [titles];
+  for (const title of list) {
+    const value = extractPulseListMetrics(html, title);
+    if (value?.length) return value;
+  }
+  return [];
+}
+
+function mergePulseCountryMetrics(target, source) {
+  if (!target || !source) return target;
+  const keys = [
+    'dnssecCoverage',
+    'dnssecAdoption',
+    'ipv6Adoption',
+    'internetPenetration',
+    'downloadSpeed',
+    'internetCost',
+    'mobileCoverage',
+    'activeNetworks',
+    'internationalConnectivity',
+    'dataCenters',
+    'ixp',
+    'localCaching',
+    'domainUse',
+    'resilienceScore',
+    'displayCards',
+    'roaItems',
+    'rov'
+  ];
+  keys.forEach(key => {
+    const value = source[key];
+    if (value === undefined || value === null) return;
+    if (key === 'roaItems') {
+      if (!Array.isArray(target.roaItems) || !target.roaItems.length) {
+        target.roaItems = Array.isArray(value) ? value.slice() : [];
+      }
+      return;
+    }
+    if (key === 'rov') {
+      if (!target.rov) target.rov = value;
+      return;
+    }
+    if (!target[key] || (!target[key].value && !target[key].label && !target[key].average)) {
+      target[key] = value;
+    }
+  });
+  return target;
+}
+
+function makePulseCard(label, value, note, tone = 'info') {
+  if (value === undefined || value === null || value === '') return null;
+  return {
+    label,
+    value: String(value),
+    note: note ? String(note) : '',
+    tone
+  };
+}
+
+function buildPulseDisplayCards(reportText, reportHighlights, fields = {}) {
+  const text = String(reportText || '');
+  const joinedHighlights = Array.isArray(reportHighlights) ? reportHighlights.join(' · ') : '';
+  const cards = {
+    overview: [],
+    security: [],
+    universalidad: [],
+    accesibilidad: []
+  };
+  const add = (group, label, value, note, tone = 'info') => {
+    const card = makePulseCard(label, value, note, tone);
+    if (card) cards[group].push(card);
+  };
+
+  const datacenterMatch = joinedHighlights.match(/hay\s+([\d.,\s]+)\s+centros de datos y hay\s+([\d.,\s]+)\s+IXP activos/i);
+  if (datacenterMatch) {
+    add('overview', 'Centros de datos', datacenterMatch[1].trim(), `${datacenterMatch[2].trim()} IXP activos`, 'ok');
+  }
+  const populationMatch = joinedHighlights.match(/población de [^0-9]*?([\d][\d.,\s]+)/i);
+  if (populationMatch) {
+    add('overview', 'Población', populationMatch[1].trim(), 'Dato destacado del reporte', 'info');
+  }
+  const internetUsersMatch = joinedHighlights.match(/Aproximadamente\s+(\d+)%\s+de la población es usuaria de Internet/i);
+  if (internetUsersMatch) {
+    add('overview', 'Uso de Internet', `${internetUsersMatch[1]}%`, 'Población usuaria de Internet', 'ok');
+  }
+  const cachingMatch = joinedHighlights.match(/se puede accede al\s+(\d+)%\s+en un servidor local o en caché/i);
+  if (cachingMatch) {
+    add('overview', 'Caché local', `${cachingMatch[1]}%`, 'Top 1000 sitios accesibles localmente', 'ok');
+  }
+  const cybersecurityMatch = text.match(/Índice de ciberseguridad global[\s\S]*?(\d+(?:[.,]\d+)?)\s*\/\s*100/i);
+  if (cybersecurityMatch) {
+    add('overview', 'Ciberseguridad', `${cybersecurityMatch[1]} / 100`, 'Índice de ciberseguridad global', 'warning');
+  }
+  const egovMatch = text.match(/Calificación de los servicios públicos digitales[\s\S]*?(\d+(?:[.,]\d+)?)/i);
+  if (egovMatch) {
+    add('overview', 'Servicios públicos digitales', egovMatch[1], 'Preparación del ecosistema de gobierno electrónico', 'info');
+  }
+  const marketMatch = text.match(/Competencia de mercado[\s\S]*?\n([A-Za-zÁÉÍÓÚÑñüÜ]+)\s*\n/i);
+  if (marketMatch) {
+    add('overview', 'Competencia de mercado', marketMatch[1].trim(), 'Evaluación cualitativa', 'info');
+  }
+
+  if (fields.dnssecCoverage?.value) {
+    add('security', 'Cobertura DNSSEC', fields.dnssecCoverage.value, fields.dnssecCoverage.average ? `Promedio Américas ${fields.dnssecCoverage.average}` : fields.dnssecCoverage.label, fields.dnssecCoverage.value.includes('<') ? 'warning' : 'ok');
+  }
+  if (fields.dnssecAdoption?.value) {
+    add('security', 'Adopción DNSSEC', fields.dnssecAdoption.value, fields.dnssecAdoption.average ? `Promedio Américas ${fields.dnssecAdoption.average}` : fields.dnssecAdoption.label, 'ok');
+  }
+  if (fields.roaItems?.length) {
+    const roaIpv4 = fields.roaItems.find(item => /IPv4/i.test(String(item?.label || '')))?.value || null;
+    const roaIpv6 = fields.roaItems.find(item => /IPv6/i.test(String(item?.label || '')))?.value || null;
+    const roaValue = [roaIpv4, roaIpv6].filter(Boolean).join(' / ') || fields.roaItems.map(item => item.value).filter(Boolean).slice(0, 2).join(' / ');
+    add('security', 'ROA', roaValue, 'Prefijos protegidos por RPKI', 'ok');
+  }
+  if (fields.rov?.value) {
+    add('security', 'ROV', fields.rov.value, fields.rov.label || 'Validación de origen de rutas', 'ok');
+  }
+  if (fields.resilienceScore?.value) {
+    add('security', 'Resiliencia', fields.resilienceScore.value, fields.resilienceScore.label || 'Índice general de resiliencia de Internet', 'info');
+  }
+  const routingMatch = text.match(/Incidentes de seguridad del enrutamiento[\s\S]*?(\d+)\s*incidentes/i);
+  if (routingMatch) {
+    add('security', 'Incidentes de enrutamiento', routingMatch[1], 'Observados en el último período visible', 'warning');
+  }
+
+  if (fields.ipv6Adoption?.value) {
+    add('universalidad', 'IPv6', fields.ipv6Adoption.value, fields.ipv6Adoption.average ? `Promedio Américas ${fields.ipv6Adoption.average}` : fields.ipv6Adoption.label, 'ok');
+  }
+  if (fields.mobileCoverage?.value) {
+    add('universalidad', 'Cobertura móvil 4G', fields.mobileCoverage.value, fields.mobileCoverage.label || 'Acceso a 4G', 'ok');
+    if (fields.mobileCoverage.average) {
+      add('universalidad', 'Cobertura móvil 5G', fields.mobileCoverage.average, 'Segundo valor visible en el reporte', 'warning');
+    }
+  }
+
+  if (fields.internetPenetration?.value) {
+    add('accesibilidad', 'Penetración de Internet', fields.internetPenetration.value, fields.internetPenetration.average ? `Promedio Américas ${fields.internetPenetration.average}` : fields.internetPenetration.label, 'ok');
+  }
+  if (fields.downloadSpeed?.value) {
+    add('accesibilidad', 'Velocidad de descarga', fields.downloadSpeed.value, fields.downloadSpeed.average ? `Mobile ${fields.downloadSpeed.average}` : fields.downloadSpeed.label, 'info');
+  }
+  if (fields.internetCost?.value) {
+    add('accesibilidad', 'Costo promedio', fields.internetCost.value, fields.internetCost.label || 'Porcentaje del ingreso promedio', 'ok');
+  }
+  if (fields.localCaching?.value) {
+    add('accesibilidad', 'Caché local', fields.localCaching.value, fields.localCaching.average ? `Promedio Américas ${fields.localCaching.average}` : fields.localCaching.label, 'ok');
+  }
+  if (fields.dataCenters?.value) {
+    add('accesibilidad', 'Centros de datos', fields.dataCenters.value, fields.dataCenters.label || 'Cantidad visible en el reporte', 'info');
+  }
+  if (fields.ixp?.value) {
+    add('accesibilidad', 'IXP', fields.ixp.value, fields.ixp.average ? `Promedio Américas ${fields.ixp.average}` : fields.ixp.label, 'info');
+  }
+  if (fields.activeNetworks?.value) {
+    add('accesibilidad', 'Redes activas', fields.activeNetworks.value, fields.activeNetworks.label || 'Infraestructura visible en el reporte', 'info');
+  }
+  if (fields.internationalConnectivity?.value) {
+    add('accesibilidad', 'Conectividad internacional', fields.internationalConnectivity.value, fields.internationalConnectivity.label || 'Conexiones internacionales visibles', 'info');
+  }
+  if (fields.domainUse?.value) {
+    add('accesibilidad', 'Uso de dominios', fields.domainUse.value, fields.domainUse.label || 'ccTLD registrado', 'info');
+  }
+
+  return cards;
+}
+
+function parsePulseHardcodedReport(countryCode, hardcodedReport, sourceUrl) {
+  const code = String(countryCode || '').trim().toUpperCase();
+  const reportHighlights = Array.isArray(hardcodedReport?.highlights) ? hardcodedReport.highlights.slice() : [];
+  const reportLines = Array.isArray(hardcodedReport?.reportLines) ? hardcodedReport.reportLines.slice() : [];
+  const reportText = [...reportHighlights, ...reportLines].join('\n');
+  const value = {
+    available: true,
+    hardcoded: true,
+    country: code,
+    sourceUrl: hardcodedReport?.sourceUrl || sourceUrl,
+    dnssecCoverage: extractPulseMetricFromText(reportText, 'Cobertura de DNSSEC'),
+    dnssecAdoption: extractPulseMetricFromText(reportText, 'Adopción de DNSSEC'),
+    ipv6Adoption: extractPulseMetricFromText(reportText, 'Adopción de IPv6'),
+    internetPenetration: extractPulseMetricFromText(reportText, 'Penetración de Internet'),
+    downloadSpeed: extractPulseMetricFromText(reportText, 'Velocidad de descarga promedio'),
+    internetCost: extractPulseMetricFromText(reportText, 'Costo promedio de Internet'),
+    mobileCoverage: extractPulseMetricFromText(reportText, 'Cobertura móvil 4G y 5G'),
+    activeNetworks: extractPulseMetricFromText(reportText, 'Redes activas'),
+    internationalConnectivity: extractPulseMetricFromText(reportText, 'Conexiones internacionales'),
+    dataCenters: extractPulseMetricFromText(reportText, 'Centros de datos'),
+    ixp: extractPulseMetricFromText(reportText, 'Puntos de intercambio de Internet (IXP)'),
+    localCaching: extractPulseMetricFromText(reportText, 'Contenido almacenado en caché local'),
+    domainUse: extractPulseMetricFromText(reportText, 'Uso de dominios a nivel del país'),
+    resilienceScore: extractPulseMetricFromText(reportText, 'Índice de resiliencia de Internet'),
+    roaItems: extractPulseListMetrics(reportText, 'ROA'),
+    rov: extractPulseListMetrics(reportText, 'ROV')[0] || null,
+    reportHighlights,
+    reportLines,
+    displayCards: null,
+    notes: []
+  };
+  if (value.dnssecCoverage?.value) value.notes.push(`DNSSEC coverage ${value.dnssecCoverage.value}`);
+  if (value.dnssecAdoption?.value) value.notes.push(`DNSSEC adoption ${value.dnssecAdoption.value}`);
+  if (value.ipv6Adoption?.value) value.notes.push(`IPv6 adoption ${value.ipv6Adoption.value}`);
+  if (value.internetPenetration?.value) value.notes.push(`Internet penetration ${value.internetPenetration.value}`);
+  if (value.downloadSpeed?.value) value.notes.push(`Average download speed ${value.downloadSpeed.value}`);
+  if (value.internetCost?.value) value.notes.push(`Internet cost ${value.internetCost.value}`);
+  if (value.mobileCoverage?.value) value.notes.push(`Mobile coverage ${value.mobileCoverage.value}`);
+  if (value.activeNetworks?.value) value.notes.push(`Active networks ${value.activeNetworks.value}`);
+  if (value.internationalConnectivity?.value) value.notes.push(`International connectivity ${value.internationalConnectivity.value}`);
+  if (value.dataCenters?.value) value.notes.push(`Data centers ${value.dataCenters.value}`);
+  if (value.ixp?.value) value.notes.push(`IXP ${value.ixp.value}`);
+  if (value.localCaching?.value) value.notes.push(`Local caching ${value.localCaching.value}`);
+  if (value.domainUse?.value) value.notes.push(`Country-level domain use ${value.domainUse.value}`);
+  if (value.resilienceScore?.value) value.notes.push(`Internet resilience score ${value.resilienceScore.value}`);
+  if (value.roaItems.length) value.notes.push(`ROA entries ${value.roaItems.length}`);
+  if (value.rov?.value) value.notes.push(`ROV ${value.rov.value}`);
+  if (
+    !value.dnssecCoverage?.value &&
+    !value.dnssecAdoption?.value &&
+    !value.ipv6Adoption?.value &&
+    !value.internetPenetration?.value &&
+    !value.downloadSpeed?.value &&
+    !value.internetCost?.value &&
+    !value.mobileCoverage?.value &&
+    !value.activeNetworks?.value &&
+    !value.internationalConnectivity?.value &&
+    !value.dataCenters?.value &&
+    !value.ixp?.value &&
+    !value.localCaching?.value &&
+    !value.domainUse?.value &&
+    !value.resilienceScore?.value &&
+    !value.roaItems.length &&
+    !value.rov
+  ) {
+    value.notes.push('Snapshot local disponible, pero no se pudieron extraer métricas visibles.');
+  }
+  value.displayCards = buildPulseDisplayCards(reportText, reportHighlights, value);
+  return value;
 }
 
 async function summarizePulseCountry(countryCode) {
@@ -2544,43 +3121,102 @@ async function summarizePulseCountry(countryCode) {
   }
   const cached = cacheGet(pulseCache, `pulse:${code}`, 24 * 60 * 60 * 1000);
   if (cached) return cached;
-  const url = `https://pulse.internetsociety.org/en/reports/${encodeURIComponent(code)}/`;
+  const sourceUrl = `https://pulse.internetsociety.org/es/reports/${encodeURIComponent(code.toLowerCase())}/`;
+  const snapshotPath = path.join(PULSE_SNAPSHOT_DIR, `${code.toLowerCase()}.html`);
+  const hardcodedReport = PULSE_HARDCODED_REPORTS[String(code).toLowerCase()] || null;
+  const remoteEnabled = !['0', 'false', 'no'].includes(String(process.env.PULSE_REMOTE_FALLBACK || '1').trim().toLowerCase());
+  const parsePulseHtml = html => {
+    const value = buildPulseCountryFromSnapshot(code, html, sourceUrl);
+    value.snapshotPath = snapshotPath;
+    if (hardcodedReport) {
+      const hardcodedValue = parsePulseHardcodedReport(code, hardcodedReport, sourceUrl);
+      mergePulseCountryMetrics(value, hardcodedValue);
+      value.hardcoded = false;
+      value.reportHighlights = hardcodedValue.reportHighlights.slice();
+      value.reportLines = hardcodedValue.reportLines.slice();
+      value.notes.unshift(`Pulse duro local cargado para ${code}.`);
+      value.notes = [...new Set(value.notes)];
+    }
+    return value;
+  };
+
+  const buildHardcodedOnly = () => {
+    if (!hardcodedReport) return null;
+    const value = parsePulseHardcodedReport(code, hardcodedReport, sourceUrl);
+    value.notes.unshift(`Pulse duro local cargado para ${code}.`);
+    return value;
+  };
+
+  if (remoteEnabled) {
+    try {
+      const html = await fetchText(sourceUrl, {
+        timeout: 20000,
+        headers: {
+          'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'accept-language': 'es-ES,es;q=0.9,en;q=0.8'
+        }
+      });
+      const value = parsePulseHtml(html);
+      value.available = Boolean(html);
+      value.hardcoded = false;
+      value.notes.unshift('Pulse remoto recuperado desde el backend.');
+      cacheSet(pulseCache, `pulse:${code}`, value);
+      return value;
+    } catch (remoteError) {
+      const remoteFailure = errorMessage(remoteError);
+      try {
+        const html = await fs.readFile(snapshotPath, 'utf8');
+        const value = parsePulseHtml(html);
+        value.notes.unshift(`Fallback snapshot local: ${path.relative(__dirname, snapshotPath)}`);
+        value.notes.unshift(`Pulse remoto no disponible: ${remoteFailure}`);
+        cacheSet(pulseCache, `pulse:${code}`, value);
+        return value;
+      } catch (snapshotError) {
+        const hardcodedOnly = buildHardcodedOnly();
+        const value = hardcodedOnly || {
+          available: false,
+          hardcoded: false,
+          country: code,
+          sourceUrl,
+          snapshotPath,
+          error: errorMessage(snapshotError),
+          notes: [
+            `Pulse remoto no disponible: ${remoteFailure}`,
+            'No existe snapshot local para este país.'
+          ]
+        };
+        if (hardcodedOnly) {
+          value.error = errorMessage(snapshotError);
+          value.snapshotPath = snapshotPath;
+        }
+        cacheSet(pulseCache, `pulse:${code}`, value);
+        return value;
+      }
+    }
+  }
+
   try {
-    const page = await fetchPage(url, { timeout: 20000 });
-    const html = String(page?.body || '');
-    const dnssecCoverage = extractPulseMetric(html, 'DNSSEC coverage');
-    const dnssecAdoption = extractPulseMetric(html, 'Adoption of DNSSEC');
-    const ipv6Adoption = extractPulseMetric(html, 'Adoption of IPv6');
-    const domainUse = extractPulseMetric(html, 'Country-level domain use');
-    const resilienceScore = extractPulseMetric(html, 'Internet Resilience Score');
-    const roaItems = extractPulseListMetrics(html, 'ROA');
-    const rov = extractPulseListMetrics(html, 'ROV')[0] || null;
-    const value = {
-      available: Boolean(html),
-      country: code,
-      sourceUrl: url,
-      dnssecCoverage,
-      dnssecAdoption,
-      ipv6Adoption,
-      domainUse,
-      resilienceScore,
-      roaItems,
-      rov,
-      notes: []
-    };
-    if (dnssecCoverage?.value) value.notes.push(`DNSSEC coverage ${dnssecCoverage.value}`);
-    if (dnssecAdoption?.value) value.notes.push(`DNSSEC adoption ${dnssecAdoption.value}`);
-    if (ipv6Adoption?.value) value.notes.push(`IPv6 adoption ${ipv6Adoption.value}`);
-    if (resilienceScore?.value) value.notes.push(`Internet resilience score ${resilienceScore.value}`);
+    const html = await fs.readFile(snapshotPath, 'utf8');
+    const value = parsePulseHtml(html);
+    value.notes.unshift(`Snapshot local: ${path.relative(__dirname, snapshotPath)}`);
     cacheSet(pulseCache, `pulse:${code}`, value);
     return value;
   } catch (e) {
-    const value = {
+    const hardcodedOnly = buildHardcodedOnly();
+    const value = hardcodedOnly || {
       available: false,
-      sourceUrl: url,
+      hardcoded: false,
+      country: code,
+      sourceUrl,
+      snapshotPath,
       error: errorMessage(e),
-      notes: ['No se pudo recuperar Pulse.']
+      notes: ['No existe snapshot local para este país.']
     };
+    if (hardcodedOnly) {
+      value.error = errorMessage(e);
+      value.snapshotPath = snapshotPath;
+    }
     cacheSet(pulseCache, `pulse:${code}`, value);
     return value;
   }
@@ -3108,15 +3744,19 @@ async function buildMiniData(domain, emitProgress = () => {}) {
 
 async function handleMiniData(domain, res) {
   try {
+    console.log(`[mini] data start domain=${normalizeDomain(domain)}`);
     const data = await buildMiniData(domain);
+    console.log(`[mini] data ok domain=${normalizeDomain(domain)}`);
     sendJSON(res, 200, data);
   } catch (e) {
+    console.log(`[mini] data error domain=${normalizeDomain(domain)} - ${errorMessage(e)}`);
     sendJSON(res, 200, { domain: normalizeDomain(domain), country: detectCcTld(domain), error: errorMessage(e) });
   }
 }
 
 async function handleMiniStream(domain, res) {
   const cleanDomain = normalizeDomain(domain);
+  console.log(`[mini] stream start domain=${cleanDomain}`);
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
     'Cache-Control': 'no-cache, no-transform',
@@ -3135,7 +3775,9 @@ async function handleMiniStream(domain, res) {
   try {
     const data = await buildMiniData(cleanDomain, emit);
     if (!closed) writeSseEvent(res, 'result', data);
+    console.log(`[mini] stream result domain=${cleanDomain}`);
   } catch (e) {
+    console.log(`[mini] stream error domain=${cleanDomain} - ${errorMessage(e)}`);
     if (!closed) {
       writeSseEvent(res, 'failure', {
         domain: cleanDomain,
@@ -4224,90 +4866,6 @@ async function handleDnsviz(domain, res, format = '', mode = 'remote') {
   }
 }
 
-const STARTUP_SELF_TEST_DOMAIN = 'practicallyunhackable.com';
-const STARTUP_SELF_TEST_ROUTES = [
-  ['headers', d => `/headers/${d}`],
-  ['tlsinfo', d => `/tlsinfo/${d}`],
-  ['sslchain', d => `/sslchain/${d}`],
-  ['caa', d => `/caa/${d}`],
-  ['ipv4', d => `/ipv4/${d}`],
-  ['ipv6', d => `/ipv6/${d}`],
-  ['dnssec', d => `/dnssec/${d}`],
-  ['dnsviz', d => `/dnsviz/${d}`],
-  ['dnsrecords', d => `/dnsrecords/${d}`],
-  ['txtrecords', d => `/txtrecords/${d}`],
-  ['mx', d => `/mx/${d}`],
-  ['mailipv6', d => `/mailipv6/${d}`],
-  ['maildnssec', d => `/maildnssec/${d}`],
-  ['spf', d => `/spf/${d}`],
-  ['dmarc', d => `/dmarc/${d}`],
-  ['dkim', d => `/dkim/${d}`],
-  ['starttls', d => `/starttls/${d}`],
-  ['smtputf8', d => `/smtputf8/${d}`],
-  ['rpki', d => `/rpki/${d}`],
-  ['routing', d => `/routing/${d}`],
-  ['serverinfo', d => `/serverinfo/${d}`],
-  ['serverstatus', d => `/serverstatus/${d}`],
-  ['redirectchain', d => `/redirectchain/${d}`],
-  ['openports', d => `/openports/${d}`],
-  ['ping', d => `/ping/${d}`],
-  ['pingv6', d => `/pingv6/${d}`],
-  ['traceroute', d => `/traceroute/${d}`],
-  ['sitefeatures', d => `/sitefeatures/${d}`],
-  ['cookies', d => `/cookies/${d}`],
-  ['listedpages', d => `/listedpages/${d}`],
-  ['linkedpages', d => `/linkedpages/${d}`],
-  ['socialtags', d => `/socialtags/${d}`],
-  ['quality', d => `/quality/${d}`],
-  ['archive', d => `/archive/${d}`],
-  ['ranking', d => `/ranking/${d}`]
-];
-
-async function runStartupSelfTest(baseUrl) {
-  const domain = encodeURIComponent(STARTUP_SELF_TEST_DOMAIN);
-  console.log(`[selftest] iniciando dominio=${STARTUP_SELF_TEST_DOMAIN}`);
-  const results = [];
-  async function timedFetch(target, timeoutMs = SELFTEST_TIMEOUT_MS) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      return await fetch(target, {
-        signal: controller.signal,
-        headers: { accept: 'application/json' }
-      });
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  for (const [name, pathFn] of STARTUP_SELF_TEST_ROUTES) {
-    try {
-      const response = await timedFetch(`${baseUrl}${pathFn(domain)}`);
-      const data = await response.json();
-      const state = data?.error ? 'error' : 'ok';
-      const note = data?.error || data?.status || data?.policyStatus || data?.available || '';
-      results.push({ name, state, note });
-      console.log(`[selftest] ${name}: ${state}${note ? ` - ${note}` : ''}`);
-    } catch (e) {
-      const message = errorMessage(e);
-      results.push({ name, state: 'error', note: message });
-      console.log(`[selftest] ${name}: error - ${message}`);
-    }
-  }
-  try {
-    const wifi = await timedFetch(`${baseUrl}/wifispectrum/WFA115006`, SELFTEST_TIMEOUT_MS);
-    const wifiData = await wifi.json();
-    console.log(
-      `[selftest] wifispectrum: ${wifiData?.error ? 'error' : 'ok'}${wifiData?.certId ? ` - ${wifiData.certId}` : ''}`
-    );
-  } catch (e) {
-    console.log(`[selftest] wifispectrum: error - ${errorMessage(e)}`);
-  }
-  const ok = results.filter(item => item.state === 'ok').length;
-  const error = results.filter(item => item.state === 'error').length;
-  const compliance = results.length ? Math.round((ok / results.length) * 100) : 0;
-  console.log(`[selftest] resumen ok=${ok} error=${error} cumplimiento=${compliance}%`);
-}
-
 const server = http.createServer(async (req, res) => {
   const parsed = new URL(req.url, 'http://localhost');
   const segments = parsed.pathname.split('/').filter(Boolean);
@@ -4347,6 +4905,17 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(res, 404, { error: 'Asset no encontrado' });
     }
   }
+  if (segments[0] === 'images' && segments[1]) {
+    try {
+      const filePath = path.resolve(__dirname, 'images', ...segments.slice(1));
+      if (!filePath.startsWith(path.join(__dirname, 'images') + path.sep)) {
+        return sendJSON(res, 400, { error: 'Ruta inválida' });
+      }
+      return await sendAsset(res, filePath);
+    } catch (e) {
+      return sendJSON(res, 404, { error: 'Imagen no encontrada' });
+    }
+  }
   if (segments.length === 0 || (segments.length === 1 && segments[0] === 'index.html')) {
     try {
       const html = await fs.readFile(INDEX_PATH, 'utf8');
@@ -4374,7 +4943,47 @@ const server = http.createServer(async (req, res) => {
   if (segments[0] === 'mini' && segments[1] === 'stream' && segments[2]) {
     return handleMiniStream(segments[2], res);
   }
+  if (segments[0] === 'situacion-lac' && segments.length === 1) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
   if (segments[0] === 'cctlds' && segments.length === 1) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
+  if (segments[0] === 'mapa' && segments.length === 1) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
+  if (segments[0] === 'referencias' && segments.length === 1) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
+  if (segments[0] === 'about' && segments.length === 1) {
+    try {
+      const html = await fs.readFile(INDEX_PATH, 'utf8');
+      return sendHTML(res, 200, html);
+    } catch (e) {
+      return sendHTML(res, 500, '<h1>No se pudo cargar index.html</h1>');
+    }
+  }
+  if (segments[0] === 'revisar' && segments.length === 1) {
     try {
       const html = await fs.readFile(INDEX_PATH, 'utf8');
       return sendHTML(res, 200, html);
@@ -4384,6 +4993,9 @@ const server = http.createServer(async (req, res) => {
   }
   if (segments[0] === 'mini' && segments[1] === 'data' && segments[2]) {
     return handleMiniData(segments[2], res);
+  }
+  if (segments[0] === 'api' && segments[1] === 'cctlds') {
+    return handleCctldReport(res, parsed.searchParams.get('resolver') || 'local');
   }
   if (segments[0] === 'internetnl' && segments[1]) {
     return handleInternetNl(segments[1], res, parsed.searchParams.get('type') || 'web');
@@ -4453,7 +5065,6 @@ const server = http.createServer(async (req, res) => {
     return handleHttpSecurity(segments[1], res);
   if (segments[0] === 'archive' && segments[1]) return handleArchive(segments[1], res);
   if (segments[0] === 'ranking' && segments[1]) return handleRanking(segments[1], res);
-  if (segments[0] === 'cctlds') return handleCctldReport(res, parsed.searchParams.get('resolver') || 'local');
   if (segments[0] === 'block' && segments[1]) return handleBlock(segments[1], res);
   if (segments[0] === 'malware' && segments[1]) return handleMalware(segments[1], res);
   if (segments[0] === 'tlsciphers' && segments[1])
@@ -4474,14 +5085,6 @@ const HOST = process.env.HOST || '127.0.0.1';
 server.listen(PORT, HOST, () =>
   console.log(`Servidor escuchando en ${HOST}:${PORT}`)
 );
-
-if (process.env.STARTUP_SELF_TEST === '1') {
-  setTimeout(() => {
-    runStartupSelfTest(`http://${HOST}:${PORT}`).catch(e =>
-      console.log(`[selftest] fatal - ${errorMessage(e)}`)
-    );
-  }, 1200);
-}
 
 setTimeout(() => {
   refreshCctldReport().catch(e => console.log(`[cctld] error - ${errorMessage(e)}`));

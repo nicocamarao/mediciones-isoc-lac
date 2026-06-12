@@ -6,43 +6,39 @@
   <title>Herramienta de Mediciones ISOC-LAC 2026</title>
   <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/assets/css/custom.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <noscript><link rel="stylesheet" href="/assets/css/noscript.css" /></noscript>
 </head>
 <body class="is-preload">
-  <div id="wrapper" class="page fade-in">
-    <header id="intro" class="hero">
+    <div id="wrapper" class="page fade-in">
+      <header id="intro" class="hero">
       <div class="hero-grid">
         <div>
+          <div class="hero-brand">
+            <img src="/assets/isoc-lac-hero.png" alt="Internet Society Mediciones ISOC-LAC">
+          </div>
           <p class="kicker">Estándares de Internet / medición regional</p>
           <h1>Herramienta de Mediciones ISOC-LAC</h1>
+          <p class="hero-subtitle">¿Qué tan preparado está Internet en nuestros países para enfrentar los desafíos de seguridad, resiliencia, accesibilidad e innovación de los próximos años?</p>
         </div>
         <p class="lead">
-          Medimos dominios, correo, DNS, TLS, universalidad y accesibilidad con una base inspirada en Internet.nl, pero ejecutada en Node.js para reutilizar nuestras rutas y mantener el flujo estable.
+          En el Grupo de Trabajo de Mediciones de ISOC LAC trabajamos para responder esa pregunta mediante datos abiertos, indicadores comparables y análisis técnicos que nos ayudan a comprender mejor el estado de Internet en América Latina y el Caribe.
           <br>
-          La interfaz incluye un reporte precalculado de los ccTLDs de LACNIC, que se refresca automáticamente cada 15 minutos y queda disponible más abajo.
+          Esta es una iniciativa regional colaborativa que reúne a capítulos, organizaciones, investigadores, operadores de redes, estudiantes y profesionales de Internet.
         </p>
-        <div class="inline-note">
-          <span class="pill">DNSViz centrado</span>
-          <span class="pill">Reporte ccTLD precalculado</span>
-          <span class="pill">Logs claros en español</span>
-        </div>
         <div class="lang-switch" aria-label="Selector de idioma">
           <button type="button" class="lang-btn" data-lang-switch="es">ES</button>
           <button type="button" class="lang-btn" data-lang-switch="pt">PT</button>
           <button type="button" class="lang-btn" data-lang-switch="en">EN</button>
         </div>
-        <nav class="mode-tabs" aria-label="Modo de vista">
-          <a class="mode-tab" href="/" data-view-link="home">Home</a>
-          <a class="mode-tab" href="/mini" data-view-link="mini">Mini</a>
-          <a class="mode-tab" href="/cctlds" data-view-link="cctlds">ccTLDs</a>
-        </nav>
-        <nav class="section-nav" aria-label="Navegación por secciones">
-          <a href="#mapa-general">Seguridad</a>
-          <a href="#reporte-cctld">ccTLD LACNIC</a>
-          <a href="#explorador">Explorador</a>
-          <a href="#resultados">Resultados</a>
-          <a href="#registro">Registro</a>
-        </nav>
+        <div class="page-links" aria-label="Atajos de página">
+          <a class="page-link" href="/">Home</a>
+          <a class="page-link" href="/situacion-lac">Situación LAC</a>
+          <a class="page-link" href="/referencias">Referencias</a>
+          <a class="page-link" href="/about">About</a>
+          <a class="page-link" href="/revisar">Revisar</a>
+          <a class="page-link" href="/mini">Mini</a>
+        </div>
       </div>
     </header>
     <header id="header">
@@ -51,8 +47,11 @@
     <nav id="nav" aria-label="Navegación principal">
       <ul class="links">
         <li class="active"><a href="/">Home</a></li>
+        <li><a href="/situacion-lac">Situación LAC</a></li>
+        <li><a href="/referencias">Referencias</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/revisar">Revisar</a></li>
         <li><a href="/mini">Mini</a></li>
-        <li><a href="/cctlds">ccTLDs</a></li>
       </ul>
     </nav>
 
@@ -63,11 +62,16 @@
           <p class="muted">Una lectura limpia, rápida y más visual. Si pegas varios dominios separados por coma, analizamos el primero.</p>
         </div>
         <div class="section-actions">
-          <span class="section-pill">Minimalista</span>
+          <span class="section-pill">Old</span>
         </div>
       </div>
       <div class="mini-input-row">
         <textarea id="miniDomains" class="mini-input" placeholder="practicallyunhackable.com, ejemplo.com"></textarea>
+        <div class="example-actions">
+          <span class="example-label">Casos rápidos:</span>
+          <button class="example-chip" type="button" data-domain-target="mini" data-domain-example="google.com">google.com</button>
+          <button class="example-chip" type="button" data-domain-target="mini" data-domain-example="lacnic.net">lacnic.net</button>
+        </div>
         <div class="toolbar">
           <button id="miniRunButton" class="button primary" type="button">Analizar mini</button>
           <span id="miniStatus" class="mini-hint">Pega un dominio y verás 8 tarjetas claras: 4 arriba y 4 abajo.</span>
@@ -93,6 +97,11 @@
       </div>
       <div class="form-grid">
         <textarea id="domains" placeholder="ejemplo.com, nic.uy, internet.org"></textarea>
+        <div class="example-actions">
+          <span class="example-label">Pruebas rápidas:</span>
+          <button class="example-chip" type="button" data-domain-target="main" data-domain-example="google.com">google.com</button>
+          <button class="example-chip" type="button" data-domain-target="main" data-domain-example="lacnic.net">lacnic.net</button>
+        </div>
         <div id="loading" class="loading">
           <span class="spinner"></span>
           <span>Analizando uno por uno para evitar saturación.</span>
@@ -101,7 +110,7 @@
     </section>
 
     <main id="main" class="layout home-only">
-      <section class="panel">
+      <section class="panel home-only">
         <div class="section-title" id="mapa-general">
           <div>
             <h2>Mapa general</h2>
@@ -124,11 +133,10 @@
           </div>
           <div class="section-actions">
             <button id="runButton" class="button primary" type="button">Analizar</button>
-            <button id="exportJsonButton" class="button secondary" type="button" disabled>Exportar JSON</button>
-            <button id="exportCsvButton" class="button secondary" type="button" disabled>Exportar CSV</button>
             <button id="clearButton" class="button ghost" type="button">Limpiar</button>
           </div>
         </div>
+        <div id="categoryFilters" class="category-filters" aria-label="Filtros por categoría"></div>
         <div class="results-grid">
           <aside class="results-sidebar">
             <div class="result-nav">
@@ -147,24 +155,26 @@
                 <div id="resultCounter" class="result-counter">0 / 0</div>
               </div>
               <div id="summary" class="summary-strip"></div>
+              <div id="cctldInsights" class="cctld-insights" hidden></div>
             </div>
           </aside>
           <div class="results-detail">
             <div id="featuredCards" class="feature-grid"></div>
+            <div id="currentResults" class="current-results"></div>
             <div class="axis-results">
               <section class="axis-sheet">
                 <div class="axis-sheet-head">
-                  <h3>Seguridad de cabeceras</h3>
-                  <p>HTTPS, cabeceras defensivas, TLS y correo.</p>
+                  <h3>Seguridad DNS</h3>
+                  <p>DNSSEC, DNSViz, registros y TXT. Acá quedan primero las mediciones más críticas de autenticidad DNS.</p>
                 </div>
-                <div id="axis-results-headers" class="axis-sheet-body"></div>
+                <div id="axis-results-dns" class="axis-sheet-body"></div>
               </section>
               <section class="axis-sheet">
                 <div class="axis-sheet-head">
-                  <h3>Seguridad DNS</h3>
-                  <p>DNSSEC, DNSViz, registros y TXT.</p>
+                  <h3>Seguridad de cabeceras</h3>
+                  <p>HTTPS, cabeceras defensivas, TLS y correo. Las mediciones de validación y transporte quedan aquí.</p>
                 </div>
-                <div id="axis-results-dns" class="axis-sheet-body"></div>
+                <div id="axis-results-headers" class="axis-sheet-body"></div>
               </section>
               <section class="axis-sheet">
                 <div class="axis-sheet-head">
@@ -175,24 +185,24 @@
               </section>
               <section class="axis-sheet">
                 <div class="axis-sheet-head">
-                  <h3>Universalidad</h3>
-                  <p>IPv6 y UA/EAI.</p>
-                </div>
-                <div id="axis-results-universalidad" class="axis-sheet-body"></div>
-              </section>
-              <section class="axis-sheet">
-                <div class="axis-sheet-head">
                   <h3>Accesibilidad</h3>
                   <p>W3C, calidad y herramientas de apoyo.</p>
                 </div>
                 <div id="axis-results-accesibilidad" class="axis-sheet-body"></div>
+              </section>
+              <section class="axis-sheet">
+                <div class="axis-sheet-head">
+                  <h3>Universalidad</h3>
+                  <p>IPv6 y UA/EAI. Primero va la conectividad moderna, luego la aceptación universal.</p>
+                </div>
+                <div id="axis-results-universalidad" class="axis-sheet-body"></div>
               </section>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="panel home-only" id="repairPanel">
+      <section class="panel repair-only" id="repairPanel">
         <div class="panel-head">
           <div>
             <h2>Las que hay que arreglar</h2>
@@ -202,27 +212,7 @@
         <div id="repairResults" class="repair-stack"></div>
       </section>
 
-      <section class="panel home-only" id="futurePanel">
-        <div class="panel-head">
-          <div>
-            <h2>Próximamente</h2>
-            <p class="muted">Mediciones en preparación para integrar con una fuente estable.</p>
-          </div>
-        </div>
-        <div id="axis-results-future" class="axis-sheet-body"></div>
-      </section>
-
-      <section class="panel home-only" id="labPanel">
-        <div class="panel-head">
-          <div>
-            <h2>Laboratorio</h2>
-            <p class="muted">Herramientas extra para inspección, referencias y exploración.</p>
-          </div>
-        </div>
-        <div id="axis-results-lab" class="axis-sheet-body"></div>
-      </section>
-
-      <section class="panel" id="reporte-cctld">
+      <section class="panel cctld-only" id="reporte-cctld">
         <div class="section-title">
           <div>
             <h2>Reporte ccTLD LACNIC</h2>
@@ -232,6 +222,17 @@
             <span class="mini-toggle active">Dig local</span>
             <span id="cctldRefresh" class="section-pill">Cargando...</span>
           </div>
+        </div>
+          <div class="cctld-map-panel">
+          <div class="cctld-map-head">
+            <div>
+              <h3>Mapa 6 GHz y DNSSEC</h3>
+              <p>Selecciona un país de LAC para ver en un mapa Leaflet la cobertura DNSSEC, DNSViz, NSEC3, Pulse y Wi‑Fi 6 GHz.</p>
+            </div>
+            <div id="cctldMapSummary" class="cctld-map-summary"></div>
+          </div>
+          <div id="cctldLeafletMap" class="cctld-leaflet-map" aria-label="Mapa Leaflet de la situación LAC"></div>
+          <div id="cctldMapNotes" class="cctld-map-notes"></div>
         </div>
         <div id="cctldGrid" class="cctld-grid"></div>
       </section>
@@ -291,6 +292,32 @@
         <div id="runLog" class="chat-log" style="min-height:140px;max-height:280px"></div>
       </section>
     </main>
+
+    <section class="panel references-only" id="referenciasPage">
+      <div class="panel-head">
+        <div>
+          <h2 id="referencesTitle">Referencias</h2>
+          <p id="referencesSubtitle" class="muted">Panorama de cada medición, qué valida internamente y qué consultas o comandos usamos como base.</p>
+        </div>
+        <div class="section-actions">
+          <span id="referencesRoute" class="section-pill">Ruta: /referencias</span>
+        </div>
+      </div>
+      <div id="referencesGrid" class="references-grid"></div>
+    </section>
+
+    <section class="panel about-only" id="aboutPage">
+      <div class="panel-head">
+        <div>
+          <h2 id="aboutTitle">About</h2>
+          <p id="aboutSubtitle" class="muted">Una visión resumida de la iniciativa y sus líneas de trabajo regionales.</p>
+        </div>
+        <div class="section-actions">
+          <span id="aboutRoute" class="section-pill">Ruta: /about</span>
+        </div>
+      </div>
+      <div id="aboutCopy" class="about-copy"></div>
+    </section>
   </div>
 
   <aside id="helpChat" class="chat-fab collapsed" aria-label="Ayuda contextual">
@@ -323,19 +350,29 @@
   <script src="/assets/js/breakpoints.min.js"></script>
   <script src="/assets/js/util.js"></script>
   <script src="/assets/js/main.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
   <script>
     const API_BASE = location.protocol === 'file:' ? 'http://localhost:4000' : '';
-    const VIEW_MODE = location.pathname.startsWith('/mini')
+    const pathname = location.pathname;
+    const VIEW_MODE = pathname.startsWith('/mini')
       ? 'mini'
-      : (location.pathname.startsWith('/cctlds') ? 'cctlds' : 'home');
+      : pathname.startsWith('/situacion-lac')
+        || pathname.startsWith('/cctlds')
+        || pathname.startsWith('/mapa')
+          ? 'situacion-lac'
+          : pathname.startsWith('/referencias')
+            ? 'references'
+            : pathname.startsWith('/about')
+              ? 'about'
+              : pathname.startsWith('/revisar')
+                ? 'revisar'
+                : 'home';
     document.body.dataset.view = VIEW_MODE;
     const domainsInput = document.getElementById('domains');
     const miniDomains = document.getElementById('miniDomains');
     const runButton = document.getElementById('runButton');
     const miniRunButton = document.getElementById('miniRunButton');
-    const exportJsonButton = document.getElementById('exportJsonButton');
-    const exportCsvButton = document.getElementById('exportCsvButton');
     const clearButton = document.getElementById('clearButton');
     const loading = document.getElementById('loading');
     const miniStatus = document.getElementById('miniStatus');
@@ -344,8 +381,14 @@
     const miniBottomGrid = document.getElementById('miniBottomGrid');
     const summaryEl = document.getElementById('summary');
     const featuredCardsEl = document.getElementById('featuredCards');
+    const currentResultsEl = document.getElementById('currentResults');
     const cctldGrid = document.getElementById('cctldGrid');
     const cctldRefresh = document.getElementById('cctldRefresh');
+    const referencesGrid = document.getElementById('referencesGrid');
+    const cctldLeafletMapEl = document.getElementById('cctldLeafletMap');
+    const cctldMapSummary = document.getElementById('cctldMapSummary');
+    const cctldMapNotes = document.getElementById('cctldMapNotes');
+    const cctldLog = document.getElementById('cctldLog');
     const axisResultsHeaders = document.getElementById('axis-results-headers');
     const axisResultsDns = document.getElementById('axis-results-dns');
     const axisResultsRouting = document.getElementById('axis-results-routing');
@@ -377,14 +420,27 @@
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
     const langButtons = Array.from(document.querySelectorAll('[data-lang-switch]'));
-    const modeTabLinks = Array.from(document.querySelectorAll('.mode-tab'));
+    const navLinks = Array.from(document.querySelectorAll('#nav .links a'));
+    const categoryFiltersEl = document.getElementById('categoryFilters');
+    const cctldInsights = document.getElementById('cctldInsights');
     let currentResultIndex = 0;
     const cctldResolverMode = 'local';
     let lastRun = null;
+    let analysisInProgress = false;
     let lastMiniData = null;
     let cctldRetryTimer = null;
     let miniStream = null;
     let miniRunToken = 0;
+    let cctldLeafletMap = null;
+    let cctldLeafletLayer = null;
+    let cctldReportItems = [];
+    const categoryFilters = [
+      { id: 'dns', labelKey: 'filter.dns', fallback: 'Seguridad DNS' },
+      { id: 'headers', labelKey: 'filter.headers', fallback: 'Seguridad' },
+      { id: 'accessibility', labelKey: 'filter.accessibility', fallback: 'Accesibilidad' },
+      { id: 'universalidad', labelKey: 'filter.universalidad', fallback: 'Universalidad' }
+    ];
+    const activeCategoryFilters = new Set(categoryFilters.map(filter => filter.id));
     const SUPPORTED_LANGS = ['es', 'pt', 'en'];
     let currentLang = localStorage.getItem('mediciones-lang') || 'es';
     const localePacks = {
@@ -402,7 +458,7 @@
         'pill.logs': 'Logs claros en español',
         'nav.home': 'Home',
         'nav.mini': 'Mini',
-        'nav.cctlds': 'ccTLDs',
+        'nav.situacionLac': 'Situación LAC',
         'mini.title': 'Mini',
         'mini.subtitle': 'Una lectura limpia, rápida y más visual. Si pegas varios dominios separados por coma, analizamos el primero.',
         'mini.badge': 'Minimalista',
@@ -580,8 +636,8 @@
         'mini.streamFailed': 'La medición en vivo falló.',
         'mini.fallback': 'Evento SSE no disponible; se usó respuesta directa.',
         'status.loading': 'Cargando...',
-        'home.cctld.title': 'Reporte ccTLD LACNIC',
-        'home.cctld.desc': 'Vista precalculada de todos los ccTLDs de la región, lista al abrir la herramienta.',
+        'home.cctld.title': 'Situación LAC',
+        'home.cctld.desc': 'Vista de situación regional con el mapa y el estado de los ccTLDs de LAC.',
         'home.log.title': 'Registro de ejecución',
         'home.log.desc': 'Mensajes claros con el avance de la medición, errores y exportación.',
         'help.title': 'Ayuda rápida',
@@ -597,7 +653,7 @@
         'pill.logs': 'Logs claros em espanhol',
         'nav.home': 'Home',
         'nav.mini': 'Mini',
-        'nav.cctlds': 'ccTLDs',
+        'nav.situacionLac': 'Situação LAC',
         'mini.title': 'Mini',
         'mini.subtitle': 'Uma leitura limpa, rápida e mais visual. Se você colar vários domínios separados por vírgula, analisamos o primeiro.',
         'mini.badge': 'Minimalista',
@@ -775,8 +831,8 @@
         'mini.streamFailed': 'A medição ao vivo falhou.',
         'mini.fallback': 'Evento SSE indisponível; resposta direta usada.',
         'status.loading': 'Carregando...',
-        'home.cctld.title': 'Relatório ccTLD LACNIC',
-        'home.cctld.desc': 'Visão pré-calculada de todos os ccTLDs da região, pronta ao abrir a ferramenta.',
+        'home.cctld.title': 'Situação LAC',
+        'home.cctld.desc': 'Visão da situação regional com o mapa e o estado dos ccTLDs da LAC.',
         'home.log.title': 'Registro de execução',
         'home.log.desc': 'Mensagens claras com o avanço da medição, erros e exportação.',
         'help.title': 'Ajuda rápida',
@@ -792,7 +848,7 @@
         'pill.logs': 'Clear logs in Spanish',
         'nav.home': 'Home',
         'nav.mini': 'Mini',
-        'nav.cctlds': 'ccTLDs',
+        'nav.situacionLac': 'LAC Situation',
         'mini.title': 'Mini',
         'mini.subtitle': 'A clean, fast, more visual readout. If you paste several domains separated by commas, we analyze the first one.',
         'mini.badge': 'Minimal',
@@ -970,8 +1026,8 @@
         'mini.streamFailed': 'The live measurement failed.',
         'mini.fallback': 'SSE event unavailable; direct response used.',
         'status.loading': 'Loading...',
-        'home.cctld.title': 'LACNIC ccTLD report',
-        'home.cctld.desc': 'Precomputed view of all regional ccTLDs, ready when the tool opens.',
+        'home.cctld.title': 'LAC Situation',
+        'home.cctld.desc': 'Regional situation view with the map and the state of LAC ccTLDs.',
         'home.log.title': 'Execution log',
         'home.log.desc': 'Clear messages for progress, errors and export.',
         'help.title': 'Quick help',
@@ -1018,6 +1074,12 @@
       const lookupKey = group?.id ? `group.${group.id}.${field}` : '';
       return lookupKey ? t(lookupKey, fallback) : fallback;
     }
+    function referenceText(index, field, fallback = '') {
+      return t(`references.${index}.${field}`, fallback);
+    }
+    function aboutText(key, fallback = '') {
+      return t(`about.${key}`, fallback);
+    }
     function miniText(key, fallback = '') {
       return t(`mini.${key}`, fallback);
     }
@@ -1045,18 +1107,52 @@
         button.textContent = t(`lang.${lang}`, lang.toUpperCase());
       });
     }
+    function updatePageLinks() {
+      const labels = {
+        es: {
+          '/': 'Home',
+          '/situacion-lac': 'Situación LAC',
+          '/referencias': 'Referencias',
+          '/about': 'About',
+          '/revisar': 'Revisar',
+          '/mini': 'Mini'
+        },
+        pt: {
+          '/': 'Home',
+          '/situacion-lac': 'Situação LAC',
+          '/referencias': 'Referências',
+          '/about': 'Sobre',
+          '/revisar': 'Revisar',
+          '/mini': 'Mini'
+        },
+        en: {
+          '/': 'Home',
+          '/situacion-lac': 'LAC Situation',
+          '/referencias': 'References',
+          '/about': 'About',
+          '/revisar': 'Review',
+          '/mini': 'Mini'
+        }
+      };
+      document.querySelectorAll('.page-links .page-link').forEach(link => {
+        const href = link.getAttribute('href') || '';
+        link.textContent = labels[currentLang]?.[href] || link.textContent;
+      });
+    }
     function applyStaticTranslations() {
+      document.title = t('app.title', 'Herramienta de Mediciones ISOC-LAC');
       setNodeText('.kicker', t('app.kicker', 'Estándares de Internet / medición regional'));
       setNodeText('.hero h1', t('app.title', 'Herramienta de Mediciones ISOC-LAC'));
-      setNodeText('.hero .lead', t('app.lead', 'Medimos dominios, correo, DNS, TLS, universalidad y accesibilidad.'));
-      const pills = document.querySelectorAll('.inline-note .pill');
-      if (pills[0]) pills[0].textContent = t('pill.dnsviz', 'DNSViz centrado');
-      if (pills[1]) pills[1].textContent = t('pill.report', 'Reporte ccTLD precalculado');
-      if (pills[2]) pills[2].textContent = t('pill.logs', 'Logs claros en español');
-      const tabs = Array.from(document.querySelectorAll('.mode-tabs .mode-tab'));
-      if (tabs[0]) tabs[0].textContent = t('nav.home', 'Home');
-      if (tabs[1]) tabs[1].textContent = t('nav.mini', 'Mini');
-      if (tabs[2]) tabs[2].textContent = t('nav.cctlds', 'ccTLDs');
+      const heroLead = document.querySelector('.hero .lead');
+      if (heroLead) heroLead.textContent = t('app.lead', 'Medimos dominios, correo, DNS, TLS, universalidad y accesibilidad.');
+      const heroSubtitle = document.querySelector('.hero-subtitle');
+      if (heroSubtitle) heroSubtitle.textContent = t('app.subtitle', '¿Qué tan preparado está Internet en nuestros países para enfrentar los desafíos de seguridad, resiliencia, accesibilidad e innovación de los próximos años?');
+      if (navLinks[0]) navLinks[0].textContent = t('nav.home', 'Home');
+      if (navLinks[1]) navLinks[1].textContent = t('nav.situacionLac', 'Situación LAC');
+      if (navLinks[2]) navLinks[2].textContent = t('nav.references', 'Referencias');
+      if (navLinks[3]) navLinks[3].textContent = t('nav.about', 'About');
+      if (navLinks[4]) navLinks[4].textContent = t('nav.revisar', 'Revisar');
+      if (navLinks[5]) navLinks[5].textContent = t('nav.mini', 'Mini');
       setNodeText('#miniShell h2', t('mini.title', 'Mini'));
       setNodeText('#miniShell .muted', t('mini.subtitle', 'Una lectura limpia, rápida y más visual.'));
       setNodePlaceholder('#miniDomains', t('mini.placeholder', 'practicallyunhackable.com, ejemplo.com'));
@@ -1072,8 +1168,6 @@
       const resultsDesc = document.querySelector('#resultados .panel-head .muted');
       if (resultsDesc) resultsDesc.textContent = t('home.results.desc', 'La vista principal ahora es una matriz de tarjetas.');
       setNodeText('#runButton', t('button.analyze', 'Analizar'));
-      setNodeText('#exportJsonButton', t('button.exportJson', 'Exportar JSON'));
-      setNodeText('#exportCsvButton', t('button.exportCsv', 'Exportar CSV'));
       setNodeText('#clearButton', t('button.clear', 'Limpiar'));
       setNodeText('#resultados .results-meta-head h3', t('home.summary.title', 'Resumen por eje'));
       const summaryDesc = document.querySelector('#resultados .results-meta-head p');
@@ -1097,13 +1191,11 @@
       });
       setNodeText('#repairPanel h2', t('group.fixPrefix', 'Las que hay que arreglar'));
       setNodeText('#repairPanel .muted', t('group.fixDesc', 'Falsos positivos, errores o respuestas dudosas que conviene revisar.'));
-      setNodeText('#futurePanel h2', t('home.future.title', 'Próximamente'));
-      setNodeText('#futurePanel .muted', t('home.future.desc', 'Mediciones en preparación para integrar con una fuente estable.'));
-      setNodeText('#labPanel h2', t('home.lab.title', 'Laboratorio'));
-      setNodeText('#labPanel .muted', t('home.lab.desc', 'Herramientas extra para inspección, referencias y exploración.'));
-      setNodeText('#reporte-cctld h2', t('home.cctld.title', 'Reporte ccTLD LACNIC'));
+      const repairRoute = document.querySelector('#repairPanel .section-pill');
+      if (repairRoute) repairRoute.textContent = t('nav.revisar', 'Revisar');
+      setNodeText('#reporte-cctld h2', t('home.cctld.title', 'Situación LAC'));
       const cctldDesc = document.querySelector('#reporte-cctld .section-title p');
-      if (cctldDesc) cctldDesc.textContent = t('home.cctld.desc', 'Vista precalculada de todos los ccTLDs de la región, lista al abrir la herramienta.');
+      if (cctldDesc) cctldDesc.textContent = t('home.cctld.desc', 'Vista de situación regional con el mapa y el estado de los ccTLDs de LAC.');
       setNodeText('#cctldRefresh', t('status.loading', 'Cargando...'));
       const miniToggle = document.querySelector('#reporte-cctld .mini-toggle');
       if (miniToggle) miniToggle.textContent = t('mini.dig', 'Dig local');
@@ -1117,6 +1209,14 @@
       setNodePlaceholder('#chatInput', t('help.placeholder', 'Escribe dnssec, ipv6, spf...'));
       const chatSubmit = document.querySelector('#chatForm button');
       if (chatSubmit) chatSubmit.textContent = t('button.info', 'Ver');
+      setNodeText('#referencesTitle', t('references.pageTitle', 'Referencias'));
+      setNodeText('#referencesSubtitle', t('references.pageSubtitle', 'Panorama de cada medición, qué valida internamente y qué consultas o comandos usamos como base.'));
+      setNodeText('#referencesRoute', t('references.route', 'Ruta: /referencias'));
+      setNodeText('#aboutTitle', t('about.title', 'About'));
+      setNodeText('#aboutSubtitle', t('about.subtitle', 'Una visión resumida de la iniciativa y sus líneas de trabajo regionales.'));
+      setNodeText('#aboutRoute', t('about.route', 'Ruta: /about'));
+      updatePageLinks();
+      renderAboutPage();
       updateLangButtons();
       if (document.body.dataset.view === 'mini') {
         buildMiniCards();
@@ -1124,6 +1224,10 @@
         else renderMiniEmpty(t('mini.empty', 'Pega un dominio para mostrar el mini.'));
       } else if (document.body.dataset.view === 'home') {
         renderCatalog();
+      } else if (document.body.dataset.view === 'references') {
+        buildReferences();
+      } else if (document.body.dataset.view === 'about') {
+        renderAboutPage();
       }
     }
     async function setLanguage(lang) {
@@ -1140,6 +1244,15 @@
       }
       if (document.body.dataset.view === 'mini' && lastMiniData) {
         renderMiniResults(lastMiniData);
+      }
+      if (document.body.dataset.view === 'references') {
+        buildReferences();
+      }
+      if (document.body.dataset.view === 'about') {
+        renderAboutPage();
+      }
+      if (document.body.dataset.view === 'revisar') {
+        renderCatalog();
       }
     }
 
@@ -1540,7 +1653,7 @@
       future: 'future',
       lab: 'lab'
     };
-    const groupOrder = ['https', 'appsecpriv', 'tls', 'mailauth', 'mailtransport', 'dnssec', 'route', 'ip', 'ua', 'accessibility', 'future', 'lab'];
+    const groupOrder = ['dnssec', 'tls', 'https', 'appsecpriv', 'mailauth', 'mailtransport', 'route', 'accessibility', 'ip', 'ua', 'future', 'lab'];
     const groupCards = new Map();
     const repairCards = new Map();
     const repairableGroupIds = new Set(['https', 'appsecpriv', 'tls', 'mailauth', 'mailtransport', 'dnssec', 'route', 'ip', 'ua', 'accessibility']);
@@ -1613,6 +1726,324 @@
       return status || 'info';
     }
 
+    function categoryIdForGroup(groupId) {
+      const group = categoryMap.get(groupId);
+      if (!group) return 'other';
+      if (group.id === 'dnssec') return 'dns';
+      if (['https', 'appsecpriv', 'tls', 'mailauth', 'mailtransport', 'route'].includes(group.id)) return 'headers';
+      if (group.id === 'accessibility') return 'accessibility';
+      if (['ip', 'ua'].includes(group.id)) return 'universalidad';
+      return 'other';
+    }
+
+    function isGroupVisible(groupId) {
+      return activeCategoryFilters.has(categoryIdForGroup(groupId));
+    }
+
+    function renderCategoryFilters() {
+      if (!categoryFiltersEl) return;
+      clearNode(categoryFiltersEl);
+      categoryFilters.forEach(filter => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        const active = activeCategoryFilters.has(filter.id);
+        button.className = `category-filter ${active ? 'active' : 'inactive'}`;
+        button.dataset.filterId = filter.id;
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        button.textContent = t(filter.labelKey, filter.fallback);
+        button.addEventListener('click', () => {
+          if (activeCategoryFilters.has(filter.id)) activeCategoryFilters.delete(filter.id);
+          else activeCategoryFilters.add(filter.id);
+          if (!activeCategoryFilters.size) {
+            categoryFilters.forEach(item => activeCategoryFilters.add(item.id));
+          }
+          renderCategoryFilters();
+          renderCatalog();
+          if (lastRun) renderResultPager();
+          if (lastRun?.selectedIds?.length) {
+            renderResultsHeader(lastRun.summary?.totalChecks || 0, lastRun.summary || { ok: 0, warning: 0, info: 0, fail: 0, error: 0, totalChecks: 0 });
+          }
+        });
+        categoryFiltersEl.appendChild(button);
+      });
+    }
+
+    function findCctldByDomain(domain) {
+      const cleaned = String(domain || '').trim().toLowerCase();
+      if (!cleaned) return null;
+      const labels = cleaned.split('.').filter(Boolean);
+      if (!labels.length) return null;
+      const tld = labels[labels.length - 1];
+      return cctldReportItems.find(item => String(item.tld || '').toLowerCase() === tld) || null;
+    }
+
+    function buildCctldInsightRows(item) {
+      if (!item) return [];
+      const rows = [];
+      const pulseHighlights = Array.isArray(item?.pulse?.reportHighlights) ? item.pulse.reportHighlights : [];
+      const dnssecCoverage = item?.pulse?.dnssecCoverage?.value || item?.dnssec?.assessment?.summaryLines?.[0] || null;
+      const wifi = item?.wifi || {};
+      if (dnssecCoverage) {
+        rows.push({
+          label: 'Seguridad DNS',
+          value: `DNSSEC: ${dnssecCoverage}`,
+          tone: 'info',
+          note: [
+            item?.pulse?.dnssecAdoption?.value ? `Adopción DNSSEC: ${item.pulse.dnssecAdoption.value}` : null,
+            pulseHighlights[0] ? `Pulse LAC: ${pulseHighlights[0]}` : null
+          ].filter(Boolean).join(' · ') || null
+        });
+      }
+      if (wifi.label || wifi.status) {
+        rows.push({
+          label: 'Universalidad',
+          value: `6 GHz: ${wifi.label || 'Sin dato'}`,
+          tone: wifi.status === 'FULL_5925_7125' ? 'ok' : (wifi.status === 'LOW_5925_6425' ? 'warning' : 'info'),
+          note: Array.isArray(wifi.territories) && wifi.territories.length ? `Territorios: ${wifi.territories.join(', ')}` : null
+        });
+      }
+      if (item?.pulse?.rov?.value) {
+        rows.push({
+          label: 'RPKI / ROV',
+          value: `ROV: ${item.pulse.rov.value}`,
+          tone: 'info',
+          note: [
+            item?.pulse?.resilienceScore?.value ? `Resilience score: ${item.pulse.resilienceScore.value}` : null,
+            pulseHighlights[1] ? `Pulse LAC: ${pulseHighlights[1]}` : null
+          ].filter(Boolean).join(' · ') || null
+        });
+      }
+      if (pulseHighlights.length > 1) {
+        rows.push({
+          label: 'Pulse LAC',
+          value: pulseHighlights[1] || pulseHighlights[0],
+          tone: 'info',
+          note: pulseHighlights.length > 2 ? pulseHighlights[2] : null
+        });
+      }
+      return rows;
+    }
+
+    function renderCctldInsights(domain) {
+      if (!cctldInsights) return;
+      const item = findCctldByDomain(domain);
+      clearNode(cctldInsights);
+      if (!item) {
+        cctldInsights.hidden = true;
+        return;
+      }
+      const rows = buildCctldInsightRows(item);
+      if (!rows.length) {
+        cctldInsights.hidden = true;
+        return;
+      }
+      cctldInsights.hidden = false;
+      const head = make('div', 'cctld-insights-head');
+      head.append(
+        make('div', 'cctld-insights-title', `Complemento ccTLD · .${item.tld}`),
+        make('div', 'cctld-insights-note', 'Datos regionales hardcodeados como apoyo para seguridad y universalidad.')
+      );
+      cctldInsights.appendChild(head);
+      rows.forEach(row => {
+        const box = make('div', `cctld-insight ${row.tone || 'info'}`);
+        box.appendChild(make('div', 'cctld-insight-label', row.label));
+        box.appendChild(make('div', 'cctld-insight-value', row.value));
+        if (row.note) box.appendChild(make('div', 'cctld-insight-note', row.note));
+        cctldInsights.appendChild(box);
+      });
+    }
+
+    function buildReferenceCard(item) {
+      const card = document.createElement('article');
+      card.className = 'reference-card';
+      const head = document.createElement('div');
+      head.className = 'reference-card-head';
+      const left = document.createElement('div');
+      left.appendChild(make('h3', '', item.title));
+      left.appendChild(make('p', '', item.category));
+      head.append(left, make('span', 'section-pill', item.axis));
+      card.appendChild(head);
+      const body = document.createElement('div');
+      body.className = 'reference-card-body';
+      body.appendChild(make('p', '', item.what));
+      body.appendChild(make('p', '', item.internal));
+      const list = document.createElement('ul');
+      item.commands.forEach(line => {
+        const li = document.createElement('li');
+        li.textContent = line;
+        list.appendChild(li);
+      });
+      body.appendChild(list);
+      if (item.note) body.appendChild(make('div', 'muted', item.note));
+      card.appendChild(body);
+      return card;
+    }
+
+    function buildReferences() {
+      if (!referencesGrid) return;
+      const references = [
+        {
+          axis: referenceText(1, 'axis', 'Seguridad'),
+          category: referenceText(1, 'category', 'HTTPS / Web'),
+          title: referenceText(1, 'title', 'HTTPS activo'),
+          what: referenceText(1, 'what', 'Verifica si el sitio responde por HTTPS y si la publicación base ya está migrada al canal cifrado.'),
+          internal: referenceText(1, 'internal', 'La comprobación parte de una petición HTTP/HTTPS sobre el dominio y observa el estado de respuesta, la redirección y la disponibilidad del esquema seguro.'),
+          commands: [
+            referenceText(1, 'command1', 'GET /https/:dominio'),
+            referenceText(1, 'command2', 'GET /headers/:dominio'),
+            referenceText(1, 'command3', 'Equivale a validar si HTTP redirige hacia HTTPS y si la respuesta final usa TLS.')
+          ]
+        },
+        {
+          axis: referenceText(2, 'axis', 'Seguridad'),
+          category: referenceText(2, 'category', 'Cabeceras defensivas'),
+          title: referenceText(2, 'title', 'Cabeceras defensivas y security.txt'),
+          what: referenceText(2, 'what', 'Evalúa si el sitio expone CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy y security.txt.'),
+          internal: referenceText(2, 'internal', 'Toma la respuesta HTTP del sitio, inspecciona las cabeceras y busca el archivo RFC 9116 para ver si existe un canal de contacto de seguridad.'),
+          commands: [
+            referenceText(2, 'command1', 'GET /headers/:dominio'),
+            referenceText(2, 'command2', 'GET /securitytxt/:dominio'),
+            referenceText(2, 'command3', 'GET /caa/:dominio')
+          ]
+        },
+        {
+          axis: referenceText(3, 'axis', 'Seguridad'),
+          category: referenceText(3, 'category', 'TLS / Criptografía'),
+          title: referenceText(3, 'title', 'TLS y certificados'),
+          what: referenceText(3, 'what', 'Mide la versión TLS negociada, la cadena de certificados, OCSP stapling y DANE/TLSA.'),
+          internal: referenceText(3, 'internal', 'Conecta al servicio TLS del dominio, compara la negociación por versión y revisa certificados, estado OCSP y presencia de TLSA.'),
+          commands: [
+            referenceText(3, 'command1', 'GET /tlsinfo/:dominio'),
+            referenceText(3, 'command2', 'GET /sslchain/:dominio'),
+            referenceText(3, 'command3', 'GET /tlsa/:dominio')
+          ]
+        },
+        {
+          axis: referenceText(4, 'axis', 'Seguridad DNS'),
+          category: referenceText(4, 'category', 'DNSSEC / DNS'),
+          title: referenceText(4, 'title', 'DNSSEC y DNSViz'),
+          what: referenceText(4, 'what', 'Valida si hay DNSSEC activo, si el padre publica DS, si el hijo publica DNSKEY y cómo se ve la cadena completa en DNSViz.'),
+          internal: referenceText(4, 'internal', 'Resuelve la cadena DNSSEC, comprueba padre e hijo, revisa NSEC3 y usa DNSViz para ver observaciones, advertencias y errores de delegación.'),
+          commands: [
+            referenceText(4, 'command1', 'GET /dnssec/:dominio'),
+            referenceText(4, 'command2', 'GET /dnsviz/:dominio?resolver=local'),
+            referenceText(4, 'command3', 'GET /dnsrecords/:dominio'),
+            referenceText(4, 'command4', 'GET /txtrecords/:dominio')
+          ]
+        },
+        {
+          axis: referenceText(5, 'axis', 'Seguridad'),
+          category: referenceText(5, 'category', 'Correo'),
+          title: referenceText(5, 'title', 'SPF, DMARC y DKIM'),
+          what: referenceText(5, 'what', 'Revisa la autenticación de correo basada en DNS para ver si el dominio reduce suplantación y mejora alineación.'),
+          internal: referenceText(5, 'internal', 'Consulta los registros SPF y DMARC, y prueba soporte DKIM para ver si el dominio puede firmar correo con identidad propia.'),
+          commands: [
+            referenceText(5, 'command1', 'GET /spf/:dominio'),
+            referenceText(5, 'command2', 'GET /dmarc/:dominio'),
+            referenceText(5, 'command3', 'GET /dkim/:dominio?selector=support')
+          ]
+        },
+        {
+          axis: referenceText(6, 'axis', 'Seguridad'),
+          category: referenceText(6, 'category', 'Transporte de correo'),
+          title: referenceText(6, 'title', 'MX, IPv6 en MX y STARTTLS'),
+          what: referenceText(6, 'what', 'Verifica si hay servidores MX, si anuncian IPv6 y si el transporte de correo puede negociar cifrado con STARTTLS.'),
+          internal: referenceText(6, 'internal', 'Se resuelven los MX y luego se hacen conexiones y EHLO para ver capacidades, soportes y fallos por servidor.'),
+          commands: [
+            referenceText(6, 'command1', 'GET /mx/:dominio'),
+            referenceText(6, 'command2', 'GET /mailipv6/:dominio'),
+            referenceText(6, 'command3', 'GET /starttls/:dominio')
+          ]
+        },
+        {
+          axis: referenceText(7, 'axis', 'Universalidad'),
+          category: referenceText(7, 'category', 'SMTPUTF8 / UA'),
+          title: referenceText(7, 'title', 'SMTPUTF8'),
+          what: referenceText(7, 'what', 'Comprueba si los MX anuncian SMTPUTF8 para aceptar direcciones internacionales y apoyar la aceptación universal.'),
+          internal: referenceText(7, 'internal', 'Se conecta a cada MX, envía EHLO y revisa si la capacidad SMTPUTF8 aparece en la respuesta del servidor.'),
+          commands: [
+            referenceText(7, 'command1', 'GET /smtputf8/:dominio'),
+            referenceText(7, 'command2', 'GET /mx/:dominio'),
+            referenceText(7, 'command3', 'EHLO contra cada MX para leer las capacidades anunciadas')
+          ],
+          note: referenceText(7, 'note', 'Es la medición clave para Direcciones de Correo Electrónico Internacionalizadas (EAI).')
+        },
+        {
+          axis: referenceText(8, 'axis', 'Universalidad'),
+          category: referenceText(8, 'category', 'IPv4 e IPv6'),
+          title: referenceText(8, 'title', 'IPv4 e IPv6'),
+          what: referenceText(8, 'what', 'Comprueba si el dominio publica A y AAAA y si los servicios críticos también responden por IPv6.'),
+          internal: referenceText(8, 'internal', 'Busca las direcciones del dominio y compara la publicación de IPv4 e IPv6 en DNS y en los MX.'),
+          commands: [
+            referenceText(8, 'command1', 'GET /ipv4/:dominio'),
+            referenceText(8, 'command2', 'GET /ipv6/:dominio'),
+            referenceText(8, 'command3', 'GET /mailipv6/:dominio')
+          ]
+        },
+        {
+          axis: referenceText(9, 'axis', 'Seguridad'),
+          category: referenceText(9, 'category', 'RPKI'),
+          title: referenceText(9, 'title', 'RPKI y routing'),
+          what: referenceText(9, 'what', 'Evalúa si las rutas observadas para el dominio quedan cubiertas por ROAs y si la validación de origen es correcta.'),
+          internal: referenceText(9, 'internal', 'Consulta el origen de ruta para las IP detectadas y lo contrasta con la cobertura RPKI y el estado ROV.'),
+          commands: [
+            referenceText(9, 'command1', 'GET /rpki/:dominio'),
+            referenceText(9, 'command2', 'GET /routing/:dominio'),
+            referenceText(9, 'command3', 'GET /serverinfo/:dominio')
+          ]
+        },
+        {
+          axis: referenceText(10, 'axis', 'Accesibilidad'),
+          category: referenceText(10, 'category', 'W3C y calidad web'),
+          title: referenceText(10, 'title', 'Accesibilidad y calidad'),
+          what: referenceText(10, 'what', 'Valida HTML y métricas de calidad web para detectar problemas estructurales, de usabilidad y de soporte técnico.'),
+          internal: referenceText(10, 'internal', 'La revisión usa validación W3C y herramientas de calidad para sumar errores, avisos y señales de experiencia.'),
+          commands: [
+            referenceText(10, 'command1', 'GET /w3c/:dominio'),
+            referenceText(10, 'command2', 'GET /quality/:dominio'),
+            referenceText(10, 'command3', 'GET /sitefeatures/:dominio')
+          ]
+        },
+        {
+          axis: referenceText(11, 'axis', 'Laboratorio'),
+          category: referenceText(11, 'category', 'Herramientas extra'),
+          title: referenceText(11, 'title', 'Herramientas auxiliares'),
+          what: referenceText(11, 'what', 'Agrupa mediciones de exploración y diagnóstico como puertos, traceroute, ping, redes sociales, archivo y ranking.'),
+          internal: referenceText(11, 'internal', 'No define una sola prueba; agrupa varias lecturas auxiliares para inspección, diagnóstico y contexto del dominio.'),
+          commands: [
+            referenceText(11, 'command1', 'GET /openports/:dominio'),
+            referenceText(11, 'command2', 'GET /ping/:dominio'),
+            referenceText(11, 'command3', 'GET /pingv6/:dominio'),
+            referenceText(11, 'command4', 'GET /traceroute/:dominio'),
+            referenceText(11, 'command5', 'GET /archive/:dominio'),
+            referenceText(11, 'command6', 'GET /ranking/:dominio')
+          ]
+        }
+      ];
+      clearNode(referencesGrid);
+      references.forEach(item => referencesGrid.appendChild(buildReferenceCard(item)));
+    }
+
+    function renderAboutPage() {
+      const aboutCopy = document.getElementById('aboutCopy');
+      if (!aboutCopy) return;
+      clearNode(aboutCopy);
+      [
+        aboutText('intro1', '📊 ¿Qué tan preparado está Internet en nuestros países para enfrentar los desafíos de seguridad, resiliencia, accesibilidad e innovación de los próximos años?'),
+        aboutText('intro2', 'En el Grupo de Trabajo de Mediciones de ISOC LAC trabajamos para responder esa pregunta mediante datos abiertos, indicadores comparables y análisis técnicos que nos ayudan a comprender mejor el estado de Internet en América Latina y el Caribe.'),
+        aboutText('intro3', 'Esta es una iniciativa regional colaborativa que reúne a participantes de ISOC Capítulo Argentina, ISOC Brasil, ISOC Uruguay, Internet Society Capítulo Venezuela, ISOC Ecuador, ISOC Capítulo Paraguay, ISOC Panamá, el Grupo Permanente de Accesibilidad de ISOC, y muchos otros capítulos, organizaciones, investigadores, operadores de redes, estudiantes y profesionales de Internet.')
+      ].forEach(text => aboutCopy.appendChild(make('p', '', text)));
+      const list = document.createElement('ul');
+      for (let i = 1; i <= 12; i += 1) {
+        const bullet = aboutText(`bullet${i}`, '');
+        if (!bullet) continue;
+        list.appendChild(make('li', '', bullet));
+      }
+      if (list.childElementCount) aboutCopy.appendChild(list);
+      aboutCopy.appendChild(make('p', '', aboutText('pillars', 'Actualmente, la plataforma integra más de 200 mediciones organizadas en torno a tres grandes pilares: Seguridad, Universalidad y Accesibilidad.')));
+      aboutCopy.appendChild(make('p', '', aboutText('closing', 'Más importante aún, buscamos transformar estas mediciones en conocimiento accionable para la comunidad técnica, la academia, los reguladores, los responsables de políticas públicas y todos los actores del ecosistema de Internet.')));
+    }
+
     function createStatusBadge(status) {
       const badge = make('span', `status ${statusClass(status)}`);
       badge.textContent = statusLabels[status] || status;
@@ -1627,6 +2058,7 @@
     }
 
     function clearNode(node) {
+      if (!node) return;
       while (node.firstChild) node.removeChild(node.firstChild);
     }
 
@@ -1740,6 +2172,115 @@
       }
     }
 
+    function buildTechDetails(result, item, domain) {
+      const tech = document.createElement('details');
+      tech.className = 'tech-panel result-tech-panel';
+      const summary = document.createElement('summary');
+      const left = document.createElement('div');
+      left.appendChild(make('div', 'tech-line', 'Información técnica'));
+      left.appendChild(make('div', 'muted', 'Comando, respuesta y observaciones.'));
+      summary.append(left, make('span', 'chevron', '⌄'));
+      const body = document.createElement('div');
+      body.className = 'tech-body';
+      const lines = Array.isArray(result?.lines) ? result.lines : [];
+      const request = requestForMeasurement(item?.id || result?.id, domain) || '';
+      const rows = [
+        request ? `Comando: ${request}` : null,
+        result.status ? `Estado: ${result.status}` : null,
+        lines.length ? `Resultado: ${lines.join(' · ')}` : 'Sin resultado visible.'
+      ].filter(Boolean);
+      appendLines(body, rows, 'Sin información técnica.');
+      tech.append(summary, body);
+      return tech;
+    }
+
+    function getResultGuidance(id, result) {
+      const status = String(result?.status || '');
+      const lines = Array.isArray(result?.lines) ? result.lines.map(line => String(line || '')) : [];
+      const lowerLines = lines.map(line => line.toLowerCase());
+      const guidance = [];
+      const hasFailure = ['fail', 'error', 'warning'].includes(status);
+
+      const pushIfMissing = value => {
+        if (value && !guidance.includes(value)) guidance.push(value);
+      };
+
+      if (id === 'dnssec' && hasFailure) {
+        const hasDnsvizSection = Array.isArray(result?.sections) && result.sections.some(section => String(section?.label || '').toLowerCase().includes('dnsviz'));
+        const hasParentDs = lowerLines.some(line => line.includes('ds visible en el padre') || line.includes('ds visible no pai') || line.includes('ds presente en el padre'));
+        const hasChildDnskey = lowerLines.some(line => line.includes('dnskey visible en el hijo') || line.includes('dnskey visible no filho') || line.includes('dnskey presente'));
+        const hasNsec3 = lowerLines.some(line => line.includes('nsec3'));
+        const hasSha1 = lowerLines.some(line => line.includes('sha-1') || line.includes('sha1'));
+        const hasAlgorithm8 = lowerLines.some(line => line.includes('algoritmo 8') || line.includes('algo 8') || line.includes('rsa/sha-256'));
+
+        if (!hasParentDs) {
+          pushIfMissing('Recomendación: publicar el registro DS en el padre y coordinar con el registrador o el operador del DNS del dominio padre para activar la delegación segura.');
+          pushIfMissing('Si el padre no tiene DNSSEC, hay que pedirle al administrador del dominio padre que lo implemente primero, porque la cadena no puede validarse sin ese eslabón.');
+        }
+        if (!hasChildDnskey) {
+          pushIfMissing('Recomendación: publicar DNSKEY firmadas en la zona hija y volver a firmar la zona para que la cadena DS -> DNSKEY quede consistente.');
+        }
+        if (hasDnsvizSection) {
+          pushIfMissing('Revisa el bloque DNSViz dentro de DNSSEC: allí aparecen la cadena, las advertencias, los errores y posibles pistas de fallback TCP.');
+        }
+        if (!hasNsec3) {
+          pushIfMissing('Buenas prácticas NSEC3: usar NSEC3 con SHA-1, iterations: 0, salt: None (Empty) y flags: 0 (Opt-Out disabled) salvo que exista una razón operativa para otro valor.');
+        }
+        if (hasSha1 || hasAlgorithm8) {
+          pushIfMissing('Si hoy usa algoritmo 8, la recomendación es migrar a algoritmos más modernos y compatibles: 13 (ECDSA P-256), 15 (Ed25519) o 16 (Ed448).');
+          pushIfMissing('El algoritmo 16 (Ed448) es el más moderno de la familia EdDSA y ofrece firmas pequeñas y alta seguridad. Los más recomendados y compatibles globalmente siguen siendo 13 y 15.');
+        }
+        if (!hasSha1 && hasNsec3) {
+          pushIfMissing('Si NSEC3 está presente, revisa que no falten iteraciones, salt o flags: un NSEC3 incompleto suele degradar la seguridad de la cadena.');
+        }
+      }
+
+      if (id === 'ipv6' && hasFailure) {
+        pushIfMissing('Recomendación: desplegar IPv6 y publicar un registro AAAA en DNS para el dominio.');
+        pushIfMissing('El dominio no es accesible de forma nativa por IPv6; habilitarlo mejora compatibilidad con redes modernas y evita que parezca obsoleto.');
+        pushIfMissing('Asegúrate de probar también los servicios críticos por IPv6, especialmente web y correo, para que la conectividad sea completa.');
+      }
+
+      if (id === 'smtputf8' && hasFailure) {
+        pushIfMissing('No se soporta SMTPUTF8. Esto limita la compatibilidad con Direcciones de Correo Electrónico Internacionalizadas (EAI) y afecta la Aceptación Universal.');
+        pushIfMissing('Se recomienda implementar SMTPUTF8 para permitir direcciones con caracteres internacionales en el correo entrante y saliente.');
+        pushIfMissing('Si los MX no anuncian SMTPUTF8, revisa la versión del MTA y la configuración de EHLO para activar soporte EAI.');
+      }
+
+      if (id === 'mailipv6' && hasFailure) {
+        pushIfMissing('Recomendación: desplegar IPv6 también en los MX para no limitar la recepción de correo desde redes IPv6-only o preferidas por IPv6.');
+      }
+
+      if (id === 'maildnssec' && hasFailure) {
+        pushIfMissing('Recomendación: activar DNSSEC en el dominio y en la zona del correo para que los MX y sus registros puedan validarse end-to-end.');
+      }
+
+      if (id === 'spf' && hasFailure) {
+        pushIfMissing('Recomendación: publicar un registro SPF válido en el dominio y limitar el envío a las fuentes autorizadas.');
+        pushIfMissing('Si falta SPF, el correo saliente tiene más riesgo de spoofing y de peor reputación de entrega.');
+      }
+
+      if (id === 'dmarc' && hasFailure) {
+        pushIfMissing('Recomendación: publicar DMARC con una política alineada a la madurez del dominio y revisar reportes agregados.');
+        pushIfMissing('DMARC ayuda a que SPF y DKIM funcionen como una política verificable para el dominio.');
+      }
+
+      if (id === 'dkim' && hasFailure) {
+        pushIfMissing('Recomendación: habilitar DKIM en el MTA y firmar los mensajes con uno o más selectores activos.');
+        pushIfMissing('DKIM complementa SPF y DMARC y permite validar la integridad del mensaje firmado por el dominio.');
+      }
+
+      if (id === 'dnsviz' && hasFailure) {
+        pushIfMissing('Revisa la cadena DNSViz completa: el fallo suele estar en un salto intermedio, en el padre o en una firma vencida.');
+      }
+
+      if (id === 'rpki' && hasFailure) {
+        pushIfMissing('Recomendación: publicar o corregir los ROAs para que la(s) ruta(s) observada(s) queden válidas bajo RPKI.');
+      }
+
+      return guidance;
+    }
+
     function setSummary(counts, totalChecks) {
       clearNode(summaryEl);
       const chip = make('span', 'summary-chip');
@@ -1768,6 +2309,17 @@
       runLog.prepend(entry);
       while (runLog.childElementCount > 120) {
         runLog.removeChild(runLog.lastElementChild);
+      }
+    }
+
+    function logCctld(message, kind = 'info') {
+      if (!cctldLog) return;
+      const entry = document.createElement('div');
+      entry.className = 'chat-msg';
+      entry.innerHTML = `<strong>[${formatTimestamp()}] ${kind.toUpperCase()}</strong><div>${message}</div>`;
+      cctldLog.prepend(entry);
+      while (cctldLog.childElementCount > 80) {
+        cctldLog.removeChild(cctldLog.lastElementChild);
       }
     }
 
@@ -1881,7 +2433,7 @@
       const family = document.createElement('article');
       family.className = 'measurement-family';
       if (repair) family.classList.add('repair-family');
-      if (repair) family.hidden = true;
+      if (repair) family.hidden = VIEW_MODE !== 'revisar';
       family.dataset.catalogPanel = group.id;
       family.id = `catalog-${group.id}`;
 
@@ -1936,13 +2488,17 @@
       });
 
       const renderedGroups = new Set();
+      const visibleAxisCounts = new Map();
       groupOrder.forEach(groupId => {
         const group = categoryMap.get(groupId);
         if (!group || renderedGroups.has(groupId)) return;
         renderedGroups.add(groupId);
         const axis = axisForGroup(group.id);
         const card = createGroupCard(group);
+        const visible = isGroupVisible(group.id);
+        card.hidden = !visible;
         axisContainer(axis).appendChild(card);
+        if (visible) visibleAxisCounts.set(axis, (visibleAxisCounts.get(axis) || 0) + 1);
         let repairCard = null;
         if (repairableGroupIds.has(group.id)) {
           repairCard = createGroupCard(group, { repair: true });
@@ -1958,6 +2514,23 @@
           catalogResultSlots.set(item.id, inline);
           inline.goodContainer.appendChild(inline.row);
         });
+        if (!visible) {
+          card.hidden = true;
+          if (repairCard) repairCard.hidden = true;
+          group.checks.forEach(item => {
+            const slot = catalogResultSlots.get(item.id);
+            if (slot?.row) slot.row.hidden = true;
+          });
+        } else {
+          group.checks.forEach(item => {
+            const slot = catalogResultSlots.get(item.id);
+            if (slot?.row) slot.row.hidden = false;
+          });
+        }
+      });
+      Object.entries(sectionContainers).forEach(([axis, container]) => {
+        const sheet = container?.closest('.axis-sheet');
+        if (sheet) sheet.hidden = (visibleAxisCounts.get(axis) || 0) === 0;
       });
       updateSelectionCount();
     }
@@ -2040,6 +2613,10 @@
       }
     }
 
+    function yieldToPaint() {
+      return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }
+
     async function getHeaders(domain) { return apiJson(`/headers/${encodeURIComponent(domain)}`); }
     async function getTlsInfo(domain) { return apiJson(`/tlsinfo/${encodeURIComponent(domain)}`); }
     async function getSslChain(domain) { return apiJson(`/sslchain/${encodeURIComponent(domain)}`); }
@@ -2080,7 +2657,7 @@
     async function getArchive(domain) { return apiJson(`/archive/${encodeURIComponent(domain)}`); }
     async function getRanking(domain) { return apiJson(`/ranking/${encodeURIComponent(domain)}`); }
     async function getWifiSpectrum(variantId) { return apiJson(`/wifispectrum/${encodeURIComponent(variantId)}`); }
-    async function getCctldReport(mode = 'local') { return apiJson(`/cctlds?resolver=${encodeURIComponent(mode)}`); }
+    async function getCctldReport(mode = 'local') { return apiJson(`/api/cctlds?resolver=${encodeURIComponent(mode)}`); }
     async function getMiniData(domain) {
       return apiJson(`/mini/data/${encodeURIComponent(domain)}`);
     }
@@ -2932,8 +3509,367 @@
       return box;
     }
 
+    const CCTLD_MAP_POINTS = Object.fromEntries([
+      ['ar', { label: 'Argentina', lat: -38.4, lon: -63.6 }],
+      ['bo', { label: 'Bolivia', lat: -16.3, lon: -63.6 }],
+      ['br', { label: 'Brazil', lat: -10.0, lon: -55.0 }],
+      ['cl', { label: 'Chile', lat: -35.7, lon: -71.5 }],
+      ['co', { label: 'Colombia', lat: 4.6, lon: -74.1 }],
+      ['ec', { label: 'Ecuador', lat: -1.8, lon: -78.2 }],
+      ['fk', { label: 'Falkland Islands', lat: -51.8, lon: -59.5 }],
+      ['gf', { label: 'French Guiana', lat: 4.0, lon: -53.1 }],
+      ['gy', { label: 'Guyana', lat: 5.0, lon: -58.9 }],
+      ['pe', { label: 'Peru', lat: -9.2, lon: -75.0 }],
+      ['py', { label: 'Paraguay', lat: -23.4, lon: -58.4 }],
+      ['sr', { label: 'Suriname', lat: 4.0, lon: -56.0 }],
+      ['uy', { label: 'Uruguay', lat: -32.5, lon: -55.8 }],
+      ['ve', { label: 'Venezuela', lat: 7.0, lon: -66.0 }],
+      ['bz', { label: 'Belize', lat: 17.2, lon: -88.7 }],
+      ['cr', { label: 'Costa Rica', lat: 9.9, lon: -84.1 }],
+      ['gt', { label: 'Guatemala', lat: 15.8, lon: -90.2 }],
+      ['hn', { label: 'Honduras', lat: 14.1, lon: -87.2 }],
+      ['ni', { label: 'Nicaragua', lat: 12.9, lon: -85.0 }],
+      ['pa', { label: 'Panama', lat: 8.5, lon: -80.8 }],
+      ['sv', { label: 'El Salvador', lat: 13.7, lon: -88.9 }],
+      ['mx', { label: 'Mexico', lat: 23.6, lon: -102.5 }],
+      ['ai', { label: 'Anguilla', lat: 18.2, lon: -63.1 }],
+      ['ag', { label: 'Antigua and Barbuda', lat: 17.1, lon: -61.8 }],
+      ['aw', { label: 'Aruba', lat: 12.5, lon: -69.9 }],
+      ['bb', { label: 'Barbados', lat: 13.2, lon: -59.5 }],
+      ['bl', { label: 'Saint Barthélemy', lat: 17.9, lon: -62.8 }],
+      ['bm', { label: 'Bermuda', lat: 32.3, lon: -64.8 }],
+      ['bq', { label: 'Bonaire, Sint Eustatius and Saba', lat: 12.2, lon: -68.3 }],
+      ['bs', { label: 'Bahamas', lat: 25.0, lon: -77.4 }],
+      ['cu', { label: 'Cuba', lat: 21.5, lon: -79.4 }],
+      ['cw', { label: 'Curacao', lat: 12.1, lon: -68.9 }],
+      ['dm', { label: 'Dominica', lat: 15.4, lon: -61.4 }],
+      ['do', { label: 'Dominican Republic', lat: 18.7, lon: -70.2 }],
+      ['gd', { label: 'Grenada', lat: 12.1, lon: -61.7 }],
+      ['gp', { label: 'Guadeloupe', lat: 16.2, lon: -61.5 }],
+      ['ht', { label: 'Haiti', lat: 18.9, lon: -72.3 }],
+      ['jm', { label: 'Jamaica', lat: 18.1, lon: -77.3 }],
+      ['kn', { label: 'Saint Kitts and Nevis', lat: 17.3, lon: -62.7 }],
+      ['ky', { label: 'Cayman Islands', lat: 19.3, lon: -81.4 }],
+      ['lc', { label: 'Saint Lucia', lat: 13.9, lon: -60.98 }],
+      ['mf', { label: 'Saint Martin', lat: 18.1, lon: -63.0 }],
+      ['mq', { label: 'Martinique', lat: 14.64, lon: -61.0 }],
+      ['ms', { label: 'Montserrat', lat: 16.75, lon: -62.2 }],
+      ['pr', { label: 'Puerto Rico', lat: 18.2, lon: -66.5 }],
+      ['sx', { label: 'Sint Maarten', lat: 18.0, lon: -63.0 }],
+      ['tc', { label: 'Turks and Caicos Islands', lat: 21.7, lon: -71.8 }],
+      ['tt', { label: 'Trinidad and Tobago', lat: 10.7, lon: -61.2 }],
+      ['vc', { label: 'Saint Vincent and the Grenadines', lat: 13.25, lon: -61.2 }],
+      ['vg', { label: 'British Virgin Islands', lat: 18.4, lon: -64.6 }],
+      ['vi', { label: 'United States Virgin Islands', lat: 18.35, lon: -64.95 }]
+    ]);
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function projectMapPoint(point) {
+      const lon = Number(point?.lon);
+      const lat = Number(point?.lat);
+      if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
+      return {
+        x: ((lon + 180) / 360) * 100,
+        y: ((90 - lat) / 180) * 100
+      };
+    }
+
+    function getCctldMapTone(item) {
+      const status = String(item?.wifi?.status || '').toUpperCase();
+      if (status === 'FULL_5925_7125') return 'ok';
+      if (status === 'LOW_5925_6425' || status === 'CONSULTATION') return 'warning';
+      if (status === 'NO_PUBLIC_ADOPTION_FOUND') return 'fail';
+      return item?.dnssec?.valid ? 'info' : 'warning';
+    }
+
+    function getCctldDisplayName(item) {
+      const territories = Array.isArray(item?.wifi?.territories) ? item.wifi.territories.filter(Boolean) : [];
+      if (territories.length) {
+        return territories.join(' · ');
+      }
+      return item?.tld ? item.tld.toUpperCase() : 'País';
+    }
+
+    function getCctldMapSummary(items) {
+      const list = Array.isArray(items) ? items : [];
+      return {
+        full: list.filter(item => item?.wifi?.status === 'FULL_5925_7125'),
+        low: list.filter(item => item?.wifi?.status === 'LOW_5925_6425'),
+        pending: list.filter(item => item?.wifi?.status === 'CONSULTATION'),
+        noAdoption: list.filter(item => item?.wifi?.status === 'NO_PUBLIC_ADOPTION_FOUND')
+      };
+    }
+
+    function buildPulseSummaryLines(pulse, options = {}) {
+      if (!pulse) return [];
+      const compact = Boolean(options.compact);
+      const lines = [];
+      const pushGroup = (label, parts) => {
+        const clean = parts.filter(Boolean);
+        if (!clean.length) return;
+        lines.push(`${label}: ${clean.join(' · ')}`);
+      };
+      const reportHighlights = Array.isArray(pulse.reportHighlights) ? pulse.reportHighlights.filter(Boolean) : [];
+      if (reportHighlights.length) {
+        lines.push(`Pulse LAC: ${reportHighlights.slice(0, compact ? 1 : 3).join(' · ')}`);
+      }
+      pushGroup('Seguridad', [
+        pulse.dnssecCoverage?.value ? `Cobertura DNSSEC ${pulse.dnssecCoverage.value}${pulse.dnssecCoverage.average ? ` (promedio ${pulse.dnssecCoverage.average})` : ''}` : null,
+        pulse.dnssecAdoption?.value ? `Adopción DNSSEC ${pulse.dnssecAdoption.value}${pulse.dnssecAdoption.average ? ` (promedio ${pulse.dnssecAdoption.average})` : ''}` : null,
+        pulse.rov?.value ? `ROV ${pulse.rov.value}${pulse.rov.label ? ` · ${pulse.rov.label}` : ''}` : null,
+        Array.isArray(pulse.roaItems) && pulse.roaItems.length
+          ? `ROA ${pulse.roaItems.slice(0, compact ? 1 : 3).map(row => row.label ? `${row.label} ${row.value}` : row.value).filter(Boolean).join(' | ')}`
+          : null
+      ]);
+      pushGroup('Universalidad', [
+        pulse.ipv6Adoption?.value ? `IPv6 ${pulse.ipv6Adoption.value}${pulse.ipv6Adoption.average ? ` (promedio ${pulse.ipv6Adoption.average})` : ''}` : null,
+        pulse.mobileCoverage?.value ? `4G/5G ${pulse.mobileCoverage.value}${pulse.mobileCoverage.average ? ` · ${pulse.mobileCoverage.average}` : ''}` : null
+      ]);
+      pushGroup('Accesibilidad', [
+        pulse.internetPenetration?.value ? `Uso de Internet ${pulse.internetPenetration.value}${pulse.internetPenetration.average ? ` (promedio ${pulse.internetPenetration.average})` : ''}` : null,
+        pulse.downloadSpeed?.value ? `Descarga ${pulse.downloadSpeed.value}${pulse.downloadSpeed.average ? ` · ${pulse.downloadSpeed.average}` : ''}` : null,
+        pulse.internetCost?.value ? `Costo ${pulse.internetCost.value}` : null,
+        pulse.localCaching?.value ? `Caché local ${pulse.localCaching.value}${pulse.localCaching.average ? ` · promedio ${pulse.localCaching.average}` : ''}` : null,
+        pulse.dataCenters?.value ? `Centros de datos ${pulse.dataCenters.value}` : null,
+        pulse.ixp?.value ? `IXP ${pulse.ixp.value}${pulse.ixp.average ? ` · promedio ${pulse.ixp.average}` : ''}` : null,
+        pulse.activeNetworks?.value ? `Redes activas ${pulse.activeNetworks.value}` : null,
+        pulse.internationalConnectivity?.value ? `Conectividad internacional ${pulse.internationalConnectivity.value}` : null,
+      ]);
+      if (pulse.domainUse?.value) {
+        lines.push(`Uso de dominios: ${pulse.domainUse.value}`);
+      }
+      if (pulse.resilienceScore?.value) {
+        lines.push(`Resiliencia: ${pulse.resilienceScore.value}`);
+      }
+      if (pulse.sourceUrl) {
+        lines.push(`Fuente: ${pulse.sourceUrl}`);
+      }
+      return lines.filter(Boolean);
+    }
+
+    function renderPulseMetricCard(card, compact = false) {
+      const box = document.createElement('article');
+      box.className = `pulse-metric-card ${card?.tone || 'info'}${compact ? ' compact' : ''}`;
+      const label = make('div', 'pulse-metric-label', card?.label || 'Pulse');
+      const value = make('div', 'pulse-metric-value', card?.value || '--');
+      box.append(label, value);
+      if (card?.note) {
+        box.appendChild(make('div', 'pulse-metric-note', card.note));
+      }
+      return box;
+    }
+
+    function renderPulseCardSection(title, cards, compact = false) {
+      const list = Array.isArray(cards) ? cards.filter(Boolean) : [];
+      if (!list.length) return null;
+      const section = document.createElement('section');
+      section.className = `pulse-card-section${compact ? ' compact' : ''}`;
+      const head = document.createElement('div');
+      head.className = 'pulse-card-section-head';
+      head.appendChild(make('div', 'pulse-card-section-title', title));
+      head.appendChild(make('div', 'pulse-card-section-count', `${list.length}`));
+      section.appendChild(head);
+      const grid = document.createElement('div');
+      grid.className = `pulse-card-grid${compact ? ' compact' : ''}`;
+      list.slice(0, compact ? Math.min(2, list.length) : list.length).forEach(card => {
+        grid.appendChild(renderPulseMetricCard(card, compact));
+      });
+      section.appendChild(grid);
+      return section;
+    }
+
+    function renderPulseCardDeck(pulse, options = {}) {
+      const compact = Boolean(options.compact);
+      const deck = document.createElement('div');
+      deck.className = `pulse-card-deck${compact ? ' compact' : ''}`;
+      const groups = pulse?.displayCards || {};
+      const sectionTitles = [
+        ['overview', 'Pulse LAC'],
+        ['security', 'Seguridad'],
+        ['universalidad', 'Universalidad'],
+        ['accesibilidad', 'Accesibilidad']
+      ];
+      sectionTitles.forEach(([key, title]) => {
+        const section = renderPulseCardSection(title, groups[key], compact);
+        if (section) deck.appendChild(section);
+      });
+      if (!deck.childElementCount) {
+        const fallback = document.createElement('div');
+        fallback.className = 'pulse-card-fallback';
+        appendLines(fallback, buildPulseSummaryLines(pulse, options), 'Sin datos de Pulse.');
+        deck.appendChild(fallback);
+      }
+      return deck;
+    }
+
+    function buildCctldMapPopup(item) {
+      const popup = document.createElement('div');
+      popup.className = 'cctld-map-popup-card';
+      const head = document.createElement('div');
+      head.className = 'cctld-map-popup-head';
+      const left = document.createElement('div');
+      left.appendChild(make('h4', '', `${getCctldDisplayName(item)} · .${item.tld}`));
+      left.appendChild(make('p', '', `.${item.tld.toUpperCase()} · ${item.nsCount} NS · ${item.ipv4NsCount} IPv4 · ${item.ipv6NsCount} IPv6`));
+      const right = document.createElement('div');
+      right.style.display = 'grid';
+      right.style.gap = '6px';
+      right.style.justifyItems = 'end';
+      right.appendChild(createStatusBadge(getCctldMapTone(item)));
+      head.append(left, right);
+      popup.appendChild(head);
+
+      const body = document.createElement('div');
+      body.className = 'cctld-map-popup-body';
+      const wifi = item?.wifi || {};
+      const pulse = item?.pulse || {};
+      const dnsviz = item?.dnsviz || {};
+      body.appendChild(make('span', 'section-pill', wifi.label || 'Wi‑Fi 6 GHz'));
+      if (pulse) {
+        const pulseDeck = renderPulseCardDeck(pulse, { compact: true });
+        pulseDeck.classList.add('pulse-map-deck');
+        body.appendChild(pulseDeck);
+      }
+      const lines = [
+        item.dnssec?.valid ? 'DNSSEC válido.' : 'DNSSEC parcial o ausente.',
+        item.dnssec?.parent ? 'DS visible en el padre.' : 'Sin DS visible en el padre.',
+        item.dnssec?.child ? 'DNSKEY visible en el hijo.' : 'Sin DNSKEY visible en el hijo.',
+        item.dnssec?.nsec3?.present
+          ? `NSEC3 ${item.dnssec.nsec3.configured ? 'configurado' : 'incompleto'}${item.dnssec.nsec3.hashAlgorithmName ? ` · hash ${item.dnssec.nsec3.hashAlgorithmName}` : ''}${Number.isFinite(item.dnssec.nsec3.iterations) ? ` · iter ${item.dnssec.nsec3.iterations}` : ''}`
+          : 'NSEC3 no detectado.',
+        dnsviz?.available || dnsviz?.observations?.length || dnsviz?.warnings?.length || dnsviz?.errors?.length
+          ? `DNSViz: ${dnsviz.available ? 'disponible' : 'parcial/no disponible'}${Array.isArray(dnsviz.observations) && dnsviz.observations.length ? ` · ${dnsviz.observations.length} observación(es)` : ''}${Array.isArray(dnsviz.warnings) && dnsviz.warnings.length ? ` · ${dnsviz.warnings.length} warning(s)` : ''}${Array.isArray(dnsviz.errors) && dnsviz.errors.length ? ` · ${dnsviz.errors.length} error(es)` : ''}`
+          : null,
+        wifi.territories?.length ? `Territorios: ${wifi.territories.join(', ')}` : null,
+        wifi.notes?.length ? wifi.notes[0] : null
+      ].filter(Boolean);
+      if (lines.length) {
+        const legacy = document.createElement('div');
+        legacy.className = 'pulse-card-fallback legacy-pulse-notes';
+        appendLines(legacy, lines, 'Sin datos adicionales.');
+        body.appendChild(legacy);
+      }
+      popup.appendChild(body);
+
+      const actions = document.createElement('div');
+      actions.className = 'cctld-map-popup-actions';
+      const openDetail = document.createElement('button');
+      openDetail.type = 'button';
+      openDetail.className = 'button secondary';
+      openDetail.textContent = 'Abrir detalle';
+      openDetail.addEventListener('click', () => {
+        const target = document.getElementById(`cctld-${item.tld}`);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      actions.appendChild(openDetail);
+      if (pulse.sourceUrl) {
+        const link = document.createElement('a');
+        link.href = pulse.sourceUrl;
+        link.target = '_blank';
+        link.rel = 'noreferrer';
+        link.className = 'button ghost';
+        link.textContent = 'Pulse';
+        actions.appendChild(link);
+      }
+      popup.appendChild(actions);
+      return popup;
+    }
+
+    function renderCctldMap(items) {
+      if (!cctldLeafletMapEl || !cctldMapSummary || !cctldMapNotes) return;
+      const list = Array.isArray(items) ? items.filter(item => item && item.tld && CCTLD_MAP_POINTS[item.tld]) : [];
+      const summary = getCctldMapSummary(list);
+      clearNode(cctldMapSummary);
+      clearNode(cctldMapNotes);
+
+      [
+        `${summary.full.length} banda completa`,
+        `${summary.low.length} solo banda baja`,
+        `${summary.pending.length} en consulta`,
+        `${summary.noAdoption.length} sin adopción pública`
+      ].forEach(text => cctldMapSummary.appendChild(make('span', 'section-pill', text)));
+
+      const unharmonized = list
+        .filter(item => item?.wifi?.status !== 'FULL_5925_7125')
+        .map(item => getCctldDisplayName(item))
+        .filter(Boolean);
+      cctldMapNotes.appendChild(make('div', '', 'Países donde la situación aún no está plenamente armonizada o no aparecen como adoptados.'));
+      cctldMapNotes.appendChild(make('div', '', unharmonized.length ? unharmonized.join(', ') : 'No hay países pendientes en el set actual.'));
+
+      if (typeof L === 'undefined') {
+        cctldLeafletMapEl.innerHTML = '<div class="empty-state">Leaflet no está disponible en este momento.</div>';
+        return;
+      }
+
+      if (!cctldLeafletMap) {
+        cctldLeafletMap = L.map(cctldLeafletMapEl, {
+          scrollWheelZoom: false,
+          worldCopyJump: true,
+          minZoom: 2,
+          maxZoom: 6
+        }).setView([-6, -62], 3);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(cctldLeafletMap);
+      }
+
+      if (cctldLeafletLayer) {
+        cctldLeafletLayer.clearLayers();
+      } else {
+        cctldLeafletLayer = L.featureGroup().addTo(cctldLeafletMap);
+      }
+
+      const markers = [];
+      list.forEach(item => {
+        const point = CCTLD_MAP_POINTS[item.tld];
+        if (!point) return;
+        const tone = getCctldMapTone(item);
+        const fillColor = tone === 'ok'
+          ? '#0d7a4b'
+          : tone === 'warning'
+            ? '#c98a00'
+            : tone === 'fail'
+              ? '#aa2e25'
+              : '#2458a6';
+        const marker = L.circleMarker([point.lat, point.lon], {
+          radius: 7,
+          color: '#ffffff',
+          weight: 2,
+          fillColor,
+          fillOpacity: 1
+        });
+        const popup = buildCctldMapPopup(item);
+        marker.bindPopup(popup, {
+          maxWidth: 420,
+          autoPanPadding: [24, 24],
+          closeButton: true
+        });
+        marker.on('click', () => {
+          marker.openPopup();
+        });
+        marker.addTo(cctldLeafletLayer);
+        markers.push(marker);
+      });
+
+      if (markers.length) {
+        const group = L.featureGroup(markers);
+        const bounds = group.getBounds();
+        if (bounds.isValid()) {
+          cctldLeafletMap.fitBounds(bounds.pad(0.15), { maxZoom: 5 });
+        }
+      }
+
+      setTimeout(() => {
+        if (cctldLeafletMap) cctldLeafletMap.invalidateSize();
+      }, 0);
+    }
+
     function renderCctldCard(item) {
       const card = document.createElement('details');
+      card.id = `cctld-${item.tld}`;
+      card.dataset.tld = item.tld;
       const dnsvizWarningCount = Number(item.dnsviz?.warningCount || 0);
       const dnsvizErrorCount = Number(item.dnsviz?.errorCount || 0);
       const dnssecAssessmentStatus = item.dnssec?.assessment?.status || (item.dnssec?.valid ? 'ok' : 'fail');
@@ -2955,42 +3891,77 @@
       summary.append(left, right);
 
       const details = document.createElement('div');
-      const assessment = item.dnssec?.assessment || {};
-      const dnssecSummary = Array.isArray(assessment.summaryLines) ? assessment.summaryLines : [];
-      const dnssecSections = Array.isArray(assessment.sections) ? assessment.sections : [];
       const dnsvizNotices = item.dnsviz?.notices?.notices || item.dnsviz?.notices || {};
       const dnsvizWarnings = Array.isArray(dnsvizNotices.warnings) ? dnsvizNotices.warnings.length : 0;
       const dnsvizErrors = Array.isArray(dnsvizNotices.errors) ? dnsvizNotices.errors.length : 0;
-      const dnssecStatusLabel = dnssecAssessmentStatus === 'ok'
-        ? 'Cumple'
-        : dnssecAssessmentStatus === 'warning'
-          ? 'Revisar'
-          : 'No cumple';
       const dnssecLines = [
-        `DNSSEC: ${item.dnssec.valid ? 'válido' : 'parcial o ausente'} · ${dnssecStatusLabel}`,
+        `DNSSEC: ${item.dnssec.valid ? 'válido' : 'parcial o ausente'}`,
         item.dnssec.parent ? 'DS visible en el padre.' : 'No se detectó DS en el padre.',
         item.dnssec.child ? 'DNSKEY visible en el hijo.' : 'No se detectó DNSKEY en el hijo.',
         item.dnssec.nsec3?.present
-          ? `NSEC3: ${item.dnssec.nsec3.configured ? 'configurado' : 'parcial o ausente'}${item.dnssec.nsec3.hashAlgorithmName ? ` · hash ${item.dnssec.nsec3.hashAlgorithmName}` : ''}`
-          : 'NSEC3: no detectado',
-        Number.isFinite(item.dnssec.nsec3?.iterations) ? `Iteraciones NSEC3: ${item.dnssec.nsec3.iterations}` : null,
+          ? `NSEC3: ${item.dnssec.nsec3.configured ? 'configurado' : 'parcial o ausente'}${item.dnssec.nsec3.hashAlgorithmName ? ` · hash ${item.dnssec.nsec3.hashAlgorithmName}` : ''}${Number.isFinite(item.dnssec.nsec3.iterations) ? ` · iteraciones ${item.dnssec.nsec3.iterations}` : ''}`
+          : 'NSEC3: no detectado.',
         item.dnssec.nsec3?.salt ? `Salt NSEC3: ${item.dnssec.nsec3.salt}` : null,
         item.dnssec.nsec3?.hasSha1 ? 'NSEC3 usa SHA-1.' : null,
-        Array.isArray(item.dnssec.nsec3?.records) && item.dnssec.nsec3.records.length ? `NSEC3PARAM crudo: ${item.dnssec.nsec3.records.join(' | ')}` : null,
         item.dnssec.algorithms?.length ? `Algoritmos: ${item.dnssec.algorithms.join(', ')}` : null,
         item.dnssec.digests?.length ? `Digests: ${item.dnssec.digests.join(', ')}` : null,
-        Array.isArray(item.dnssec.nsec3?.notes) && item.dnssec.nsec3.notes.length ? item.dnssec.nsec3.notes.join(' · ') : null,
-        ...(dnssecSummary.length ? dnssecSummary : []),
-        (dnsvizWarnings || dnsvizErrors) ? `DNSViz: ${dnsvizWarnings} warning(s), ${dnsvizErrors} error(es)` : null
+        item.pulse?.dnssecCoverage?.value ? `DNSSEC coverage: ${item.pulse.dnssecCoverage.value}${item.pulse.dnssecCoverage.average ? ` · promedio Américas ${item.pulse.dnssecCoverage.average}` : ''}` : null,
+        item.pulse?.dnssecAdoption?.value ? `DNSSEC adoption: ${item.pulse.dnssecAdoption.value}${item.pulse.dnssecAdoption.average ? ` · promedio Américas ${item.pulse.dnssecAdoption.average}` : ''}` : null,
+        item.pulse?.ipv6Adoption?.value ? `IPv6 adoption: ${item.pulse.ipv6Adoption.value}${item.pulse.ipv6Adoption.average ? ` · promedio Américas ${item.pulse.ipv6Adoption.average}` : ''}` : null
       ].filter(Boolean);
       const dnssecBox = make('div', 'cctld-dnssec');
       appendLines(dnssecBox, dnssecLines, 'Sin DNSSEC');
       details.appendChild(dnssecBox);
 
-      if (dnssecSections.length) {
-        const sectionWrap = make('div', 'cctld-dnssec');
-        renderSubcheckSections(sectionWrap, dnssecSections);
-        details.appendChild(sectionWrap);
+      if (item.dnsviz?.available || dnsvizWarnings || dnsvizErrors || Array.isArray(item.dnsviz?.observations) && item.dnsviz.observations.length) {
+        const dnsvizPanel = document.createElement('details');
+        dnsvizPanel.className = 'aux-panel';
+        const dnsvizSummary = document.createElement('summary');
+        const dnsvizLeft = document.createElement('div');
+        dnsvizLeft.appendChild(make('h3', '', `DNSViz ${item.tld}`));
+        dnsvizLeft.appendChild(make('p', '', 'Observaciones y errores resumidos del grafo DNSViz.'));
+        const dnsvizRight = document.createElement('div');
+        dnsvizRight.style.display = 'flex';
+        dnsvizRight.style.alignItems = 'center';
+        dnsvizRight.style.gap = '8px';
+        dnsvizRight.append(
+          createStatusBadge(!item.dnssec?.valid ? 'fail' : (dnsvizErrors ? 'fail' : (dnsvizWarnings ? 'warning' : 'ok'))),
+          make('span', 'chevron', '⌄')
+        );
+        dnsvizSummary.append(dnsvizLeft, dnsvizRight);
+        const dnsvizBody = document.createElement('div');
+        dnsvizBody.className = 'aux-body';
+        const dnsvizLines = [
+          item.dnsviz?.available ? 'DNSViz disponible.' : 'DNSViz parcial o no disponible.',
+          dnsvizWarnings ? `${dnsvizWarnings} warning(s)` : null,
+          dnsvizErrors ? `${dnsvizErrors} error(es)` : null,
+          Array.isArray(item.dnsviz?.observations) && item.dnsviz.observations.length ? item.dnsviz.observations.slice(0, 4).join(' · ') : null
+        ].filter(Boolean);
+        appendLines(dnsvizBody, dnsvizLines, 'Sin datos DNSViz.');
+        if (item.dnsviz?.svgUrl) {
+          const graphBox = renderGraphBox(item.tld, {
+            pageUrl: item.dnsviz.pageUrl,
+            svgUrl: item.dnsviz.svgUrl,
+            updated: item.dnsviz.updated,
+            chain: Array.isArray(item.dnsviz.chain) ? item.dnsviz.chain : [],
+            observations: Array.isArray(item.dnsviz.observations) ? item.dnsviz.observations : [],
+            warnings: Array.isArray(item.dnsviz?.notices?.warnings) ? item.dnsviz.notices.warnings : [],
+            errors: Array.isArray(item.dnsviz?.notices?.errors) ? item.dnsviz.notices.errors : []
+          });
+          dnsvizBody.appendChild(graphBox);
+        }
+        if (item.dnsviz?.pageUrl) {
+          const link = document.createElement('a');
+          link.href = item.dnsviz.pageUrl;
+          link.target = '_blank';
+          link.rel = 'noreferrer';
+          link.textContent = 'Abrir DNSViz';
+          link.style.display = 'inline-block';
+          link.style.marginTop = '10px';
+          dnsvizBody.appendChild(link);
+        }
+        dnsvizPanel.append(dnsvizSummary, dnsvizBody);
+        details.appendChild(dnsvizPanel);
       }
 
       const detailsList = document.createElement('ul');
@@ -3006,101 +3977,38 @@
         const wifiLines = [
           `Wi‑Fi 6 GHz: ${item.wifi.label || 'Próximamente'}`,
           Array.isArray(item.wifi.territories) && item.wifi.territories.length ? `Territorios: ${item.wifi.territories.join(', ')}` : null,
-          item.wifi.notes?.length ? item.wifi.notes.join(' · ') : null
+          item.wifi.notes?.length ? item.wifi.notes[0] : null
         ].filter(Boolean);
         appendLines(wifiBox, wifiLines, 'Próximamente');
         details.appendChild(wifiBox);
       }
 
       if (item.pulse) {
-        const pulseBox = make('div', 'cctld-dnssec');
-        const roaLines = Array.isArray(item.pulse.roaItems) ? item.pulse.roaItems : [];
-        const pulseLines = [
-          item.pulse.dnssecCoverage?.value ? `Pulse DNSSEC coverage: ${item.pulse.dnssecCoverage.value}${item.pulse.dnssecCoverage.average ? ` · Promedio Américas: ${item.pulse.dnssecCoverage.average}` : ''}` : null,
-          item.pulse.dnssecAdoption?.value ? `Pulse DNSSEC adoption: ${item.pulse.dnssecAdoption.value}${item.pulse.dnssecAdoption.average ? ` · Promedio Américas: ${item.pulse.dnssecAdoption.average}` : ''}` : null,
-          item.pulse.ipv6Adoption?.value ? `IPv6 adoption: ${item.pulse.ipv6Adoption.value}${item.pulse.ipv6Adoption.average ? ` · Promedio Américas: ${item.pulse.ipv6Adoption.average}` : ''}` : null,
-          roaLines.length ? `ROA: ${roaLines.map(row => row.label ? `${row.label} ${row.value}` : row.value).filter(Boolean).join(' | ')}` : null,
-          item.pulse.rov?.value ? `ROV: ${item.pulse.rov.value}${item.pulse.rov.label ? ` · ${item.pulse.rov.label}` : ''}` : null,
-          item.pulse.resilienceScore?.value ? `Internet Resilience Score: ${item.pulse.resilienceScore.value}` : null,
-          item.pulse.domainUse?.value ? `Country-level domain use: ${item.pulse.domainUse.value}` : null,
-          item.pulse.notes?.length ? item.pulse.notes.join(' · ') : null
-        ].filter(Boolean);
-        appendLines(pulseBox, pulseLines, 'Sin datos de Pulse.');
+        const pulseBox = make('div', 'cctld-dnssec cctld-pulse-box');
+        pulseBox.appendChild(renderPulseCardDeck(item.pulse, { compact: false }));
         details.appendChild(pulseBox);
       }
 
-      if (item.dnsviz?.svgUrl) {
-        const img = document.createElement('img');
-        img.className = 'dnsviz-graph';
-        img.loading = 'lazy';
-        img.alt = `DNSViz ${item.tld}`;
-        img.src = `${API_BASE}/dnsviz/${encodeURIComponent(item.tld)}?format=svg&resolver=${encodeURIComponent(cctldResolverMode)}`;
-        img.onerror = () => {
-          if (img.dataset.fallbackDone === '1') return;
-          img.dataset.fallbackDone = '1';
-          img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320">
-              <rect width="960" height="320" rx="20" fill="#f7faf8"/>
-              <text x="40" y="120" font-size="28" fill="#17211b" font-family="Arial, sans-serif">DNSViz no disponible</text>
-              <text x="40" y="168" font-size="18" fill="#5d6a64" font-family="Arial, sans-serif">Se muestran los detalles DNSViz y las observaciones debajo.</text>
-            </svg>`
-          )}`;
-        };
-        details.appendChild(img);
+      if (item.backend) {
+        const backendBox = document.createElement('details');
+        backendBox.className = 'aux-panel';
+        const backendSummary = document.createElement('summary');
+        const backendLeft = document.createElement('div');
+        backendLeft.appendChild(make('h3', '', 'Referencia técnica'));
+        backendLeft.appendChild(make('p', '', 'Consultas equivalentes usadas para generar este reporte.'));
+        backendSummary.append(backendLeft, make('span', 'chevron', '⌄'));
+        const backendBody = document.createElement('div');
+        backendBody.className = 'aux-body';
+        const backendLines = [
+          item.backend.source || 'Referencia de backend.',
+          ...(Array.isArray(item.backend.notes) ? item.backend.notes : []),
+          ...(Array.isArray(item.backend.commands) ? item.backend.commands : [])
+        ].filter(Boolean);
+        appendLines(backendBody, backendLines, 'Sin comandos de referencia.');
+        backendBox.append(backendSummary, backendBody);
+        details.appendChild(backendBox);
       }
-      if (item.dnsviz?.observations?.length || dnsvizWarnings || dnsvizErrors || !item.dnssec?.valid) {
-        const dnsvizPanel = document.createElement('details');
-        dnsvizPanel.className = 'aux-panel';
-        const dnsvizSummary = document.createElement('summary');
-        const dnsvizLeft = document.createElement('div');
-        dnsvizLeft.appendChild(make('h3', '', `DNSViz ${item.tld}`));
-        dnsvizLeft.appendChild(make('p', '', 'Errores, warnings y observaciones completas extraídas del grafo DNSViz.'));
-        const dnsvizRight = document.createElement('div');
-        dnsvizRight.style.display = 'flex';
-        dnsvizRight.style.alignItems = 'center';
-        dnsvizRight.style.gap = '8px';
-        dnsvizRight.append(
-          createStatusBadge(!item.dnssec?.valid ? 'fail' : (dnsvizErrors ? 'fail' : (dnsvizWarnings ? 'warning' : 'ok'))),
-          make('span', 'chevron', '⌄')
-        );
-        dnsvizSummary.append(dnsvizLeft, dnsvizRight);
-        const dnsvizBody = document.createElement('div');
-        dnsvizBody.className = 'aux-body';
-        if (Array.isArray(item.dnsviz?.observations) && item.dnsviz.observations.length) {
-          const obs = make('div', 'cctld-dnssec');
-          appendLines(obs, item.dnsviz.observations, 'Sin observaciones DNSViz.');
-          dnsvizBody.appendChild(obs);
-        }
-        if (Array.isArray(dnsvizNotices.warnings) && dnsvizNotices.warnings.length) {
-          const warnBox = make('div', 'cctld-dnssec');
-          warnBox.appendChild(make('h3', '', 'Warnings DNSViz'));
-          appendLines(warnBox, dnsvizNotices.warnings, 'Sin warnings.');
-          dnsvizBody.appendChild(warnBox);
-        }
-        if (Array.isArray(dnsvizNotices.errors) && dnsvizNotices.errors.length) {
-          const errBox = make('div', 'cctld-dnssec');
-          errBox.appendChild(make('h3', '', 'Errors DNSViz'));
-          appendLines(errBox, dnsvizNotices.errors, 'Sin errors.');
-          dnsvizBody.appendChild(errBox);
-        }
-        if (dnsvizNotices?.['DNSKEY/DS/NSEC status'] || dnsvizNotices?.['delegation status']) {
-          const rawBox = make('div', 'cctld-dnssec');
-          rawBox.appendChild(make('h3', '', 'Detalles DNSViz'));
-          const rawLines = [];
-          const dnsStatus = dnsvizNotices?.['DNSKEY/DS/NSEC status'] || {};
-          const delegationStatus = dnsvizNotices?.['delegation status'] || {};
-          if (dnsStatus.SECURE?.length) rawLines.push(`Seguros: ${dnsStatus.SECURE.length}`);
-          if (dnsStatus.INSECURE?.length) rawLines.push(`Inseguros: ${dnsStatus.INSECURE.length}`);
-          if (dnsStatus.ERROR?.length) rawLines.push(`Errores DNSViz en cadena: ${dnsStatus.ERROR.length}`);
-          if (dnsStatus.WARNING?.length) rawLines.push(`Warnings DNSViz en cadena: ${dnsStatus.WARNING.length}`);
-          if (delegationStatus.SECURE?.length) rawLines.push(`Delegaciones seguras: ${delegationStatus.SECURE.length}`);
-          if (delegationStatus.INSECURE?.length) rawLines.push(`Delegaciones inseguras: ${delegationStatus.INSECURE.length}`);
-          appendLines(rawBox, rawLines, 'Sin detalles DNSViz adicionales.');
-          dnsvizBody.appendChild(rawBox);
-        }
-        dnsvizPanel.append(dnsvizSummary, dnsvizBody);
-        details.appendChild(dnsvizPanel);
-      }
+
       card.append(summary, details);
       return card;
     }
@@ -3111,19 +4019,38 @@
         cctldGrid.innerHTML = '<div class="empty-state">Cargando reporte precalculado de ccTLDs...</div>';
       }
       try {
-        const reportUrl = apiPath(`/cctlds?resolver=${encodeURIComponent(cctldResolverMode)}`);
+        const reportUrl = apiPath(`/api/cctlds?resolver=${encodeURIComponent(cctldResolverMode)}`);
         apiCache.delete(reportUrl);
         apiFailureCache.delete(reportUrl);
         const data = await getCctldReport(cctldResolverMode);
         const items = Array.isArray(data.items) ? data.items : [];
+        cctldReportItems = items.slice();
         if (items.length) {
           clearNode(cctldGrid);
           items.forEach(item => cctldGrid.appendChild(renderCctldCard(item)));
         }
+        renderCctldMap(items);
         if (cctldRefresh) {
+          const debugBits = [];
+          if (data.debug?.lastFailures) debugBits.push(`${data.debug.lastFailures} fallo(s)`);
+          if (data.debug?.lastError?.tld && data.debug?.lastError?.message) {
+            debugBits.push(`${data.debug.lastError.tld}: ${data.debug.lastError.message}`);
+          }
           cctldRefresh.textContent = data.generatedAt
-            ? `Actualizado ${new Date(data.generatedAt).toLocaleString('es-UY')} · Dig local`
+            ? `Actualizado ${new Date(data.generatedAt).toLocaleString('es-UY')} · Pulse parseado desde archivo completo${debugBits.length ? ` · ${debugBits.join(' · ')}` : ''}`
             : (data.generating ? 'Generando...' : 'Actualizado');
+        }
+        if (cctldLog) {
+          const itemsWithHardcodedPulse = items.filter(item => item?.pulse?.hardcoded).length;
+          const bits = [
+            `Reporte ccTLD cargado con ${items.length} elemento(s).`,
+            itemsWithHardcodedPulse ? `Pulse duro local parseado en ${itemsWithHardcodedPulse} país(es).` : null,
+            data.debug?.lastFailures ? `${data.debug.lastFailures} fallback(s) tolerado(s).` : null,
+            data.debug?.lastError?.tld && data.debug?.lastError?.message
+              ? `Último error: ${data.debug.lastError.tld} - ${data.debug.lastError.message}`
+              : null
+          ].filter(Boolean);
+          logCctld(bits.join(' '), data.debug?.lastFailures ? 'warning' : 'ok');
         }
         if ((!items.length || data.generating) && !cctldRetryTimer) {
           cctldRetryTimer = setTimeout(() => {
@@ -3131,15 +4058,67 @@
             loadCctldReport();
           }, 5000);
         }
-        if (items.length) logRun(`Reporte ccTLD cargado con ${items.length} elementos.`, 'ok');
+        if (items.length) {
+          logRun(
+            data.debug?.lastFailures
+              ? `Reporte ccTLD cargado con ${items.length} elementos y ${data.debug.lastFailures} fallo(s) tolerado(s).`
+              : `Reporte ccTLD cargado con ${items.length} elementos.`,
+            data.debug?.lastFailures ? 'warning' : 'ok'
+          );
+        }
       } catch (error) {
         cctldGrid.innerHTML = `<div class="empty-state">No se pudo cargar el reporte ccTLD: ${error.message || 'Servicio no disponible'}.</div>`;
         if (cctldRefresh) cctldRefresh.textContent = 'Error';
+        logRun(`Fallo al cargar ccTLD: ${error.message || 'Servicio no disponible'}`, 'error');
       }
     }
 
     function paintCatalogResults(domain, results) {
       const byId = new Map(results.map(item => [item.id, item]));
+      renderCctldInsights(domain);
+      if (currentResultsEl) {
+        clearNode(currentResultsEl);
+        if (domain && results.length) {
+          results.forEach(result => {
+            const item = checkMap.get(result.id) || result;
+            const card = make('article', `current-result-card ${statusClass(result.status)}`);
+            const head = make('div', 'row-head');
+            const left = document.createElement('div');
+            left.appendChild(make('div', 'row-title', textFor(item, 'label', item.label || result.id || 'Medición')));
+            const desc = make('div', 'muted');
+            desc.style.fontSize = '.82rem';
+            desc.style.lineHeight = '1.45';
+            desc.textContent = textFor(item, 'desc', item.descEs || item.descPt || 'Sin descripción.');
+            left.appendChild(desc);
+            const actions = document.createElement('div');
+            actions.style.display = 'flex';
+            actions.style.alignItems = 'center';
+            actions.style.gap = '8px';
+            const infoButton = document.createElement('button');
+            infoButton.type = 'button';
+            infoButton.className = 'tech-toggle';
+            infoButton.textContent = t('button.info', 'Info');
+            infoButton.title = t('button.infoTitle', 'Ver la solicitud y la respuesta técnica');
+            const badge = createStatusBadge(result.status || 'info');
+            actions.append(infoButton, badge);
+            head.append(left, actions);
+            card.appendChild(head);
+            const body = document.createElement('div');
+            body.className = 'row-body';
+            renderResultBody(body, result);
+            card.appendChild(body);
+            const tech = buildTechDetails(result, item, domain);
+            card.appendChild(tech);
+            infoButton.addEventListener('click', () => {
+              tech.classList.toggle('open');
+              infoButton.textContent = tech.classList.contains('open')
+                ? t('button.close', 'Cerrar')
+                : t('button.info', 'Info');
+            });
+            currentResultsEl.appendChild(card);
+          });
+        }
+      }
       featuredCardSlots.forEach((slot, id) => {
         const result = byId.get(id);
         if (!result) {
@@ -3205,6 +4184,22 @@
         slot.badge = slot.row.querySelector('.status');
         slot.row.querySelector('.row-title').textContent = checkMap.get(id)?.label || id;
         renderResultBody(slot.body, result);
+        const guidance = getResultGuidance(id, result);
+        if (guidance.length) {
+          const guidanceBox = make('div', 'tech-panel open');
+          const title = make('div', 'tech-line');
+          title.append(make('span', 'tech-label', 'Recomendaciones'));
+          guidanceBox.appendChild(title);
+          const list = document.createElement('ul');
+          list.className = 'mini-list';
+          guidance.forEach(line => {
+            const li = document.createElement('li');
+            li.textContent = line;
+            list.appendChild(li);
+          });
+          guidanceBox.appendChild(list);
+          slot.body.appendChild(guidanceBox);
+        }
         if (result.graphMeta) {
           if (result.graphMeta.type === 'traceroute' || result.graphMeta.type === 'ping' || result.graphMeta.type === 'pingv6') {
             slot.body.appendChild(renderNetworkBox(domain, result.graphMeta));
@@ -3254,6 +4249,20 @@
       counts[status] = (counts[status] || 0) + 1;
     }
 
+    async function withConcurrency(items, limit, worker) {
+      const results = new Array(items.length);
+      let index = 0;
+      const runners = Array.from({ length: Math.max(1, limit) }, async () => {
+        while (index < items.length) {
+          const current = index;
+          index += 1;
+          results[current] = await worker(items[current], current);
+        }
+      });
+      await Promise.all(runners);
+      return results;
+    }
+
     function summarizeDomain(results) {
       const counts = { ok: 0, warning: 0, info: 0, fail: 0, error: 0 };
       results.forEach(result => countStatus(counts, result.status));
@@ -3295,11 +4304,14 @@
         axisChip.append(make('span', `status ${status}`, axis.label), document.createTextNode(` ${active}/${totalAxis}`));
         summaryEl.appendChild(axisChip);
       });
+      if (cctldInsights) {
+        const currentDomain = analyzedDomains[currentResultIndex] || lastRun?.domains?.[currentResultIndex] || '';
+        renderCctldInsights(currentDomain);
+      }
     }
 
     function updateExportButtons(enabled) {
-      exportJsonButton.disabled = !enabled;
-      exportCsvButton.disabled = !enabled;
+      return enabled;
     }
 
     function buildRunExport() {
@@ -3594,12 +4606,59 @@
             const data = await getDnssec(domain);
             if (data.error) return { status: 'error', lines: [data.error] };
             const assessment = data.assessment || {};
+            const dnsviz = data.dnsviz || {};
+            const dnsvizNotices = dnsviz.notices?.notices || dnsviz.notices || {};
+            const dnsvizWarnings = Array.isArray(dnsvizNotices.warnings) ? dnsvizNotices.warnings : [];
+            const dnsvizErrors = Array.isArray(dnsvizNotices.errors) ? dnsvizNotices.errors : [];
+            const dnsvizObservations = Array.isArray(dnsviz.observations) ? dnsviz.observations : [];
+            const dnsvizChain = Array.isArray(dnsviz.chain) ? dnsviz.chain : [];
+            const dnsvizTargetValid = Boolean(dnsvizChain.some(level => level?.level === 'target' && level.valid));
+            const dnsvizStatus = !dnsviz.available
+              ? 'info'
+              : (!dnsvizTargetValid || dnsvizErrors.length
+                ? 'fail'
+                : (dnsvizWarnings.length ? 'warning' : 'ok'));
+            const dnsvizChainNames = dnsvizChain.map(level => level?.name).filter(Boolean);
             return {
               status: assessment.status || (data.valid ? 'ok' : 'fail'),
-              lines: assessment.summaryLines || [
-                data.valid ? 'DNSSEC válido.' : 'DNSSEC no está validado.'
+              lines: [
+                ...(assessment.summaryLines || [data.valid ? 'DNSSEC válido.' : 'DNSSEC no está validado.']),
+                dnsviz.available
+                  ? `DNSViz: ${dnsvizTargetValid ? 'objetivo validado' : 'objetivo no validado'}${dnsviz.updated ? ` · actualizado ${dnsviz.updated}` : ''}`
+                  : 'DNSViz: no respondió por completo'
               ],
-              sections: Array.isArray(assessment.sections) ? assessment.sections : []
+              sections: [
+                ...(Array.isArray(assessment.sections) ? assessment.sections : []),
+                {
+                  label: 'DNSViz',
+                  status: dnsvizStatus,
+                  note: dnsviz.available
+                    ? 'DNSViz aporta la cadena completa, avisos y errores para complementar DNSSEC.'
+                    : 'DNSViz no respondió por completo, pero la cadena DNSSEC sigue disponible.',
+                  items: [
+                    {
+                      text: dnsvizTargetValid ? 'La cadena valida el objetivo.' : 'La cadena no valida el objetivo.',
+                      status: dnsvizTargetValid ? 'ok' : 'fail',
+                      note: dnsviz.updated ? `Actualizado: ${dnsviz.updated}` : 'Sin fecha de actualización visible.'
+                    },
+                    {
+                      text: dnsvizChainNames.length ? `Cadena: ${dnsvizChainNames.join(' → ')}` : 'Sin cadena visible.',
+                      status: dnsvizTargetValid ? 'ok' : 'warning',
+                      note: dnsvizObservations.length ? dnsvizObservations.slice(0, 4).join(' · ') : 'Sin observaciones visibles.'
+                    },
+                    {
+                      text: `Avisos: ${dnsvizWarnings.length}`,
+                      status: dnsvizWarnings.length ? 'warning' : 'ok',
+                      note: dnsvizWarnings.length ? dnsvizWarnings.slice(0, 3).join(' · ') : 'Sin avisos DNSViz.'
+                    },
+                    {
+                      text: `Errores: ${dnsvizErrors.length}`,
+                      status: dnsvizErrors.length ? 'fail' : 'ok',
+                      note: dnsvizErrors.length ? dnsvizErrors.slice(0, 3).join(' · ') : 'Sin errores DNSViz.'
+                    }
+                  ]
+                }
+              ]
             };
           }
           case 'dnsviz': {
@@ -3723,7 +4782,17 @@
                 `Estado: ${data.policyStatus || 'missing'}`,
                 data.records?.length ? `Registro: ${data.records[0]}` : 'Sin SPF.',
                 data.parsed?.[0]?.policy ? `Política: ${data.parsed[0].policy}` : null
-              ].filter(Boolean)
+              ].filter(Boolean),
+              sections: [{
+                label: 'SPF',
+                status: data.policyStatus === 'strict' ? 'ok' : (data.policyStatus === 'weak' ? 'warning' : 'fail'),
+                note: 'Se revisa el TXT SPF publicado en el dominio.',
+                items: [{
+                  text: data.records?.length ? data.records[0] : 'Sin registro SPF.',
+                  status: data.records?.length ? 'ok' : 'fail',
+                  note: data.parsed?.[0]?.policy ? `Política: ${data.parsed[0].policy}` : 'Sin política visible.'
+                }]
+              }]
             };
           }
           case 'dmarc': {
@@ -3735,7 +4804,17 @@
                 `Estado: ${data.policyStatus || 'missing'}`,
                 data.records?.length ? `Registro: ${data.records[0]}` : 'Sin DMARC.',
                 data.parsed?.[0]?.policy ? `Política: ${data.parsed[0].policy}` : null
-              ].filter(Boolean)
+              ].filter(Boolean),
+              sections: [{
+                label: 'DMARC',
+                status: data.policyStatus === 'strict' ? 'ok' : (data.policyStatus === 'weak' ? 'warning' : 'fail'),
+                note: 'Se revisa el TXT DMARC publicado en _dmarc.',
+                items: [{
+                  text: data.records?.length ? data.records[0] : 'Sin registro DMARC.',
+                  status: data.records?.length ? 'ok' : 'fail',
+                  note: data.parsed?.[0]?.policy ? `Política: ${data.parsed[0].policy}` : 'Sin política visible.'
+                }]
+              }]
             };
           }
           case 'dkim': {
@@ -3749,7 +4828,17 @@
                 data.supported ? 'El dominio soporta DKIM.' : 'No se detectó soporte DKIM.',
                 selectors.length ? `Selectores: ${selectors.join(', ')}` : null,
                 matches.length ? matches.map(item => item.records).flat().join(' | ') : null
-              ].filter(Boolean)
+              ].filter(Boolean),
+              sections: [{
+                label: 'DKIM',
+                status: data.supported ? 'ok' : 'fail',
+                note: 'Se revisa la respuesta del selector y la existencia del registro DKIM.',
+                items: [{
+                  text: data.supported ? 'DKIM soportado.' : 'DKIM no detectado.',
+                  status: data.supported ? 'ok' : 'fail',
+                  note: selectors.length ? `Selectores: ${selectors.join(', ')}` : 'Sin selectores visibles.'
+                }]
+              }]
             };
           }
           case 'starttls': {
@@ -4091,24 +5180,29 @@
     async function analyzeDomain(domain, selectedIds, counts) {
       const results = [];
       logRun(`Iniciando dominio ${domain} con ${selectedIds.length} mediciones.`, 'info');
+      await yieldToPaint();
 
-      for (const id of selectedIds) {
+      await withConcurrency(selectedIds, 4, async (id, index) => {
         logRun(`Consultando ${domain} · ${checkMap.get(id)?.label || id}`, 'info');
         const result = await runCheck(id, domain);
-        results.push({ id, ...result });
+        results[index] = { id, ...result };
         countStatus(counts, result.status);
-        domainResultsStore.set(domain, results.slice());
-        paintCatalogResults(domain, results);
+        const currentResults = results.filter(Boolean);
+        domainResultsStore.set(domain, currentResults.slice());
+        paintCatalogResults(domain, currentResults);
         renderResultsHeader(counts.totalChecks, counts);
         logRun(`Resultado ${domain} · ${checkMap.get(id)?.label || id}: ${result.status}`, result.status);
-      }
+        await yieldToPaint();
+      });
 
-      domainResultsStore.set(domain, results.slice());
-      paintCatalogResults(domain, results);
+      const finalResults = results.filter(Boolean);
+      domainResultsStore.set(domain, finalResults.slice());
+      paintCatalogResults(domain, finalResults);
       if (!analyzedDomains.includes(domain)) analyzedDomains.push(domain);
       currentResultIndex = analyzedDomains.indexOf(domain);
       renderResultPager();
       logRun(`Dominio ${domain} finalizado.`, 'ok');
+      await yieldToPaint();
       return { domain, results };
     }
 
@@ -4171,6 +5265,10 @@
     }
 
     async function handleRun() {
+      if (analysisInProgress) {
+        logRun('Ya hay una medición en curso. Espera a que termine para iniciar otra.', 'warning');
+        return;
+      }
       const domains = parseDomains(domainsInput.value);
       const selectedIds = getSelectedIds();
       updateSelectionCount();
@@ -4186,6 +5284,7 @@
       domainResultsStore.clear();
       analyzedDomains.length = 0;
       currentResultIndex = 0;
+      analysisInProgress = true;
       lastRun = {
         startedAt: new Date().toISOString(),
         domains: domains.slice(),
@@ -4195,7 +5294,8 @@
       loading.style.display = 'flex';
       runButton.disabled = true;
       updateExportButtons(false);
-      logRun(`Se inició la medición de ${domains.length} dominio(s) con ${selectedIds.length} mediciones activas.`, 'info');
+      logRun(`Se inició la medición de ${domains.length} dominio(s) con ${selectedIds.length} mediciones activas en paralelo limitado x4.`, 'info');
+      await yieldToPaint();
 
       const totals = { ok: 0, warning: 0, info: 0, fail: 0, error: 0, totalChecks: domains.length * selectedIds.length };
       renderResultsHeader(totals.totalChecks, totals);
@@ -4207,6 +5307,7 @@
       } finally {
         loading.style.display = 'none';
         runButton.disabled = false;
+        analysisInProgress = false;
         lastRun.summary = { ...totals };
         renderResultsHeader(totals.totalChecks, totals);
         renderResultPager();
@@ -4224,9 +5325,20 @@
 
     runButton.addEventListener('click', handleRun);
     if (miniRunButton) miniRunButton.addEventListener('click', handleMiniRun);
-    exportJsonButton.addEventListener('click', exportAsJson);
-    exportCsvButton.addEventListener('click', exportAsCsv);
     wifiProbe.addEventListener('click', handleWifiProbe);
+    document.querySelectorAll('[data-domain-example]').forEach(button => {
+      button.addEventListener('click', () => {
+        const value = button.dataset.domainExample || '';
+        const target = button.dataset.domainTarget || 'main';
+        if (target === 'mini' && miniDomains) {
+          miniDomains.value = value;
+          miniDomains.focus();
+        } else if (domainsInput) {
+          domainsInput.value = value;
+          domainsInput.focus();
+        }
+      });
+    });
     if (miniDomains) {
       miniDomains.addEventListener('keydown', event => {
         if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
@@ -4274,18 +5386,46 @@
       });
     });
 
-    modeTabLinks.forEach(link => {
-      const target = (link.dataset.viewLink || '').trim();
-      const active = (VIEW_MODE === 'home' && target === 'home')
-        || (VIEW_MODE === 'mini' && target === 'mini')
-        || (VIEW_MODE === 'cctlds' && target === 'cctlds');
+    navLinks.forEach(link => {
+      const target = (link.textContent || '').trim().toLowerCase();
+      const href = (link.getAttribute('href') || '').trim();
+      const active = (VIEW_MODE === 'home' && href === '/')
+        || (VIEW_MODE === 'mini' && href === '/mini')
+        || (VIEW_MODE === 'situacion-lac' && href === '/situacion-lac')
+        || (VIEW_MODE === 'references' && href === '/referencias')
+        || (VIEW_MODE === 'about' && href === '/about')
+        || (VIEW_MODE === 'revisar' && href === '/revisar');
       if (active) {
         link.classList.add('active');
         link.setAttribute('aria-current', 'page');
       }
+      link.addEventListener('click', event => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+        if (href === '/situacion-lac') {
+          event.preventDefault();
+          window.location.assign('/situacion-lac');
+        }
+        if (href === '/referencias') {
+          event.preventDefault();
+          window.location.assign('/referencias');
+        }
+        if (href === '/about') {
+          event.preventDefault();
+          window.location.assign('/about');
+        }
+        if (href === '/revisar') {
+          event.preventDefault();
+          window.location.assign('/revisar');
+        }
+        if (href === '/mini') {
+          event.preventDefault();
+          window.location.assign('/mini');
+        }
+      });
     });
 
     buildMiniCards();
+    renderCategoryFilters();
     void setLanguage(currentLang);
 
     if (VIEW_MODE === 'home') {
@@ -4298,9 +5438,15 @@
       loadFragment('axis-accesibilidad', 'partials/accesibilidad.html');
       loadCctldReport();
       setInterval(() => loadCctldReport(), 15 * 60 * 1000);
-    } else if (VIEW_MODE === 'cctlds') {
+    } else if (VIEW_MODE === 'situacion-lac') {
       loadCctldReport();
       setInterval(() => loadCctldReport(), 15 * 60 * 1000);
+    } else if (VIEW_MODE === 'references') {
+      buildReferences();
+    } else if (VIEW_MODE === 'about') {
+      // Static about page; content is already in the markup.
+    } else if (VIEW_MODE === 'revisar') {
+      renderCatalog();
     } else if (VIEW_MODE === 'mini') {
       renderMiniEmpty('Pega un dominio para mostrar el mini.');
     }
