@@ -509,9 +509,12 @@
         'status.waiting': 'Esperando',
         'status.pending': 'Pendiente',
         'status.ok': 'OK',
+        'status.no': 'NO',
         'status.warning': 'Aviso',
         'status.fail': 'Error',
         'status.info': 'Info',
+        'status.pqc': 'PQC',
+        'status.nonpqc': 'Legado',
         'mini.card.universal.title': 'Universalidad',
         'mini.card.universal.caption': 'IPv6 nativo, aceptación universal e 6 GHz.',
         'mini.card.accessibility.title': 'Accesibilidad',
@@ -700,9 +703,12 @@
         'status.waiting': 'Aguardando',
         'status.pending': 'Pendente',
         'status.ok': 'OK',
+        'status.no': 'NÃO',
         'status.warning': 'Aviso',
         'status.fail': 'Erro',
         'status.info': 'Info',
+        'status.pqc': 'PQC',
+        'status.nonpqc': 'Legado',
         'mini.card.universal.title': 'Universalidade',
         'mini.card.universal.caption': 'IPv6 nativo, aceitação universal e 6 GHz.',
         'mini.card.accessibility.title': 'Acessibilidade',
@@ -891,9 +897,12 @@
         'status.waiting': 'Waiting',
         'status.pending': 'Pending',
         'status.ok': 'OK',
+        'status.no': 'NO',
         'status.warning': 'Warning',
         'status.fail': 'Error',
         'status.info': 'Info',
+        'status.pqc': 'PQC',
+        'status.nonpqc': 'Legacy',
         'mini.card.universal.title': 'Universalidad',
         'mini.card.universal.caption': 'Native IPv6, universal acceptance and 6 GHz.',
         'mini.card.accessibility.title': 'Accessibility',
@@ -2957,7 +2966,7 @@
         copy.appendChild(make('span', 'mini-line-label', item.label));
         copy.appendChild(make('span', 'mini-line-value', item.value || '—'));
         row.appendChild(copy);
-        const statusLabel = item.statusText || (item.status === 'ok' ? 'OK' : (item.status === 'fail' ? 'NO' : (item.status === 'warning' ? 'REV' : 'INFO')));
+        const statusLabel = item.statusText || (item.status === 'ok' ? t('status.ok', 'OK') : (item.status === 'fail' ? t('status.no', 'NO') : (item.status === 'warning' ? t('status.warning', 'REV') : (item.status === 'pqc' ? t('status.pqc', 'PQC') : (item.status === 'nonpqc' ? t('status.nonpqc', 'LEGACY') : t('status.info', 'INFO'))))));
         const statusButton = document.createElement('button');
         statusButton.type = 'button';
         statusButton.className = `mini-line-status ${item.status || 'info'}`;
@@ -3096,6 +3105,13 @@
       return String(entry);
     }
 
+    function algorithmTone(value) {
+      const text = String(value || '');
+      if (/PQC|POST-?QUANT|ML-?KEM|DILITHIUM|FALCON|SPHINCS|SABER|KYBER|ED25519|ED448/i.test(text)) return 'pqc';
+      if (/SHA-1|DSA|RSA\/SHA-1/i.test(text)) return 'nonpqc';
+      return 'info';
+    }
+
     function dnsvizToneForGroup(label) {
       const value = String(label || '').toLowerCase();
       if (value.includes('secure') || value.includes('seguro')) return 'ok';
@@ -3132,7 +3148,7 @@
 
     function buildMiniDnsvizItem(entry) {
       const item = document.createElement('div');
-      item.className = 'mini-dnsviz-item';
+      item.className = `mini-dnsviz-item ${algorithmTone(entry?.text || entry?.raw || entry?.title || entry?.description || '')}`;
       const text = make('div', 'mini-dnsviz-item-text', entry?.text || entry?.raw || 'Sin detalle.');
       item.appendChild(text);
       const metaBits = [
@@ -3352,7 +3368,11 @@
           value: `${w3cItems.slice(0, 4).map(([label, token]) => `${label}: ${hasIssue(token) ? 'No' : 'OK'}`).join(', ')}${w3cItems.length > 4 ? ', ...' : ''}`,
           status: w3cIssues.length ? 'warning' : 'ok',
           command: 'GET /w3c/:dominio',
-          detail: w3cItems.map(([label, token, message]) => `${label}: ${hasIssue(token) ? message : 'OK'}`)
+          detail: w3cItems.map(([label, token, message]) => (
+            hasIssue(token)
+              ? `${label}: ${message} This can block screen readers or make navigation harder.`
+              : `${label}: OK`
+          ))
         }
       ];
       setMiniSimpleCard(
@@ -3433,13 +3453,21 @@
             ? data.dnsviz.errors.slice(0, 5).map(item => formatMiniDnsvizEntry(item))
             : ['Sin errores NSEC3 detectados.']
         },
-        ...(Array.isArray(data?.dnssec?.algorithms) ? data.dnssec.algorithms.slice(0, 3).map(algo => ({
-          label: 'Algoritmo',
-          value: algo,
-          status: /SHA-1/i.test(String(algo)) ? 'warning' : 'ok',
-          command: 'GET /dnssec/:dominio',
-          detail: [`Algoritmo DNSSEC observado: ${algo}`]
-        })) : [])
+        ...(Array.isArray(data?.dnssec?.algorithms) ? data.dnssec.algorithms.slice(0, 3).map(algo => {
+          const algoText = String(algo || '');
+          const isQuantumSafe = /PQC|POST-?QUANT|ML-?KEM|DILITHIUM|FALCON|SPHINCS|SABER|KYBER|ED25519|ED448/i.test(algoText);
+          const isLegacy = /SHA-1|DSA|RSA\/SHA-1/i.test(algoText);
+          return {
+            label: 'Algoritmo',
+            value: algoText,
+            status: isQuantumSafe ? 'pqc' : (isLegacy ? 'nonpqc' : 'info'),
+            command: 'GET /dnssec/:dominio',
+            detail: [
+              `Algoritmo DNSSEC observado: ${algoText}`,
+              isQuantumSafe ? 'This algorithm is post-quantum.' : 'This algorithm is not post-quantum.'
+            ]
+          };
+        }) : [])
       ]);
 
       const dnsviz = data?.dnsviz || {};
@@ -3456,28 +3484,36 @@
           value: data?.email?.config?.spf ? 'Sí' : 'No',
           status: data?.email?.config?.spf ? 'ok' : 'fail',
           command: 'GET /emailconfig/:dominio',
-          detail: data?.email?.config?.spfPolicy ? [`Política: ${data.email.config.spfPolicy.policy || 'sin dato'}`, data.email.config.spfPolicy.strict ? 'Estricto' : 'No estricto'] : ['No se detectó SPF.']
+          detail: data?.email?.config?.spfPolicy
+            ? [`Política: ${data.email.config.spfPolicy.policy || 'sin dato'}`, data.email.config.spfPolicy.strict ? 'Esta política es estricta.' : 'Esta política es más permisiva.']
+            : ['No se detectó SPF.', 'Sin SPF es más fácil suplantar el dominio en campañas de phishing.']
         },
         {
           label: 'DMARC',
           value: data?.email?.config?.dmarc ? 'Sí' : 'No',
           status: data?.email?.config?.dmarc ? 'ok' : 'fail',
           command: 'GET /emailconfig/:dominio',
-          detail: data?.email?.config?.dmarcPolicy ? [`Política: ${data.email.config.dmarcPolicy.policy || 'sin dato'}`, data.email.config.dmarcPolicy.strict ? 'Estricto' : 'No estricto'] : ['No se detectó DMARC.']
+          detail: data?.email?.config?.dmarcPolicy
+            ? [`Política: ${data.email.config.dmarcPolicy.policy || 'sin dato'}`, data.email.config.dmarcPolicy.strict ? 'Esta política ayuda a bloquear abuso.' : 'Esta política aún permite solo monitoreo o cuarentena.']
+            : ['No se detectó DMARC.', 'Sin DMARC no hay una política clara para tratar fallos de autenticación.']
         },
         {
           label: 'DKIM',
           value: data?.email?.config?.dkim ? 'Sí' : 'No',
           status: data?.email?.config?.dkim ? 'ok' : 'fail',
           command: 'GET /emailconfig/:dominio',
-          detail: data?.email?.config?.dkimDetails ? [`Selector: ${data.email.config.dkimDetails.selector || 'support'}`] : ['No se detectó DKIM.']
+          detail: data?.email?.config?.dkimDetails
+            ? [`Selector: ${data.email.config.dkimDetails.selector || 'support'}`, 'DKIM agrega firma criptográfica a los mensajes.']
+            : ['No se detectó DKIM.', 'Sin DKIM no hay una firma verificable del correo saliente.']
         },
         {
           label: 'Start TLS',
           value: data?.email?.starttls?.supported ? 'Sí' : 'No',
           status: data?.email?.starttls?.supported ? 'ok' : 'fail',
           command: 'GET /starttls/:dominio',
-          detail: Array.isArray(data?.email?.starttls?.results) ? data.email.starttls.results.map(item => `${item.server}: ${item.status}`) : ['No hay detalle STARTTLS.']
+          detail: Array.isArray(data?.email?.starttls?.results)
+            ? data.email.starttls.results.map(item => `${item.server}: ${item.status}`)
+            : ['No hay detalle STARTTLS.', 'Sin STARTTLS, el tráfico de correo puede viajar sin cifrado en tránsito.']
         }
       ]);
 

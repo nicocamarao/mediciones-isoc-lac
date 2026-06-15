@@ -741,6 +741,16 @@
       background:#fff;
       min-width:0;
     }
+    .mini-dnsviz-item.pqc{
+      background:#f8f1fe;
+      border-color:rgba(122,52,180,.24);
+    }
+    .mini-dnsviz-item.nonpqc{
+      background:#fff5eb;
+      border-color:rgba(197,106,19,.24);
+    }
+    .mini-dnsviz-item.pqc .mini-dnsviz-item-text{color:#7a34b4}
+    .mini-dnsviz-item.nonpqc .mini-dnsviz-item-text{color:#c56a13}
     .mini-dnsviz-item-text{
       font-size:.84rem;
       line-height:1.45;
@@ -838,10 +848,14 @@
     .mini-line.warning .mini-line-status{background:#f8efe0;color:#a86a00;border-color:rgba(160,106,0,.28)}
     .mini-line.fail .mini-line-status{background:#fbe8e6;color:#b13a30;border-color:rgba(178,50,42,.28)}
     .mini-line.info .mini-line-status{background:#edf3fb;color:#285c9a;border-color:rgba(36,88,166,.28)}
+    .mini-line.pqc .mini-line-status{background:#f0e8fb;color:#7a34b4;border-color:rgba(122,52,180,.28)}
+    .mini-line.nonpqc .mini-line-status{background:#fff0e4;color:#c56a13;border-color:rgba(197,106,19,.28)}
     .mini-line.ok .mini-line-value{color:#0a7a4b}
     .mini-line.warning .mini-line-value{color:#a86a00}
     .mini-line.fail .mini-line-value{color:#b13a30}
     .mini-line.info .mini-line-value{color:#285c9a}
+    .mini-line.pqc .mini-line-value{color:#7a34b4}
+    .mini-line.nonpqc .mini-line-value{color:#c56a13}
     .mini-detail-dialog::backdrop{background:rgba(11,18,14,.34)}
     .mini-detail-dialog{
       border:0;
