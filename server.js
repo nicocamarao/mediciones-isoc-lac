@@ -3570,6 +3570,130 @@ async function buildMiniData(domain, emitProgress = () => {}) {
       };
     });
 
+  const ipv6Promise = resolveDnsValue(domain, 'AAAA', 'local')
+    .then(records => {
+      progress(
+        'ipv6',
+        records.length ? 'ok' : 'warning',
+        records.length ? `IPv6 listo: ${records.length} registro(s) AAAA.` : 'IPv6 sin registros AAAA.'
+      );
+      return records;
+    })
+    .catch(error => {
+      progress('ipv6', 'fail', `IPv6 sin respuesta: ${errorMessage(error)}`);
+      return [];
+    });
+
+  const mailIpv6Promise = collectMxIps(domain)
+    .then(info => (info.ips || []).filter(ip => String(ip || '').includes(':')))
+    .then(records => {
+      progress(
+        'mailipv6',
+        records.length ? 'ok' : 'warning',
+        records.length ? `IPv6 en MX listo: ${records.length} dirección(es).` : 'MX sin IPv6 visible.'
+      );
+      return records;
+    })
+    .catch(error => {
+      progress('mailipv6', 'fail', `IPv6 en MX sin respuesta: ${errorMessage(error)}`);
+      return [];
+    });
+
+  const mxIpv4Promise = collectMxIps(domain)
+    .then(info => (info.ips || []).filter(ip => String(ip || '').includes('.') && !String(ip || '').includes(':')))
+    .then(records => {
+      progress(
+        'mailipv4',
+        records.length ? 'ok' : 'warning',
+        records.length ? `IPv4 en MX listo: ${records.length} dirección(es).` : 'MX sin IPv4 visible.'
+      );
+      return records;
+    })
+    .catch(error => {
+      progress('mailipv4', 'fail', `IPv4 en MX sin respuesta: ${errorMessage(error)}`);
+      return [];
+    });
+
+  const spfPromise = fetchLocalJson(`/spf/${encodeURIComponent(domain)}`)
+    .then(data => {
+      progress('spf', data?.supported || data?.present ? 'ok' : 'warning', data?.present ? 'SPF listo.' : 'SPF ausente.');
+      return data || {};
+    })
+    .catch(error => {
+      progress('spf', 'fail', `SPF sin respuesta: ${errorMessage(error)}`);
+      return {};
+    });
+
+  const dmarcPromise = fetchLocalJson(`/dmarc/${encodeURIComponent(domain)}`)
+    .then(data => {
+      progress('dmarc', data?.present ? 'ok' : 'warning', data?.present ? 'DMARC listo.' : 'DMARC ausente.');
+      return data || {};
+    })
+    .catch(error => {
+      progress('dmarc', 'fail', `DMARC sin respuesta: ${errorMessage(error)}`);
+      return {};
+    });
+
+  const dkimPromise = fetchLocalJson(`/dkim/${encodeURIComponent(domain)}?selector=support`)
+    .then(data => {
+      progress('dkim', data?.supported ? 'ok' : 'warning', data?.supported ? 'DKIM listo.' : 'DKIM no detectado.');
+      return data || {};
+    })
+    .catch(error => {
+      progress('dkim', 'fail', `DKIM sin respuesta: ${errorMessage(error)}`);
+      return {};
+    });
+
+  const starttlsPromise = fetchLocalJson(`/starttls/${encodeURIComponent(domain)}`)
+    .then(data => {
+      progress('starttls', data?.supported ? 'ok' : 'warning', data?.supported ? 'STARTTLS listo.' : 'STARTTLS no detectado.');
+      return data || {};
+    })
+    .catch(error => {
+      progress('starttls', 'fail', `STARTTLS sin respuesta: ${errorMessage(error)}`);
+      return {};
+    });
+
+  const tlsPromise = fetchLocalJson(`/tlsinfo/${encodeURIComponent(domain)}`)
+    .then(data => {
+      progress('tls', data?.error ? 'warning' : 'ok', data?.error ? 'TLS con observaciones.' : 'TLS listo.');
+      return data || {};
+    })
+    .catch(error => {
+      progress('tls', 'fail', `TLS sin respuesta: ${errorMessage(error)}`);
+      return {};
+    });
+
+  const w3cPromise = fetchLocalJson(`/w3c/${encodeURIComponent(domain)}`)
+    .then(data => {
+      progress('w3c', data?.errors || data?.warnings ? 'warning' : 'ok', data?.errors || data?.warnings ? 'W3C con hallazgos.' : 'W3C listo.');
+      return data || {};
+    })
+    .catch(error => {
+      progress('w3c', 'fail', `W3C sin respuesta: ${errorMessage(error)}`);
+      return {};
+    });
+
+  const wifiPromise = summarizeWifiCountry(domain)
+    .then(data => {
+      progress('wifi', data?.status || 'info', data?.label ? `6 GHz listo: ${data.label}.` : '6 GHz sin dato.');
+      return data || {};
+    })
+    .catch(error => {
+      progress('wifi', 'info', `6 GHz sin respuesta: ${errorMessage(error)}`);
+      return { status: 'pending', label: 'Sin dato', notes: [] };
+    });
+
+  const emailConfigPromise = fetchLocalJson(`/emailconfig/${encodeURIComponent(domain)}`)
+    .then(data => {
+      progress('emailconfig', data?.error ? 'warning' : 'ok', data?.error ? 'Correo con observaciones.' : 'Correo configurado.');
+      return data || {};
+    })
+    .catch(error => {
+      progress('emailconfig', 'fail', `Correo sin respuesta: ${errorMessage(error)}`);
+      return {};
+    });
+
   const pulsePromise = pulseEligible
     ? getCachedCctldPulse(pulseCountryCode, 'local')
         .then(async pulse => {
@@ -3611,14 +3735,25 @@ async function buildMiniData(domain, emitProgress = () => {}) {
         notes: ['Dominio sin ccTLD; Pulse no aplica.']
       });
 
-  const [ipv4Records, dnssecRaw, domainRpki, mxInfo, dnsviz, pulse, headers] = await Promise.all([
+  const [ipv4Records, ipv6Records, dnssecRaw, domainRpki, mxInfo, dnsviz, pulse, headers, mailIpv6Records, mailIpv4Records, spf, dmarc, dkim, starttls, tls, w3c, wifi, emailConfig] = await Promise.all([
     ipv4Promise,
+    ipv6Promise,
     dnssecPromise,
     domainRpkiPromise,
     mxInfoPromise,
     dnsvizPromise,
     pulsePromise,
-    headersPromise
+    headersPromise,
+    mailIpv6Promise,
+    mxIpv4Promise,
+    spfPromise,
+    dmarcPromise,
+    dkimPromise,
+    starttlsPromise,
+    tlsPromise,
+    w3cPromise,
+    wifiPromise,
+    emailConfigPromise
   ]);
 
   const assessment = buildDnssecAssessment(dnssecRaw || {});
@@ -3697,6 +3832,11 @@ async function buildMiniData(domain, emitProgress = () => {}) {
       present: ipv4Records.length > 0,
       records: ipv4Records
     },
+    ipv6: {
+      status: ipv6Records.length ? 'ok' : 'fail',
+      present: ipv6Records.length > 0,
+      records: ipv6Records
+    },
     dnssec: {
       status: assessment.status || (assessment.valid ? 'ok' : 'fail'),
       valid: assessment.valid,
@@ -3722,6 +3862,26 @@ async function buildMiniData(domain, emitProgress = () => {}) {
       status: dnsviz.available ? 'ok' : 'info',
       ...dnsviz
     },
+    mailipv6: {
+      status: mailIpv6Records.length ? 'ok' : 'fail',
+      present: mailIpv6Records.length > 0,
+      records: mailIpv6Records
+    },
+    mailipv4: {
+      status: mailIpv4Records.length ? 'ok' : 'fail',
+      present: mailIpv4Records.length > 0,
+      records: mailIpv4Records
+    },
+    email: {
+      spf,
+      dmarc,
+      dkim,
+      starttls,
+      config: emailConfig
+    },
+    tls,
+    w3c,
+    wifi,
     headers,
     pulse: {
       available: Boolean(pulse.available),
@@ -3855,13 +4015,63 @@ async function handleWhois(domain, res) {
 async function handleW3C(domain, res) {
   domain = normalizeDomain(domain);
   try {
-    const data = await fetchJSON(
-      `https://validator.w3.org/nu/?doc=${encodeURIComponent(`https://${domain}`)}&out=json`
-    );
-    const messages = Array.isArray(data.messages) ? data.messages : [];
+    const [data, page] = await Promise.all([
+      fetchJSON(`https://validator.w3.org/nu/?doc=${encodeURIComponent(`https://${domain}`)}&out=json`).catch(() => null),
+      fetchWebsite(domain).catch(() => null)
+    ]);
+    const messages = Array.isArray(data?.messages) ? data.messages : [];
     const errors = messages.filter(m => m.type === 'error').length;
     const warnings = messages.filter(m => m.type !== 'error').length;
-    sendJSON(res, 200, { domain, errors, warnings });
+    const html = String(page?.body || '');
+    const lower = html.toLowerCase();
+    const attrMatches = name => new RegExp(`<${name}\\b[^>]*>`, 'gi');
+    const scanIssues = [];
+    const hasLang = /<html\b[^>]*\blang\s*=\s*["'][^"']+["']/i.test(html);
+    if (!hasLang) scanIssues.push('La página no declara el idioma principal del contenido.');
+    if (!/<title>\s*[^<]+<\/title>/i.test(html)) scanIssues.push('La página no tiene un título descriptivo.');
+    if (/<img\b(?![^>]*\balt\s*=)/i.test(html)) scanIssues.push('Hay imágenes sin texto alternativo.');
+    if (/<(input|select|textarea)\b(?![^>]*(?:aria-label|aria-labelledby|id|name|title)\s*=)/i.test(html)) {
+      scanIssues.push('Hay campos de formulario sin etiqueta accesible.');
+    }
+    if (/<button\b(?![^>]*(?:aria-label|aria-labelledby))[^>]*>\s*<\/button>/i.test(html)) {
+      scanIssues.push('Hay botones sin nombre accesible.');
+    }
+    if (/<a\b[^>]*href=([^>]+)>(\s|<\/?span|<\/?strong|<\/?em)*<\/a>/i.test(html)) {
+      scanIssues.push('Hay enlaces sin nombre accesible.');
+    }
+    if (!/<h1\b/i.test(html)) scanIssues.push('La página no tiene encabezado principal.');
+    const headingMatches = [...html.matchAll(/<h([1-6])\b/gi)].map(m => Number(m[1]));
+    for (let i = 1; i < headingMatches.length; i += 1) {
+      if (headingMatches[i] - headingMatches[i - 1] > 1) {
+        scanIssues.push('La estructura de encabezados puede ser incorrecta.');
+        break;
+      }
+    }
+    if (!/<main\b/i.test(html) && !/role\s*=\s*["']main["']/i.test(html)) scanIssues.push('No se identifica la región principal del contenido.');
+    if (/tabindex\s*=\s*["']([1-9]\d*)["']/i.test(html)) scanIssues.push('Se detectó tabindex positivo, lo que puede alterar el orden natural de navegación.');
+    if (/<(div|span|li|img|p)\b[^>]*onclick\s*=/i.test(html)) scanIssues.push('Hay elementos no semánticos usados como controles interactivos.');
+    if (/<iframe\b(?![^>]*\btitle\s*=)/i.test(html)) scanIssues.push('Hay iframes sin título descriptivo.');
+    if (/<table\b[\s\S]*?(?<!<th\b)[\s\S]*?<\/table>/i.test(html) && !/<th\b/i.test(html)) scanIssues.push('Hay tablas sin encabezados estructurados.');
+    if (/(aria-labelledby|aria-describedby)\s*=\s*["']([^"']+)["']/i.test(html)) {
+      const refs = [...html.matchAll(/(?:aria-labelledby|aria-describedby)\s*=\s*["']([^"']+)["']/gi)]
+        .flatMap(match => match[1].split(/\s+/).filter(Boolean));
+      const missing = refs.some(id => !new RegExp(`id\\s*=\\s*["']${id}["']`, 'i').test(html));
+      if (missing) scanIssues.push('Hay referencias ARIA a elementos inexistentes.');
+    }
+    if (/aria-hidden\s*=\s*["']true["'][\s\S]*?(<button\b|<a\b|<input\b|<select\b|<textarea\b)/i.test(html)) {
+      scanIssues.push('Hay contenido interactivo oculto para tecnologías de asistencia.');
+    }
+    if (/<(audio|video)\b[^>]*\bautoplay\b(?![^>]*\bmuted\b)/i.test(html)) scanIssues.push('Hay multimedia con reproducción automática y sonido.');
+    if (/<svg\b[^>]*\brole\s*=\s*["']button["'][\s\S]*?(?![^<]*<title>)/i.test(html)) {
+      scanIssues.push('Hay íconos o SVG interactivos sin nombre accesible.');
+    }
+    sendJSON(res, 200, {
+      domain,
+      errors: errors + scanIssues.length,
+      warnings: warnings,
+      issues: scanIssues,
+      htmlChecked: Boolean(html)
+    });
   } catch (e) {
     sendJSON(res, 200, { domain, unavailable: true, note: errorMessage(e) });
   }

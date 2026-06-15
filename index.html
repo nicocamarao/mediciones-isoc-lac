@@ -74,7 +74,7 @@
         </div>
         <div class="toolbar">
           <button id="miniRunButton" class="button primary" type="button">Analizar mini</button>
-          <span id="miniStatus" class="mini-hint">Pega un dominio y verás 8 tarjetas claras: 4 arriba y 4 abajo.</span>
+          <span id="miniStatus" class="mini-hint">Pega un dominio y verás 6 tarjetas por categoría.</span>
         </div>
       </div>
       <div class="mini-trace">
@@ -512,24 +512,20 @@
         'status.warning': 'Aviso',
         'status.fail': 'Error',
         'status.info': 'Info',
-        'mini.card.ipv4.title': 'Dirección IPv4',
-        'mini.card.ipv4.caption': 'La entrada A principal visible desde DNS.',
-        'mini.card.dnssec.title': 'DNSSEC + algoritmos',
-        'mini.card.dnssec.caption': 'DS y DNSKEY resumidos con números y nombres.',
-        'mini.card.rpki.title': 'RPKI',
-        'mini.card.rpki.caption': 'Dominio y correo cubiertos por ROAs.',
-        'mini.card.smtp.title': 'SMTPUTF8',
-        'mini.card.smtp.caption': 'Aceptación universal en MX.',
-        'mini.card.dnsviz.title': 'DNSViz',
-        'mini.card.dnsviz.caption': 'La cadena visual completa.',
-        'mini.card.http.title': 'Cabeceras HTTP',
-        'mini.card.http.caption': 'HTTPS, HSTS, CSP y defensas básicas.',
-        'mini.card.pulse.title': 'Pulse DNSSEC',
-        'mini.card.pulse.caption': 'Cobertura DNSSEC de Internet Society Pulse.',
-        'mini.card.roas.title': 'ROAs',
-        'mini.card.roas.caption': 'Resumen de las rutas cubiertas.',
-        'mini.card.rov.title': 'ROV',
-        'mini.card.rov.caption': 'Validación de rutas observada.',
+        'mini.card.universal.title': 'Universalidad',
+        'mini.card.universal.caption': 'IPv6 nativo, aceptación universal e 6 GHz.',
+        'mini.card.accessibility.title': 'Accesibilidad',
+        'mini.card.accessibility.caption': 'W3C y calidad web en una sola tarjeta.',
+        'mini.card.routing.title': 'Seguridad enrutamiento',
+        'mini.card.routing.caption': 'RPKI, ROA y ASPA como bloque.',
+        'mini.card.dns.title': 'Seguridad DNS',
+        'mini.card.dns.caption': 'DNSSEC, DNSViz y validación de cadena.',
+        'mini.card.mail.title': 'Seguridad correo',
+        'mini.card.mail.caption': 'DKIM, SPF, DMARC y STARTTLS.',
+        'mini.card.perimeter.title': 'Seguridad perímetro',
+        'mini.card.perimeter.caption': 'HTTPS, TLS y cabeceras defensivas.',
+        'mini.card.pulse.title': 'Pulse ccTLD',
+        'mini.card.pulse.caption': 'Cobertura DNSSEC, adopción, ROV y 6 GHz.',
         'dnsviz.graph': 'Gráfico DNSViz',
         'dnsviz.source': 'Fuente',
         'dnsviz.observations': 'Observaciones',
@@ -707,24 +703,20 @@
         'status.warning': 'Aviso',
         'status.fail': 'Erro',
         'status.info': 'Info',
-        'mini.card.ipv4.title': 'Endereço IPv4',
-        'mini.card.ipv4.caption': 'A entrada A principal visível no DNS.',
-        'mini.card.dnssec.title': 'DNSSEC + algoritmos',
-        'mini.card.dnssec.caption': 'DS e DNSKEY resumidos com números e nomes.',
-        'mini.card.rpki.title': 'RPKI',
-        'mini.card.rpki.caption': 'Domínio e e-mail cobertos por ROAs.',
-        'mini.card.smtp.title': 'SMTPUTF8',
-        'mini.card.smtp.caption': 'Aceitação universal nos MX.',
-        'mini.card.dnsviz.title': 'DNSViz',
-        'mini.card.dnsviz.caption': 'A cadeia visual completa.',
-        'mini.card.http.title': 'Cabeçalhos HTTP',
-        'mini.card.http.caption': 'HTTPS, HSTS, CSP e defesas básicas.',
-        'mini.card.pulse.title': 'Pulse DNSSEC',
-        'mini.card.pulse.caption': 'Cobertura DNSSEC do Internet Society Pulse.',
-        'mini.card.roas.title': 'ROAs',
-        'mini.card.roas.caption': 'Resumo das rotas cobertas.',
-        'mini.card.rov.title': 'ROV',
-        'mini.card.rov.caption': 'Validação de rotas observada.',
+        'mini.card.universal.title': 'Universalidade',
+        'mini.card.universal.caption': 'IPv6 nativo, aceitação universal e 6 GHz.',
+        'mini.card.accessibility.title': 'Acessibilidade',
+        'mini.card.accessibility.caption': 'W3C e qualidade web em um cartão.',
+        'mini.card.routing.title': 'Segurança de roteamento',
+        'mini.card.routing.caption': 'RPKI, ROA e ASPA como bloco.',
+        'mini.card.dns.title': 'Segurança DNS',
+        'mini.card.dns.caption': 'DNSSEC, DNSViz e validação de cadeia.',
+        'mini.card.mail.title': 'Segurança de e-mail',
+        'mini.card.mail.caption': 'DKIM, SPF, DMARC e STARTTLS.',
+        'mini.card.perimeter.title': 'Segurança de perímetro',
+        'mini.card.perimeter.caption': 'HTTPS, TLS e cabeçalhos defensivos.',
+        'mini.card.pulse.title': 'Pulse ccTLD',
+        'mini.card.pulse.caption': 'Cobertura DNSSEC, adoção, ROV e 6 GHz.',
         'dnsviz.graph': 'Gráfico DNSViz',
         'dnsviz.source': 'Fonte',
         'dnsviz.observations': 'Observações',
@@ -902,24 +894,20 @@
         'status.warning': 'Warning',
         'status.fail': 'Error',
         'status.info': 'Info',
-        'mini.card.ipv4.title': 'IPv4 address',
-        'mini.card.ipv4.caption': 'The main A record visible in DNS.',
-        'mini.card.dnssec.title': 'DNSSEC + algorithms',
-        'mini.card.dnssec.caption': 'DS and DNSKEY summarized with numbers and names.',
-        'mini.card.rpki.title': 'RPKI',
-        'mini.card.rpki.caption': 'Domain and mail covered by ROAs.',
-        'mini.card.smtp.title': 'SMTPUTF8',
-        'mini.card.smtp.caption': 'Universal acceptance on MX.',
-        'mini.card.dnsviz.title': 'DNSViz',
-        'mini.card.dnsviz.caption': 'The full visual chain.',
-        'mini.card.http.title': 'HTTP headers',
-        'mini.card.http.caption': 'HTTPS, HSTS, CSP and basic defenses.',
-        'mini.card.pulse.title': 'DNSSEC Pulse',
-        'mini.card.pulse.caption': 'DNSSEC coverage from Internet Society Pulse.',
-        'mini.card.roas.title': 'ROAs',
-        'mini.card.roas.caption': 'Summary of covered routes.',
-        'mini.card.rov.title': 'ROV',
-        'mini.card.rov.caption': 'Observed route validation.',
+        'mini.card.universal.title': 'Universalidad',
+        'mini.card.universal.caption': 'Native IPv6, universal acceptance and 6 GHz.',
+        'mini.card.accessibility.title': 'Accessibility',
+        'mini.card.accessibility.caption': 'W3C and web quality in one card.',
+        'mini.card.routing.title': 'Routing security',
+        'mini.card.routing.caption': 'RPKI, ROA and ASPA as a single block.',
+        'mini.card.dns.title': 'DNS security',
+        'mini.card.dns.caption': 'DNSSEC, DNSViz and chain validation.',
+        'mini.card.mail.title': 'Mail security',
+        'mini.card.mail.caption': 'DKIM, SPF, DMARC and STARTTLS.',
+        'mini.card.perimeter.title': 'Perimeter security',
+        'mini.card.perimeter.caption': 'HTTPS, TLS and defensive headers.',
+        'mini.card.pulse.title': 'Pulse ccTLD',
+        'mini.card.pulse.caption': 'DNSSEC coverage, adoption, ROV and 6 GHz.',
         'dnsviz.graph': 'DNSViz graph',
         'dnsviz.source': 'Source',
         'dnsviz.observations': 'Observations',
@@ -1104,7 +1092,9 @@
         const active = lang === currentLang;
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', active ? 'true' : 'false');
-        button.textContent = t(`lang.${lang}`, lang.toUpperCase());
+        const labels = { es: 'ES', pt: 'PT', en: 'EN' };
+        const flags = { es: '🇪🇸', pt: '🇧🇷', en: '🇺🇸' };
+        button.textContent = `${flags[lang] || ''} ${labels[lang] || lang.toUpperCase()}`.trim();
       });
     }
     function updatePageLinks() {
@@ -1160,6 +1150,11 @@
       setNodeText('#miniStatus', t('mini.status', 'Pega un dominio y verás tarjetas claras con el resumen.'));
       setNodeText('.mini-trace-head strong', t('mini.trace.title', 'Tiempo real'));
       setNodeText('.mini-trace-note', t('mini.trace.note', 'Vas viendo cada respuesta mientras llega.'));
+      setNodeText('#miniShell .example-label', t('mini.quickExamples', 'Casos rápidos:'));
+      setNodeText('#miniShell .section-pill', t('mini.badge', 'Minimalista'));
+      document.querySelectorAll('#miniShell .example-chip').forEach(button => {
+        button.classList.add('button', 'primary');
+      });
       setNodeText('#explorador h2', t('home.explorer.title', 'Explorador de mediciones'));
       setNodeText('#explorador .muted', t('home.explorer.desc', 'Pega uno o varios dominios separados por coma.'));
       setNodeText('#mapa-general h2', t('home.map.title', 'Mapa general'));
@@ -2901,7 +2896,83 @@
       const foot = make('div', 'mini-foot', '');
       body.append(value, sub, content, foot);
       card.append(head, body);
-      return { card, badge, value, sub, content, foot, title, caption, titleNode, captionNode };
+      return { card, badge, value, sub, content, foot, title, caption, titleNode, captionNode, body };
+    }
+
+    function ensureMiniDialog() {
+      let dialog = document.getElementById('miniDetailDialog');
+      if (dialog) return dialog;
+      dialog = document.createElement('dialog');
+      dialog.id = 'miniDetailDialog';
+      dialog.className = 'mini-detail-dialog';
+      dialog.innerHTML = `
+        <form method="dialog" class="mini-detail-dialog-card">
+          <div class="mini-detail-dialog-head">
+            <div>
+              <div class="mini-detail-dialog-kicker">Detalle</div>
+              <h3 class="mini-detail-dialog-title"></h3>
+            </div>
+            <button class="button primary" value="close" type="submit">Cerrar</button>
+          </div>
+          <div class="mini-detail-dialog-body"></div>
+        </form>
+      `;
+      document.body.appendChild(dialog);
+      return dialog;
+    }
+
+    function openMiniDialog(title, lines, emptyText = 'Sin datos.', command = '') {
+      const dialog = ensureMiniDialog();
+      const titleNode = dialog.querySelector('.mini-detail-dialog-title');
+      const body = dialog.querySelector('.mini-detail-dialog-body');
+      titleNode.textContent = title;
+      clearNode(body);
+      if (command) {
+        body.appendChild(make('p', 'mini-detail-command', command));
+      }
+      const content = Array.isArray(lines) && lines.length ? lines : [emptyText];
+      content.forEach(line => {
+        const p = make('p', 'mini-detail-line', line);
+        body.appendChild(p);
+      });
+      dialog.showModal();
+    }
+
+    function setMiniCardDetails(slot, items, emptyText = 'Sin datos.') {
+      clearNode(slot.content);
+      if (!Array.isArray(items) || !items.length) {
+        slot.content.appendChild(make('div', 'mini-sub', emptyText));
+        return;
+      }
+      const list = document.createElement('ul');
+      list.className = 'mini-list';
+      items.forEach((item, index) => {
+        if (!item || !item.label) return;
+        const li = document.createElement('li');
+        li.className = `mini-line ${item.status || 'info'}`;
+        const row = document.createElement('div');
+        row.className = 'mini-line-row';
+        const copy = document.createElement('div');
+        copy.className = 'mini-line-copy';
+        copy.appendChild(make('span', 'mini-line-label', item.label));
+        copy.appendChild(make('span', 'mini-line-value', item.value || '—'));
+        row.appendChild(copy);
+        const statusLabel = item.statusText || (item.status === 'ok' ? 'OK' : (item.status === 'fail' ? 'NO' : (item.status === 'warning' ? 'REV' : 'INFO')));
+        const statusButton = document.createElement('button');
+        statusButton.type = 'button';
+        statusButton.className = `mini-line-status ${item.status || 'info'}`;
+        statusButton.textContent = statusLabel;
+        statusButton.addEventListener('click', () => openMiniDialog(
+          item.label,
+          Array.isArray(item.detail) ? item.detail : [item.detail],
+          emptyText,
+          item.command || ''
+        ));
+        row.appendChild(statusButton);
+        li.appendChild(row);
+        list.appendChild(li);
+      });
+      if (list.childElementCount) slot.content.appendChild(list);
     }
 
     function setMiniSimpleCard(slot, status, value, sub, foot) {
@@ -2956,17 +3027,15 @@
     function buildMiniCards() {
       if (!miniTopGrid || !miniBottomGrid || miniTopGrid.childElementCount || miniBottomGrid.childElementCount) return;
       const topCards = [
-        buildMiniCardSlot(miniText('card.ipv4.title', 'Dirección IPv4'), miniText('card.ipv4.caption', 'La entrada A principal visible desde DNS.')),
-        buildMiniCardSlot(miniText('card.dnssec.title', 'DNSSEC + algoritmos'), miniText('card.dnssec.caption', 'DS y DNSKEY resumidos con números y nombres.')),
-        buildMiniCardSlot(miniText('card.rpki.title', 'RPKI'), miniText('card.rpki.caption', 'Dominio y correo cubiertos por ROAs.')),
-        buildMiniCardSlot(miniText('card.smtp.title', 'SMTPUTF8'), miniText('card.smtp.caption', 'Aceptación universal en MX.'))
+        buildMiniCardSlot(miniText('card.universal.title', 'Universalidad'), miniText('card.universal.caption', 'IPv6 nativo, aceptación universal e 6 GHz.')),
+        buildMiniCardSlot(miniText('card.accessibility.title', 'Accesibilidad'), miniText('card.accessibility.caption', 'W3C y calidad web en una sola tarjeta.')),
+        buildMiniCardSlot(miniText('card.routing.title', 'Seguridad enrutamiento'), miniText('card.routing.caption', 'RPKI, ROA y ASPA como bloque.'))
       ];
       const bottomCards = [
-        buildMiniCardSlot(miniText('card.dnsviz.title', 'DNSViz'), miniText('card.dnsviz.caption', 'La cadena visual completa.')),
-        buildMiniCardSlot(miniText('card.http.title', 'Cabeceras HTTP'), miniText('card.http.caption', 'HTTPS, HSTS, CSP y defensas básicas.')),
-        buildMiniCardSlot(miniText('card.pulse.title', 'Pulse DNSSEC'), miniText('card.pulse.caption', 'Cobertura DNSSEC de Internet Society Pulse.')),
-        buildMiniCardSlot(miniText('card.roas.title', 'ROAs'), miniText('card.roas.caption', 'Resumen de las rutas cubiertas.')),
-        buildMiniCardSlot(miniText('card.rov.title', 'ROV'), miniText('card.rov.caption', 'Validación de rutas observada.'))
+        buildMiniCardSlot(miniText('card.dns.title', 'Seguridad DNS'), miniText('card.dns.caption', 'DNSSEC, DNSViz y validación de cadena.')),
+        buildMiniCardSlot(miniText('card.mail.title', 'Seguridad correo'), miniText('card.mail.caption', 'DKIM, SPF, DMARC y STARTTLS.')),
+        buildMiniCardSlot(miniText('card.perimeter.title', 'Seguridad perímetro'), miniText('card.perimeter.caption', 'HTTPS, TLS y cabeceras defensivas.')),
+        buildMiniCardSlot(miniText('card.pulse.title', 'Pulse ccTLD'), miniText('card.pulse.caption', 'Cobertura DNSSEC, adopción, ROV y 6 GHz.'))
       ];
       topCards.forEach(slot => miniTopGrid.appendChild(slot.card));
       bottomCards.forEach(slot => miniBottomGrid.appendChild(slot.card));
@@ -2980,18 +3049,14 @@
       slot.card.setAttribute('aria-hidden', visible ? 'false' : 'true');
     }
 
-    function renderMiniEmpty(message = 'Pega un dominio para mostrar las 8 tarjetas.') {
+    function renderMiniEmpty(message = 'Pega un dominio para mostrar las 6 tarjetas.') {
       if (miniStatus) miniStatus.textContent = message;
       resetMiniLog(t('mini.waiting', 'Esperando un dominio para comenzar.'));
       const topSlots = miniTopGrid?._slots || [];
       const bottomSlots = miniBottomGrid?._slots || [];
       topSlots.forEach(slot => setMiniSimpleCard(slot, 'pending', '--', t('mini.waiting', 'Esperando un dominio.'), ''));
-      bottomSlots.forEach((slot, index) => {
-        const visible = index < 2;
-        setMiniSlotVisible(slot, visible);
-        if (visible) {
-          setMiniSimpleCard(slot, 'pending', '--', t('mini.waiting', 'Esperando un dominio.'), '');
-        }
+      bottomSlots.forEach(slot => {
+        setMiniSimpleCard(slot, 'pending', '--', t('mini.waiting', 'Esperando un dominio.'), '');
       });
     }
 
@@ -3177,14 +3242,12 @@
       buildMiniCards();
       const domain = String(data?.domain || '').trim() || '—';
       const ipv4Slot = miniTopGrid?._slots?.[0];
-      const dnssecSlot = miniTopGrid?._slots?.[1];
-      const rpkiSlot = miniTopGrid?._slots?.[2];
-      const smtpSlot = miniTopGrid?._slots?.[3];
-      const dnsvizSlot = miniBottomGrid?._slots?.[0];
-      const httpSlot = miniBottomGrid?._slots?.[1];
-      const pulseSlot = miniBottomGrid?._slots?.[2];
-      const roasSlot = miniBottomGrid?._slots?.[3];
-      const rovSlot = miniBottomGrid?._slots?.[4];
+      const accessSlot = miniTopGrid?._slots?.[1];
+      const routingSlot = miniTopGrid?._slots?.[2];
+      const dnssecSlot = miniBottomGrid?._slots?.[0];
+      const mailSlot = miniBottomGrid?._slots?.[1];
+      const perimeterSlot = miniBottomGrid?._slots?.[2];
+      const pulseCardSlot = miniBottomGrid?._slots?.[3];
       const pulseEligible = Boolean(data?.pulse?.eligible);
 
       if (miniStatus) {
@@ -3195,120 +3258,356 @@
             : tf('mini.showingNoPulse', { domain }, `Mostrando ${domain}`));
       }
 
-      if (!ipv4Slot || !dnssecSlot || !rpkiSlot || !smtpSlot || !dnsvizSlot || !httpSlot || !pulseSlot || !roasSlot || !rovSlot) return;
+      if (!ipv4Slot || !accessSlot || !routingSlot || !dnssecSlot || !mailSlot || !perimeterSlot || !pulseCardSlot) return;
 
       const ipv4Records = Array.isArray(data?.ipv4?.records) ? data.ipv4.records : [];
-      const ipv4Value = ipv4Records[0] || (data?.ipv4?.present ? t('mini.ipv4.present', 'Presente') : t('mini.ipv4.absent', 'Sin IPv4'));
+      const hasIpv4 = ipv4Records.length > 0;
+      const hasIpv6 = Boolean(data?.ipv6?.present);
+      const hasMailIpv4 = Boolean(data?.mailipv4?.present);
+      const hasMailIpv6 = Boolean(data?.mailipv6?.present);
+      const hasSmtpUtf8 = Boolean(data?.smtputf8?.status === 'ok');
+      const firstIpv4 = ipv4Records[0] || '';
+      const firstIpv6 = Array.isArray(data?.ipv6?.records) ? data.ipv6.records[0] || '' : '';
+      const firstMailIpv4 = Array.isArray(data?.mailipv4?.records) ? data.mailipv4.records[0] || '' : '';
+      const firstMailIpv6 = Array.isArray(data?.mailipv6?.records) ? data.mailipv6.records[0] || '' : '';
+      const firstMxServer = Array.isArray(data?.smtputf8?.results) ? data.smtputf8.results[0]?.server || '' : '';
       setMiniSimpleCard(
         ipv4Slot,
-        data?.ipv4?.present ? 'ok' : 'fail',
-        ipv4Value,
-        data?.ipv4?.present
-          ? `${t('mini.ipv4.visible', 'IPv4 visible en')} ${ipv4Records.length} ${t('mini.ipv4.records', 'registro(s).')}`
-          : t('mini.ipv4.missing', 'No se detectaron registros A.'),
-        domain
+        hasIpv4 && hasIpv6 && hasMailIpv4 && hasMailIpv6 && hasSmtpUtf8 ? 'ok' : 'warning',
+        hasIpv6 ? (firstIpv6 || 'IPv6') : 'Sin IPv6',
+        data?.ipv6?.present
+          ? `${ipv4Records.length} A · ${Array.isArray(data?.ipv6?.records) ? data.ipv6.records.length : 0} AAAA`
+          : 'A: ' + (ipv4Records.length ? `${ipv4Records.length} registro(s)` : 'sin dato'),
+        data?.ipv6?.present
+          ? 'IPv6 nativo visible en DNS.'
+          : 'IPv6 nativo no detectado.'
       );
+      setMiniCardDetails(
+        ipv4Slot,
+        [
+          {
+            label: 'IPv6 nativo',
+            value: data?.ipv6?.present ? (firstIpv6 || 'Presente') : 'Ausente',
+            status: data?.ipv6?.present ? 'ok' : 'fail',
+            command: 'GET /ipv6/:dominio',
+            detail: data?.ipv6?.records?.length ? data.ipv6.records.slice(0, 3).map(ip => `AAAA: ${ip}`) : ['No se detectaron registros AAAA.']
+          },
+          {
+            label: 'IPv4',
+            value: ipv4Records.length ? (firstIpv4 || 'Presente') : 'Ausente',
+            status: ipv4Records.length ? 'ok' : 'fail',
+            command: 'GET /ipv4/:dominio',
+            detail: ipv4Records.length ? ipv4Records.slice(0, 3).map(ip => `A: ${ip}`) : ['No se detectaron registros A.']
+          },
+          {
+            label: 'IPv6 en MX',
+            value: data?.mailipv6?.present ? (firstMailIpv6 || 'Presente') : 'Ausente',
+            status: data?.mailipv6?.present ? 'ok' : 'warning',
+            command: 'GET /mailipv6/:dominio',
+            detail: data?.mailipv6?.records?.length ? data.mailipv6.records.slice(0, 3).map(ip => `AAAA MX: ${ip}`) : ['Los MX no publican AAAA visibles.']
+          },
+          {
+            label: 'IPv4 en MX',
+            value: data?.mailipv4?.present ? (firstMailIpv4 || 'Presente') : 'Ausente',
+            status: data?.mailipv4?.present ? 'ok' : 'warning',
+            command: 'GET /mailipv4/:dominio',
+            detail: data?.mailipv4?.records?.length ? data.mailipv4.records.slice(0, 3).map(ip => `A MX: ${ip}`) : ['Los MX no publican A visibles.']
+          },
+          {
+            label: 'SMTPUTF8',
+            value: firstMxServer || (data?.smtputf8?.status === 'ok' ? 'Sí' : (data?.smtputf8?.status ? data.smtputf8.status : 'Sin dato')),
+            status: data?.smtputf8?.status === 'ok' ? 'ok' : (data?.smtputf8?.status ? 'warning' : 'info'),
+            command: 'GET /smtputf8/:dominio',
+            detail: Array.isArray(data?.smtputf8?.results) && data.smtputf8.results.length
+              ? data.smtputf8.results.map(item => `${item.server}:${item.port || 25} ${item.status}`)
+              : ['No hay MX visibles o no respondió.']
+          }
+        ]
+      );
+
+      const w3cIssues = Array.isArray(data?.w3c?.issues) ? data.w3c.issues : [];
+      const hasIssue = (...parts) => w3cIssues.some(issue => parts.every(part => issue.toLowerCase().includes(part)));
+      const w3cItems = [
+        ['Idioma del documento', 'idioma', 'La página no declara el idioma principal del contenido.'],
+        ['Título de página', 'título', 'La página no tiene un título descriptivo.'],
+        ['Imágenes', 'imágenes', 'Hay imágenes sin texto alternativo.'],
+        ['Campos de formulario', 'formulario', 'Hay campos de formulario sin etiqueta accesible.'],
+        ['Botones', 'botones', 'Hay botones sin nombre accesible.'],
+        ['Enlaces', 'enlaces', 'Hay enlaces sin nombre accesible.'],
+        ['Encabezado principal', 'encabezado principal', 'La página no tiene encabezado principal.'],
+        ['Jerarquía de encabezados', 'encabezados', 'La estructura de encabezados puede ser incorrecta.'],
+        ['Región principal', 'región principal', 'No se identifica la región principal del contenido.'],
+        ['Tabindex positivo', 'tabindex positivo', 'Se detectó tabindex positivo, lo que puede alterar el orden natural de navegación.'],
+        ['Controles no semánticos', 'no semánticos', 'Hay elementos no semánticos usados como controles interactivos.'],
+        ['Iframes', 'iframes', 'Hay iframes sin título descriptivo.'],
+        ['Tablas', 'tablas', 'Hay tablas sin encabezados estructurados.'],
+        ['Referencias ARIA', 'referencias aria', 'Hay referencias ARIA a elementos inexistentes.'],
+        ['aria-hidden', 'aria-hidden', 'Hay contenido interactivo oculto para tecnologías de asistencia.'],
+        ['Multimedia autoplay', 'multimedia', 'Hay multimedia con reproducción automática y sonido.'],
+        ['SVG o íconos', 'íconos', 'Hay íconos o SVG interactivos sin nombre accesible.']
+      ];
+      const accessibilityRows = [
+        {
+          label: 'W3C y accesibilidad',
+          value: `${w3cItems.slice(0, 4).map(([label, token]) => `${label}: ${hasIssue(token) ? 'No' : 'OK'}`).join(', ')}${w3cItems.length > 4 ? ', ...' : ''}`,
+          status: w3cIssues.length ? 'warning' : 'ok',
+          command: 'GET /w3c/:dominio',
+          detail: w3cItems.map(([label, token, message]) => `${label}: ${hasIssue(token) ? message : 'OK'}`)
+        }
+      ];
+      setMiniSimpleCard(
+        accessSlot,
+        w3cIssues.length ? 'warning' : 'ok',
+        'W3C',
+        w3cIssues.length ? 'Revisar idioma, nombres, estructura y navegación.' : 'Accesibilidad y calidad web alineadas.',
+        `${w3cItems.slice(0, 4).map(([label, token]) => `${label}: ${hasIssue(token) ? 'No' : 'OK'}`).join(' · ')}${w3cItems.length > 4 ? ' · ...' : ''}`
+      );
+      setMiniCardDetails(accessSlot, accessibilityRows);
+
+      setMiniSimpleCard(
+        routingSlot,
+        data?.rpki?.domain?.valid && data?.rpki?.mail?.valid ? 'ok' : 'warning',
+        data?.rpki?.domain?.valid && data?.rpki?.mail?.valid ? 'RPKI' : 'RPKI parcial',
+        'RPKI, ROA y ASPA en un solo bloque.',
+        [
+          `ROA válido dominio: ${data?.rpki?.domain?.valid ? 'sí' : 'no'}`,
+          `ROA válido correo: ${data?.rpki?.mail?.valid ? 'sí' : 'no'}`,
+          'ASPA: próximamente'
+        ].join(' · ')
+      );
+      setMiniCardDetails(routingSlot, [
+        {
+          label: 'ROA válido',
+          value: data?.rpki?.domain?.valid ? 'Sí' : 'No',
+          status: data?.rpki?.domain?.valid ? 'ok' : 'fail',
+          command: 'GET /rpki/:dominio',
+          detail: data?.rpki?.domain?.results?.length
+            ? data.rpki.domain.results.map(item => `${item.ip || 'IP'}: ${item.state}${item.asn ? ` · ASN ${item.asn}` : ''}${item.prefix ? ` · prefijo máximo ${item.maxLength || item.maxlen || item.prefixLength || 'sin dato'}` : ''}`)
+            : ['No se detectó un ROA válido para el dominio.']
+        },
+        {
+          label: 'ROA correo',
+          value: data?.rpki?.mail?.valid ? 'Válido' : 'Parcial',
+          status: data?.rpki?.mail?.valid ? 'ok' : 'fail',
+          command: 'GET /rpki/:dominio',
+          detail: data?.rpki?.mail?.results?.length
+            ? data.rpki.mail.results.map(item => `${item.ip || 'IP'}: ${item.state}${item.asn ? ` · ASN ${item.asn}` : ''}${item.prefix ? ` · prefijo máximo ${item.maxLength || item.maxlen || item.prefixLength || 'sin dato'}` : ''}`)
+            : ['No se detectó un ROA válido para el correo.']
+        },
+        {
+          label: 'ASPA',
+          value: 'Próximamente',
+          status: 'warning',
+          command: 'GET /rpki/:dominio',
+          detail: ['ASPA sigue como medición futura en esta suite.']
+        }
+      ]);
 
       const dnssecLines = Array.isArray(data?.dnssec?.algorithms) ? data.dnssec.algorithms.slice(0, 4) : [];
       setMiniSimpleCard(
         dnssecSlot,
-        data?.dnssec?.status || 'info',
+        data?.dnssec?.valid && data?.dnsviz?.available ? 'ok' : 'warning',
         data?.dnssec?.valid ? t('mini.dnssec.ok', 'DNSSEC OK') : t('mini.dnssec.partial', 'DNSSEC parcial'),
         data?.dnssec?.lines?.[0] || t('mini.dnssec.review', 'Se revisa DS, DNSKEY y cadena.'),
         dnssecLines.join(' · ')
       );
-      appendMiniDnsvizDetails(dnssecSlot.content, domain, data?.dnsviz || {}, true, true);
-
-      const domainValid = data?.rpki?.domain?.valid;
-      const mailValid = data?.rpki?.mail?.valid;
-      const rpkiValue = domainValid && mailValid ? t('mini.rpki.full', 'ROAs cubren todo') : (domainValid || mailValid ? t('mini.rpki.partial', 'ROAs parciales') : t('mini.rpki.none', 'Sin ROAs'));
-      const rpkiSub = [
-        `${t('mini.rpki.domain', 'Dominio')}: ${domainValid ? t('mini.yes', 'sí') : t('mini.no', 'no')}`,
-        `${t('mini.rpki.mail', 'Mail')}: ${mailValid ? t('mini.yes', 'sí') : t('mini.no', 'no')}`
-      ].join(' · ');
-      setMiniSimpleCard(
-        rpkiSlot,
-        data?.rpki?.status || 'info',
-        rpkiValue,
-        rpkiSub,
-        t('mini.rpki.foot', 'Cobertura observada por RPKI/ROAs.')
-      );
-
-      const smtpResults = Array.isArray(data?.smtputf8?.results) ? data.smtputf8.results : [];
-      const smtpSupports = smtpResults.some(item => item.status === 'supports');
-      setMiniSimpleCard(
-        smtpSlot,
-        data?.smtputf8?.status || 'info',
-        smtpSupports ? t('mini.yes', 'Sí') : (smtpResults.length ? t('mini.no', 'No') : t('mini.pending', 'Pendiente')),
-        smtpSupports ? t('mini.smtp.yes', 'MX anuncia SMTPUTF8.') : (smtpResults.length ? t('mini.smtp.no', 'No anuncia SMTPUTF8.') : t('mini.smtp.none', 'Sin MX visibles.')),
-        smtpResults.length ? smtpResults.map(item => `${item.server}:${item.port} ${item.status}`).join(' · ') : ''
-      );
+      setMiniCardDetails(dnssecSlot, [
+        {
+          label: 'DNSViz',
+          value: data?.dnsviz?.available ? 'Disponible' : 'Parcial',
+          status: data?.dnsviz?.available ? 'ok' : 'warning',
+          command: 'GET /dnsviz/:dominio?resolver=local',
+          detail: [
+            data?.dnsviz?.pageUrl ? `Abrir: ${data.dnsviz.pageUrl.replace('/dnssec/', '/analyze/')}` : null,
+            Array.isArray(data?.dnsviz?.observations) ? `Observaciones: ${data.dnsviz.observations.length}` : null,
+            Array.isArray(data?.dnsviz?.warnings) ? `Avisos: ${data.dnsviz.warnings.length}` : null,
+            Array.isArray(data?.dnsviz?.errors) ? `Errores: ${data.dnsviz.errors.length}` : null
+          ].filter(Boolean)
+        },
+        {
+          label: 'NSEC3',
+          value: Array.isArray(data?.dnsviz?.errors) && data.dnsviz.errors.length ? 'Con errores' : 'Sin errores',
+          status: Array.isArray(data?.dnsviz?.errors) && data.dnsviz.errors.length ? 'fail' : 'ok',
+          command: 'GET /dnsviz/:dominio?resolver=local',
+          detail: Array.isArray(data?.dnsviz?.errors) && data.dnsviz.errors.length
+            ? data.dnsviz.errors.slice(0, 5).map(item => formatMiniDnsvizEntry(item))
+            : ['Sin errores NSEC3 detectados.']
+        },
+        ...(Array.isArray(data?.dnssec?.algorithms) ? data.dnssec.algorithms.slice(0, 3).map(algo => ({
+          label: 'Algoritmo',
+          value: algo,
+          status: /SHA-1/i.test(String(algo)) ? 'warning' : 'ok',
+          command: 'GET /dnssec/:dominio',
+          detail: [`Algoritmo DNSSEC observado: ${algo}`]
+        })) : [])
+      ]);
 
       const dnsviz = data?.dnsviz || {};
       setMiniSimpleCard(
-        dnsvizSlot,
-        dnsviz.status || 'info',
-        dnsviz.available ? 'DNSViz' : t('mini.dnsviz.partial', 'DNSViz parcial'),
-        dnsviz.updated ? `${t('mini.updated', 'Actualizado')}: ${dnsviz.updated}` : t('mini.dnsviz.source', 'Fuente y detalles técnicos.'),
-        [
-          Array.isArray(dnsviz.observations) && dnsviz.observations.length ? `${dnsviz.observations.length} ${t('dnsviz.observations', 'observación(es)')}` : null,
-          Array.isArray(dnsviz.warnings) && dnsviz.warnings.length ? `${dnsviz.warnings.length} ${t('dnsviz.warnings', 'advertencia(s)')}` : null,
-          Array.isArray(dnsviz.errors) && dnsviz.errors.length ? `${dnsviz.errors.length} ${t('dnsviz.errors', 'error(es)')}` : null
-        ].filter(Boolean).join(' · ')
+        mailSlot,
+        data?.email?.config?.spf && data?.email?.config?.dmarc && data?.email?.config?.dkim && data?.email?.starttls?.supported ? 'ok' : 'warning',
+        'Correo',
+        `${firstMxServer ? `${firstMxServer} · ` : ''}SPF: ${data?.email?.config?.spf ? 'sí' : 'no'} · DMARC: ${data?.email?.config?.dmarc ? 'sí' : 'no'} · DKIM: ${data?.email?.config?.dkim ? 'sí' : 'no'} · Start TLS: ${data?.email?.starttls?.supported ? 'sí' : 'no'}`,
+        data?.email?.starttls?.supported ? `${firstMxServer || 'MX'} · SPF/DMARC/DKIM` : 'Revisar autenticación de correo.'
       );
-      appendMiniDnsvizDetails(dnsvizSlot.content, domain, dnsviz, false, false);
+      setMiniCardDetails(mailSlot, [
+        {
+          label: 'SPF',
+          value: data?.email?.config?.spf ? 'Sí' : 'No',
+          status: data?.email?.config?.spf ? 'ok' : 'fail',
+          command: 'GET /emailconfig/:dominio',
+          detail: data?.email?.config?.spfPolicy ? [`Política: ${data.email.config.spfPolicy.policy || 'sin dato'}`, data.email.config.spfPolicy.strict ? 'Estricto' : 'No estricto'] : ['No se detectó SPF.']
+        },
+        {
+          label: 'DMARC',
+          value: data?.email?.config?.dmarc ? 'Sí' : 'No',
+          status: data?.email?.config?.dmarc ? 'ok' : 'fail',
+          command: 'GET /emailconfig/:dominio',
+          detail: data?.email?.config?.dmarcPolicy ? [`Política: ${data.email.config.dmarcPolicy.policy || 'sin dato'}`, data.email.config.dmarcPolicy.strict ? 'Estricto' : 'No estricto'] : ['No se detectó DMARC.']
+        },
+        {
+          label: 'DKIM',
+          value: data?.email?.config?.dkim ? 'Sí' : 'No',
+          status: data?.email?.config?.dkim ? 'ok' : 'fail',
+          command: 'GET /emailconfig/:dominio',
+          detail: data?.email?.config?.dkimDetails ? [`Selector: ${data.email.config.dkimDetails.selector || 'support'}`] : ['No se detectó DKIM.']
+        },
+        {
+          label: 'Start TLS',
+          value: data?.email?.starttls?.supported ? 'Sí' : 'No',
+          status: data?.email?.starttls?.supported ? 'ok' : 'fail',
+          command: 'GET /starttls/:dominio',
+          detail: Array.isArray(data?.email?.starttls?.results) ? data.email.starttls.results.map(item => `${item.server}: ${item.status}`) : ['No hay detalle STARTTLS.']
+        }
+      ]);
 
       const headers = data?.headers || {};
-      const findings = Array.isArray(headers.findings) ? headers.findings : [];
-      const headerValue = headers.https ? t('http.summary.ok', 'HTTPS y cabeceras clave presentes.') : (headers.error ? t('http.summary.fail', 'Sin respuesta HTTP útil.') : t('http.summary.warn', 'Faltan una o más cabeceras importantes.'));
-      const headerLines = findings.slice(0, 5).map(item => `${httpText(`label.${item.id}`, item.label)}: ${httpText(`value.${item.value}`, item.value)}`);
+      const tls = data?.tls || {};
+      const headerValue = headers.https ? 'HTTPS' : 'HTTP';
       setMiniSimpleCard(
-        httpSlot,
-        headers.https ? 'ok' : (headers.error ? 'fail' : 'warning'),
-        headers.https ? t('http.label.https', 'HTTPS') : 'HTTP',
+        perimeterSlot,
+        headers.https && headers.hsts && headers.csp && headers.xfo && headers.xcto && tls?.protocol ? 'ok' : 'warning',
         headerValue,
-        headerLines.join(' · ')
+        headers.https ? 'HTTPS, TLS y cabeceras.' : 'Faltan señales de perímetro.',
+        [
+          headers.hsts ? 'HSTS presente' : 'HSTS ausente',
+          headers.csp ? 'CSP presente' : 'CSP ausente',
+          tls?.protocol ? `TLS: ${tls.protocol}` : 'TLS: sin dato'
+        ].join(' · ')
       );
+      setMiniCardDetails(perimeterSlot, [
+        {
+          label: 'HTTPS',
+          value: headers.https ? 'Sí' : 'No',
+          status: headers.https ? 'ok' : 'fail',
+          command: 'GET /headers/:dominio',
+          detail: headers.https ? ['La respuesta final usa HTTPS.'] : ['No responde por HTTPS.']
+        },
+        {
+          label: 'HSTS',
+          value: headers.hsts ? 'Sí' : 'No',
+          status: headers.hsts ? 'ok' : 'fail',
+          command: 'GET /headers/:dominio',
+          detail: headers.hsts ? [`max-age: ${headers.hstsMaxAge || 'sin dato'}`] : ['No se detectó HSTS.']
+        },
+        {
+          label: 'X-Frame-Options',
+          value: headers.xfo ? 'Sí' : 'No',
+          status: headers.xfo ? 'ok' : 'fail',
+          command: 'GET /headers/:dominio',
+          detail: headers.xfo ? ['Cabecera X-Frame-Options presente.'] : ['Cabecera X-Frame-Options ausente.']
+        },
+        {
+          label: 'X-Content-Type-Options',
+          value: headers.xcto ? 'Sí' : 'No',
+          status: headers.xcto ? 'ok' : 'fail',
+          command: 'GET /headers/:dominio',
+          detail: headers.xcto ? ['Cabecera X-Content-Type-Options presente.'] : ['Cabecera X-Content-Type-Options ausente.']
+        },
+        {
+          label: 'CSP',
+          value: headers.csp ? 'Sí' : 'No',
+          status: headers.csp ? 'ok' : 'fail',
+          command: 'GET /headers/:dominio',
+          detail: headers.csp ? ['Content-Security-Policy presente.'] : ['Content-Security-Policy ausente.']
+        },
+        {
+          label: 'TLS',
+          value: tls?.protocol || 'Sin dato',
+          status: tls?.protocol ? 'ok' : 'fail',
+          command: 'GET /tlsinfo/:dominio',
+          detail: [
+            tls?.protocol ? `Protocolo: ${tls.protocol}` : 'No se detectó protocolo TLS.',
+            tls?.cipher ? `Cifra: ${tls.cipher}` : null,
+            tls?.key?.type ? `Intercambio: ${tls.key.type}${tls.key.size ? ` ${tls.key.size}` : ''}` : null
+          ].filter(Boolean)
+        }
+      ]);
 
       const pulse = data?.pulse || {};
-      setMiniSlotVisible(pulseSlot, pulseEligible);
-      setMiniSlotVisible(roasSlot, pulseEligible);
-      setMiniSlotVisible(rovSlot, pulseEligible);
-      if (!pulseEligible) {
-        setMiniSimpleCard(pulseSlot, 'info', '--', t('mini.pulse.hidden', 'Se oculta porque el dominio no es ccTLD.'), '');
-        setMiniSimpleCard(roasSlot, 'info', '--', t('mini.roas.hidden', 'Se oculta porque el dominio no es ccTLD.'), '');
-        setMiniSimpleCard(rovSlot, 'info', '--', t('mini.rov.hidden', 'Se oculta porque el dominio no es ccTLD.'), '');
-        return;
+      const wifi = data?.wifi || {};
+      const pulseDnssecAdoptionLabel = pulse?.dnssecAdoption?.label || 'Adopción DNSSEC';
+      setMiniSimpleCard(
+        pulseCardSlot,
+        pulseEligible && pulse.available && pulse.dnssecCoverage?.value && pulse.dnssecAdoption?.value && pulse.rov?.value && wifi.label ? 'ok' : 'warning',
+        pulseEligible ? (pulse.dnssecCoverage?.value || 'Pulse') : '--',
+        pulseEligible
+          ? (pulse.dnssecCoverage?.label || tf('mini.pulse.label', { country: String(data?.country || pulse.country || '').toUpperCase() || '??' }, 'Cobertura DNSSEC del reporte.'))
+          : 'Se muestra solo si el dominio es ccTLD.',
+        [
+          pulseEligible ? `DNSSEC cobertura: ${pulse.dnssecCoverage?.value || 'sin dato'}` : null,
+          pulseEligible ? `${pulseDnssecAdoptionLabel}: ${pulse.dnssecAdoption?.value || 'sin dato'}` : null,
+          pulseEligible ? `ROV: ${pulse.rov?.value || 'sin dato'}` : null,
+          pulseEligible ? `6 GHz: ${wifi.label || 'Info no disponible'}` : null
+        ].filter(Boolean).join(' · ')
+      );
+      setMiniCardDetails(pulseCardSlot, [
+        {
+          label: 'Cobertura DNSSEC',
+          value: pulseEligible ? (pulse.dnssecCoverage?.value || 'Sin dato') : 'No aplica',
+          status: pulseEligible && pulse.dnssecCoverage?.value ? 'ok' : 'fail',
+          command: 'GET /pulse/:cctld',
+          detail: pulseEligible ? [pulse.dnssecCoverage?.label || 'Cobertura DNSSEC del reporte.'] : ['Pulse no aplica.']
+        },
+        {
+          label: pulseDnssecAdoptionLabel,
+          value: pulseEligible ? (pulse.dnssecAdoption?.value || 'Sin dato') : 'No aplica',
+          status: pulseEligible && pulse.dnssecAdoption?.value ? 'ok' : 'fail',
+          command: 'GET /pulse/:cctld',
+          detail: pulseEligible ? [pulse.dnssecAdoption?.label || 'Adopción DNSSEC del reporte.'] : ['Pulse no aplica.']
+        },
+        {
+          label: 'ROV',
+          value: pulseEligible ? (pulse.rov?.value || 'Sin dato') : 'No aplica',
+          status: pulseEligible && pulse.rov?.value ? 'ok' : 'fail',
+          command: 'GET /pulse/:cctld',
+          detail: pulseEligible ? [pulse.rov?.label || 'Validación de origen de rutas.'] : ['Pulse no aplica.']
+        },
+        {
+          label: '6 GHz',
+          value: wifi.label || 'Info no disponible',
+          status: wifi.status === 'FULL_5925_7125' ? 'ok' : (wifi.status === 'LOW_5925_6425' || wifi.status === 'NO_PUBLIC_ADOPTION_FOUND' ? 'fail' : 'warning'),
+          command: 'Hardcoded map WIFI_6GHZ_STATUS_BY_CCTLD',
+          detail: Array.isArray(wifi.entries) && wifi.entries.length ? wifi.entries.map(item => `${item.territory}: ${item.status}`) : ['Info no disponible']
+        }
+      ]);
+      if (dnsviz?.pageUrl) {
+        const link = document.createElement('a');
+        link.className = 'button primary mini-dnsviz-link-button';
+        link.href = dnsviz.pageUrl.replace('/dnssec/', '/analyze/');
+        link.target = '_blank';
+        link.rel = 'noreferrer';
+        link.textContent = 'DNSViz';
+        dnssecSlot.content.appendChild(link);
+        if (dnsviz.svgUrl) {
+          const img = document.createElement('img');
+          img.className = 'mini-graph';
+          img.loading = 'lazy';
+          img.alt = `DNSViz para ${domain}`;
+          img.src = `${API_BASE}/dnsviz/${encodeURIComponent(domain)}?format=svg&resolver=local`;
+          dnssecSlot.content.prepend(img);
+        }
       }
-      const pulseCoverage = pulse.dnssecCoverage?.value || 'Sin dato';
-      const pulseCountryLabel = String(data?.country || pulse.country || '').toUpperCase() || '??';
-      const pulseAverage = pulse.dnssecCoverage?.average ? `${t('mini.average', 'Promedio')}: ${pulse.dnssecCoverage.average}` : '';
-      setMiniSimpleCard(
-        pulseSlot,
-        pulse.available ? 'ok' : 'info',
-        pulseCoverage,
-        pulse.dnssecCoverage?.label || tf('mini.pulse.label', { country: pulseCountryLabel }, 'Cobertura DNSSEC del reporte ' + pulseCountryLabel + '.'),
-        [pulseAverage, pulse.dnssecAdoption?.value ? `${t('mini.pulse.adoption', 'Adopción DNSSEC')}: ${pulse.dnssecAdoption.value}` : null].filter(Boolean).join(' · ')
-      );
-
-      const roaItems = formatMiniRoaItems(pulse.roaItems || []);
-      setMiniSimpleCard(
-        roasSlot,
-        roaItems.length ? 'ok' : 'info',
-        roaItems.length ? `${roaItems.length} ROA(s)` : t('mini.roas.none', 'Sin ROAs'),
-        pulse.sourceUrl || t('mini.source', 'Fuente: Internet Society Pulse.'),
-        roaItems.length ? roaItems.join(' · ') : t('mini.roas.empty', 'No se listaron ROAs.')
-      );
-
-      const rov = pulse.rov || {};
-      const rovValue = rov.value || (rov.label || 'Sin dato');
-      setMiniSimpleCard(
-        rovSlot,
-        rovValue && /yes|supported|covered|valid/i.test(String(rovValue)) ? 'ok' : 'info',
-        rovValue,
-        rov.label || tf('mini.rov.label', { country: pulseCountryLabel }, 'ROV del reporte ' + pulseCountryLabel + '.'),
-        pulse.resilienceScore?.value ? `${t('mini.resilience', 'Resilience score')}: ${pulse.resilienceScore.value}` : ''
-      );
     }
 
     async function handleMiniRun() {
